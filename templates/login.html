@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - PYQ Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-top">
+            <div class="container-fluid">
+                <div class="header-top-content">
+                    <div class="university-info">
+                        <span class="university-name">Marian College Kuttikkanam PYQ Portal</span>
+                        <span class="separator">•</span>
+                    </div>
+                    <div class="header-links">
+                        <a href="#" class="header-link">Help</a>
+                        <a href="#" class="header-link">Contact</a>
+                        {% if session.get('user_id') %}
+                            <a href="{{ url_for('logout') }}" class="header-link">Logout</a>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="header-link">Login</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="header-main">
+            <div class="container-fluid">
+                <div class="header-main-content">
+                    <div class="logo-section">
+                        <h1 class="logo-title">PYQ Portal</h1>
+                    </div>
+                    <nav class="main-nav">
+                        <ul class="nav-list">
+                            <li><a href="{{ url_for('home') }}" class="nav-link">Home</a></li>
+                            <li><a href="{{ url_for('view_papers') }}" class="nav-link">Browse Papers</a></li>
+                            {% if session.get('role') == 'admin' %}
+                            <li><a href="{{ url_for('upload_page') }}" class="nav-link">Upload</a></li>
+                            {% endif %}
+                            <li><a href="#" class="nav-link">About</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-header">
+        <div class="container">
+            <h1 class="page-title">Login</h1>
+        </div>
+    </section>
+
+    <section class="login-section">
+        <div class="container">
+            <div class="login-card">
+                <p class="info-text"><b>Only authorized users (administrators) may upload papers.</b></p><br>
+                {% if error %}
+                <div class="error-alert"><strong>Error:</strong> {{ error }}</div>
+                {% endif %}
+                <form method="post" action="{{ url_for('login') }}">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" name="username" id="username" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" name="password" id="password" required class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
