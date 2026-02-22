@@ -6,9 +6,16 @@ import mysql.connector
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from supabase import create_client
+import uuid
 
 
 app = Flask(__name__)
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET")
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')
 db = mysql.connector.connect(
     host=os.environ.get("DB_HOST"),
@@ -97,9 +104,6 @@ def home():
     except Exception:
         paper_count = 0
     return render_template("index.html", paper_count=paper_count)
-UPLOAD_FOLDER = os.path.join(app.root_path, "uploads")
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
 ALLOWED_EXTENSIONS = {"pdf"}
@@ -134,20 +138,6 @@ def get_subjects():
         rows = cursor.fetchall()
         return [{"subject_id": r[0], "subject_name": r[1], "semester": None} for r in rows]
 
-def _subject_folder_name(subject_name):
-    """Map a subject name to a stable folder name inside uploads/."""
-    s = (subject_name or "").strip()
-    # Explicit mappings for your existing folders
-    lower = s.lower()
-    if lower == "design and algorithm":
-        return "daa"
-    if lower == "dbms":
-        return "dbms"
-
-    # Fallback: sanitize subject name (no spaces/special chars)
-    s = re.sub(r"[^\w\-]", "_", s)
-    return s or "unknown"
-
 
 # -------- authentication helpers --------
 
@@ -175,10 +165,9 @@ def admin_required(f):
 @app.route("/upload", methods=["GET", "POST"])
 @login_required
 @admin_required
-
 def upload_page():
     if request.method == "POST":
-        file_path_abs = None
+        # FIX 1: Removed unused file_path_abs variable
         try:
             # Subject must be from subjects table (dropdown sends subject_id)
             subject_raw = request.form.get("subject_id")
@@ -213,40 +202,37 @@ def upload_page():
 
             exam_type = request.form.get("examType") or request.form.get("exam_type") or ""
 
-            # Create folder inside uploads: uploads/<SubjectName>/
-            folder_name = _subject_folder_name(subject_name)
-            subject_dir = os.path.join(app.config["UPLOAD_FOLDER"], folder_name)
-            os.makedirs(subject_dir, exist_ok=True)
+            # FIX 1: Supabase upload block is now correctly indented inside try:
+            file_ext = file.filename.rsplit(".", 1)[1].lower()
+            unique_name = f"{subject_id}/{year_int}/{uuid.uuid4()}.{file_ext}"
 
-            # Unique filename and save PDF inside that folder
-            new_name = f"{subject_id}_{year_int}_{int(time.time())}.pdf"
-            file_path_abs = os.path.join(subject_dir, new_name)
-            file.save(file_path_abs)
+            supabase.storage.from_(SUPABASE_BUCKET).upload(
+                unique_name,
+                file.read(),
+                file_options={"content-type": "application/pdf"}
+            )
 
-            # Path stored in DB: uploads/SubjectFolder/filename.pdf (forward slashes)
-            file_path_db = "uploads/" + folder_name + "/" + new_name
+            file_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(unique_name)
 
-            # Insert into question_papers (schema: subject_id, year, file_name, file_path, exam_type)
+            # FIX 1: DB insert block is now correctly indented inside try:
             with db.cursor() as cur:
                 cur.execute(
                     """
-                    INSERT INTO question_papers (subject_id, year, file_name, file_path, exam_type)
+                    INSERT INTO question_papers
+                    (subject_id, year, file_name, file_url, exam_type)
                     VALUES (%s, %s, %s, %s, %s)
                     """,
-                    (subject_id, year_int, new_name, file_path_db, exam_type),
+                    (subject_id, year_int, file.filename, file_url, exam_type),
                 )
             db.commit()
 
             flash("Your question paper has been uploaded successfully.")
             return redirect(url_for("upload_page"))
+
         except Exception as e:
             db.rollback()
             app.logger.exception("Upload failed")
-            try:
-                if file_path_abs and os.path.exists(file_path_abs):
-                    os.remove(file_path_abs)
-            except Exception:
-                pass
+            # FIX 1: Removed useless file_path_abs local file cleanup (Supabase handles storage)
             return render_template("upload.html", error=str(e), subjects=get_subjects())
 
     return render_template("upload.html", subjects=get_subjects())
@@ -256,14 +242,13 @@ def upload_page():
 def view_papers():
     """
     List available question papers using the fixed question_papers schema:
-    paper_id, subject_id, year, file_name, file_path, upload_date.
+    paper_id, subject_id, year, file_name, file_url, upload_date.
     Semester comes from the subjects table.
     """
     papers = []
-    # Main query aligned with your schema
     cursor.execute(
         """
-        SELECT s.subject_name, s.semester, q.year, q.file_path, q.exam_type
+        SELECT s.subject_name, s.semester, q.year, q.file_url, q.exam_type
         FROM question_papers q
         JOIN subjects s ON q.subject_id = s.subject_id
         ORDER BY q.year DESC, s.subject_name
@@ -271,17 +256,8 @@ def view_papers():
     )
     rows = cursor.fetchall()
 
-    for subject_name, semester, year, file_path, exam_type in rows:
-        size_str = "—"
-        if file_path:
-            abs_path = os.path.join(app.root_path, file_path)
-            try:
-                size_bytes = os.path.getsize(abs_path)
-                size_str = format_file_size(size_bytes)
-            except OSError:
-                # File might have been removed; keep placeholder
-                size_str = "—"
-
+    # FIX 2: Corrected indentation on the for loop (was indented with extra spaces)
+    for subject_name, semester, year, file_url, exam_type in rows:
         papers.append(
             {
                 "subject": subject_name,
@@ -289,8 +265,7 @@ def view_papers():
                 "semester": semester,
                 "department": "",
                 "examType": exam_type or "—",
-                "file_path": file_path,
-                "size": size_str,
+                "file_url": file_url,
             }
         )
 
@@ -301,10 +276,9 @@ def view_papers():
     return render_template("view.html", papers=papers, subjects=subjects, years=years)
 
 
-@app.route("/uploads/<path:filename>")
-def uploaded_file(filename):
-    uploads_dir = os.path.join(app.root_path, "uploads")
-    return send_from_directory(uploads_dir, filename, as_attachment=True)
+# FIX 3: REMOVED /uploads/<path:filename> route entirely
+# Supabase serves files directly via HTTPS public URLs — no local serving needed.
+
 
 if __name__ == "__main__":
     app.run(debug=True)
