@@ -40,7 +40,7 @@
                             {% if session.get('role') == 'admin' %}
                             <li><a href="{{ url_for('upload_page') }}" class="nav-link">Upload</a></li>
                             {% endif %}
-                            <li><a href="#" class="nav-link">About</a></li>
+                            <li><a href="{{ url_for('about') }}" class="nav-link">About</a></li>
                         </ul>
                     </nav>
                 </div>
