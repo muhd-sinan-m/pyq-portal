@@ -322,7 +322,9 @@ def view_papers():
     finally:
         cur.close()
         conn.close()
-
+@app.route("/about")
+def about():
+    return render_template("about.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
