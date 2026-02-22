@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - PYQ Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* ---- ABOUT PAGE SPECIFIC ---- */
+
+        /* Hero */
+        .about-hero {
+            position: relative;
+            padding: 5rem 0 4rem;
+            background: linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(124,58,237,0.05) 100%);
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero-bg-lines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .hero-bg-lines span {
+            position: absolute;
+            background: var(--primary-blue);
+            opacity: 0.05;
+            animation: lineDrift 10s ease-in-out infinite;
+        }
+
+        .hero-bg-lines span:nth-child(1) { width: 1px; height: 100%; left: 20%; animation-delay: 0s; }
+        .hero-bg-lines span:nth-child(2) { width: 1px; height: 100%; left: 50%; animation-delay: 2s; }
+        .hero-bg-lines span:nth-child(3) { width: 1px; height: 100%; left: 80%; animation-delay: 4s; }
+        .hero-bg-lines span:nth-child(4) { width: 100%; height: 1px; top: 35%; animation-delay: 1s; }
+        .hero-bg-lines span:nth-child(5) { width: 100%; height: 1px; top: 70%; animation-delay: 3s; }
+
+        @keyframes lineDrift {
+            0%, 100% { opacity: 0.04; }
+            50% { opacity: 0.10; }
+        }
+
+        .about-hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .about-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.25rem;
+            background: white;
+            border-radius: 2rem;
+            box-shadow: var(--shadow-sm);
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeUp 0.7s ease forwards 0.2s;
+        }
+
+        .about-hero-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            line-height: 1.1;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fadeUp 0.8s ease forwards 0.4s;
+        }
+
+        .about-hero-title .gradient-text {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .about-hero-desc {
+            font-size: 1.125rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            max-width: 580px;
+            margin: 0 auto;
+            opacity: 0;
+            animation: fadeUp 0.8s ease forwards 0.6s;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(28px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mission */
+        .mission-section {
+            padding: 5rem 0;
+            background: white;
+        }
+
+        .mission-inner {
+            max-width: 800px;
+        }
+
+        .about-section-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--primary-blue);
+            background: rgba(37,99,235,0.08);
+            padding: 0.35rem 0.85rem;
+            border-radius: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .mission-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(1.5rem, 3vw, 2.25rem);
+            font-weight: 700;
+            line-height: 1.45;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .mission-text .highlight {
+            color: var(--primary-blue);
+        }
+
+        .blue-rule {
+            width: 64px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple));
+            border-radius: 2px;
+            margin: 2rem 0;
+        }
+
+        .mission-body {
+            font-size: 1.0625rem;
+            line-height: 1.85;
+            color: var(--text-secondary);
+        }
+
+        /* Team */
+        .team-section {
+            padding: 5rem 0;
+            background: var(--bg-secondary);
+        }
+
+        .team-intro {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 3rem;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .team-intro-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            max-width: 300px;
+            line-height: 1.7;
+        }
+
+        .dev-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        /* Developer card — dark, matches CTA section vibe */
+        .dev-card {
+            position: relative;
+            background: var(--gray-900);
+            color: white;
+            border-radius: var(--radius-xl);
+            padding: 2.5rem;
+            overflow: hidden;
+            border: 1px solid var(--gray-800);
+            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s;
+        }
+
+        .dev-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        /* Top accent bar */
+        .dev-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple));
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        }
+
+        .dev-card:nth-child(2)::before {
+            background: linear-gradient(90deg, var(--primary-purple), var(--accent-cyan));
+        }
+
+        /* Glow blob */
+        .dev-card .blob {
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            filter: blur(70px);
+            opacity: 0.07;
+            right: -60px;
+            bottom: -60px;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .dev-card:nth-child(1) .blob { background: var(--primary-blue); }
+        .dev-card:nth-child(2) .blob { background: var(--primary-purple); }
+
+        .dev-card:hover .blob { opacity: 0.15; }
+
+        .dev-index {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gray-500);
+            margin-bottom: 2rem;
+            display: block;
+        }
+
+        .dev-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .dev-card:nth-child(2) .dev-avatar {
+            background: linear-gradient(135deg, var(--primary-purple), var(--accent-cyan));
+        }
+
+        .dev-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.625rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0.375rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .dev-name em {
+            font-style: normal;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .dev-card:nth-child(2) .dev-name em {
+            background: linear-gradient(90deg, var(--primary-purple), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .dev-role {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--gray-500);
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .dev-divider {
+            width: 36px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple));
+            border-radius: 2px;
+            margin-bottom: 1.25rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .dev-card:nth-child(2) .dev-divider {
+            background: linear-gradient(90deg, var(--primary-purple), var(--accent-cyan));
+        }
+
+        .dev-bio {
+            font-size: 0.9375rem;
+            line-height: 1.75;
+            color: var(--gray-400);
+            position: relative;
+            z-index: 1;
+            margin-bottom: 1.5rem;
+        }
+
+        .dev-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .skill-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.3rem 0.75rem;
+            border-radius: 2rem;
+            background: rgba(255,255,255,0.06);
+            color: var(--gray-400);
+            border: 1px solid rgba(255,255,255,0.08);
+            letter-spacing: 0.03em;
+        }
+
+        /* College section */
+        .college-section {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-purple) 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .college-inner {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .college-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            opacity: 0.75;
+            display: block;
+            margin-bottom: 1.25rem;
+        }
+
+        .college-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 0.75rem;
+        }
+
+        .college-subtitle {
+            font-size: 1rem;
+            opacity: 0.75;
+            margin-bottom: 2.5rem;
+        }
+
+        .college-badges {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .college-badge {
+            padding: 0.5rem 1.25rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 2rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.85);
+            letter-spacing: 0.04em;
+        }
+
+        /* Scroll reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(36px);
+            transition: opacity 0.75s ease, transform 0.75s ease;
+        }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-36px);
+            transition: opacity 0.75s ease, transform 0.75s ease;
+        }
+
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(36px);
+            transition: opacity 0.75s ease, transform 0.75s ease;
+        }
+
+        .reveal.visible,
+        .reveal-left.visible,
+        .reveal-right.visible {
+            opacity: 1;
+            transform: translate(0);
+        }
+
+        /* Stagger delays for cards */
+        .dev-card:nth-child(1) { transition-delay: 0s; }
+        .dev-card:nth-child(2) { transition-delay: 0.15s; }
+
+        @media (max-width: 768px) {
+            .dev-cards { grid-template-columns: 1fr; }
+            .team-intro { flex-direction: column; align-items: flex-start; }
+            .team-intro-text { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== HEADER ==================== -->
+    <header class="main-header">
+        <div class="header-top">
+            <div class="container-fluid">
+                <div class="header-top-content">
+                    <div class="university-info">
+                        <span class="university-name">Marian College Kuttikkanam PYQ Portal</span>
+                        <span class="separator">•</span>
+                    </div>
+                    <div class="header-links">
+                        <a href="#" class="header-link">Help</a>
+                        <a href="mailto:lmsinan772@gmail.com" class="header-link">Contact</a>
+                        {% if session.get('user_id') %}
+                            <span class="header-link">{{ session.username }}</span>
+                            <a href="{{ url_for('logout') }}" class="header-link">Logout</a>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="header-link">Login</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-main">
+            <div class="container-fluid">
+                <div class="header-main-content">
+                    <div class="logo-section">
+                        <div class="logo-icon">
+                            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="40" height="40" rx="8" fill="url(#grad)"/>
+                                <path d="M12 14h16v2H12v-2zm0 5h16v2H12v-2zm0 5h10v2H12v-2z" fill="white"/>
+                                <defs>
+                                    <linearGradient id="grad" x1="0" y1="0" x2="40" y2="40">
+                                        <stop offset="0%" stop-color="#2563EB"/>
+                                        <stop offset="100%" stop-color="#7C3AED"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <div class="logo-text">
+                            <h1 class="logo-title">PYQ Portal</h1>
+                            <p class="logo-subtitle">Previous Year Question Papers</p>
+                        </div>
+                    </div>
+
+                    <nav class="main-nav">
+                        <ul class="nav-list">
+                            <li><a href="{{ url_for('home') }}" class="nav-link">Home</a></li>
+                            <li><a href="{{ url_for('view_papers') }}" class="nav-link">Browse Papers</a></li>
+                            {% if session.get('role') == 'admin' %}
+                            <li><a href="{{ url_for('upload_page') }}" class="nav-link">Upload</a></li>
+                            {% endif %}
+                            <li><a href="{{ url_for('about') }}" class="nav-link active">About</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== PAGE HEADER ==================== -->
+    <section class="page-header">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="{{ url_for('home') }}">Home</a>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-current">About</span>
+            </div>
+            <h1 class="page-title">About the Portal</h1>
+            <p class="page-description">Meet the team behind PYQ Portal and learn about our mission</p>
+        </div>
+    </section>
+
+    <!-- ==================== HERO ==================== -->
+    <section class="about-hero">
+        <div class="hero-bg-lines">
+            <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="about-hero-content">
+            <div class="about-hero-badge">
+                ✦ &nbsp; Marian College Kuttikkanam
+            </div>
+            <h2 class="about-hero-title">
+                Built by students,<br>
+                <span class="gradient-text">for students.</span>
+            </h2>
+            <p class="about-hero-desc">
+                A free, fast, and always-available archive of previous year question papers — designed to make every student's exam preparation a little easier.
+            </p>
+        </div>
+    </section>
+
+    <!-- ==================== MISSION ==================== -->
+    <section class="mission-section">
+        <div class="container">
+            <div class="mission-inner">
+                <span class="about-section-tag reveal">01 — Our Mission</span>
+                <p class="mission-text reveal">
+                    We believe every student deserves access to <span class="highlight">quality study resources</span> — without barriers, without cost.
+                </p>
+                <div class="blue-rule reveal"></div>
+                <p class="mission-body reveal">
+                    The PYQ Portal was born from a simple frustration: previous year question papers were scattered, hard to find, and often unavailable when students needed them most. We built this to change that — a clean, fast, and always-available archive for Marian College students across all departments and semesters.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== TEAM ==================== -->
+    <section class="team-section">
+        <div class="container">
+            <div class="team-intro">
+                <div>
+                    <span class="about-section-tag reveal">02 — The Team</span>
+                    <h2 class="section-title reveal" style="margin-top: 0.75rem;">Meet the<br>Developers</h2>
+                </div>
+                <p class="team-intro-text reveal-right">
+                    Two developers. One shared goal. A portal that makes every student's academic journey a little easier.
+                </p>
+            </div>
+
+            <div class="dev-cards">
+                <!-- Developer 1 -->
+                <div class="dev-card reveal-left">
+                    <div class="blob"></div>
+                    <span class="dev-index">01 / Developer</span>
+                    <div class="dev-avatar">MS</div>
+                    <h3 class="dev-name">Muhammed <em>Sinan M</em></h3>
+                    <p class="dev-role">Full Stack Developer &amp; Architect</p>
+                    <div class="dev-divider"></div>
+                    <p class="dev-bio">
+                        The driving force behind PYQ Portal. Muhammed Sinan designed and built the entire system — from the Flask backend and MySQL database to Supabase storage integration and deployment on Render. Passionate about building tools that genuinely solve student problems.
+                    </p>
+                    <div class="dev-skills">
+                        <span class="skill-tag">Python</span>
+                        <span class="skill-tag">Flask</span>
+                        <span class="skill-tag">MySQL</span>
+                        <span class="skill-tag">Supabase</span>
+                        <span class="skill-tag">HTML / CSS</span>
+                    </div>
+                </div>
+
+                <!-- Developer 2 -->
+                <div class="dev-card reveal-right">
+                    <div class="blob"></div>
+                    <span class="dev-index">02 / Developer</span>
+                    <div class="dev-avatar">DG</div>
+                    <h3 class="dev-name">Daniel <em>George VM</em></h3>
+                    <p class="dev-role">Frontend Developer &amp; UI Designer</p>
+                    <div class="dev-divider"></div>
+                    <p class="dev-bio">
+                        The creative eye behind PYQ Portal's interface. Daniel crafted the user experience and visual design, ensuring the portal is intuitive, accessible, and beautiful across all devices. Dedicated to making technology feel human and approachable for every student.
+                    </p>
+                    <div class="dev-skills">
+                        <span class="skill-tag">UI Design</span>
+                        <span class="skill-tag">JavaScript</span>
+                        <span class="skill-tag">CSS</span>
+                        <span class="skill-tag">UX</span>
+                        <span class="skill-tag">Figma</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== COLLEGE ==================== -->
+    <section class="college-section">
+        <div class="college-inner">
+            <span class="college-label reveal">✦ Made with pride at</span>
+            <h2 class="college-name reveal">Marian College<br>Kuttikkanam</h2>
+            <p class="college-subtitle reveal">Autonomous College · Kerala, India</p>
+            <div class="college-badges reveal">
+                <span class="college-badge">Est. 1995</span>
+                <span class="college-badge">NAAC Accredited</span>
+                <span class="college-badge">Kerala, India</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <div class="footer-logo">
+                        <h3>PYQ Portal</h3>
+                        <p>Academic Excellence Through Collaboration</p>
+                    </div>
+                    <p class="footer-copyright">
+                        © 2024 University Academic Portal. All rights reserved.
+                    </p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <ul>
+                            <li><a href="{{ url_for('view_papers') }}">Browse Papers</a></li>
+                            {% if session.get('role') == 'admin' %}
+                            <li><a href="{{ url_for('upload_page') }}">Upload Papers</a></li>
+                            {% endif %}
+                            <li><a href="#">Guidelines</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Support</h4>
+                        <ul>
+                            <li><a href="#">Help Center</a></li>
+                            <li><a href="mailto:lmsinan772@gmail.com">Contact Us</a></li>
+                            <li><a href="#">FAQ</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Legal</h4>
+                        <ul>
+                            <li><a href="#">Privacy Policy</a></li>
+                            <li><a href="#">Terms of Service</a></li>
+                            <li><a href="#">Disclaimer</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Scroll reveal
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) e.target.classList.add('visible');
+            });
+        }, { threshold: 0.12 });
+
+        document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => {
+            observer.observe(el);
+        });
+
+        // 3D card tilt on hover
+        document.querySelectorAll('.dev-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width - 0.5;
+                const y = (e.clientY - rect.top) / rect.height - 0.5;
+                card.style.transform = `translateY(-6px) rotateX(${-y * 5}deg) rotateY(${x * 5}deg)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+            });
+        });
+    </script>
+</body>
+</html>
