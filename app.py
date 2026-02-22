@@ -1,7 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import os
-import re
-import time
 import mysql.connector
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -11,62 +9,161 @@ import uuid
 
 
 app = Flask(__name__)
+
+# ---------- Supabase ----------
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET")
 
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError("SUPABASE_URL and SUPABASE_KEY must be set as environment variables")
+
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')
-db = mysql.connector.connect(
-    host=os.environ.get("DB_HOST"),
-    user=os.environ.get("DB_USER"),
-    password=os.environ.get("DB_PASSWORD"),
-    database=os.environ.get("DB_NAME"),
-    port=int(os.environ.get("DB_PORT", 3306))
-)
-cursor = db.cursor()
 
-# ensure user table exists
-cursor.execute(
-    """
-    CREATE TABLE IF NOT EXISTS users (
-        user_id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(100) UNIQUE NOT NULL,
-        password_hash VARCHAR(255) NOT NULL,
-        role VARCHAR(20) NOT NULL DEFAULT 'user'
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    """
-)
-db.commit()
 
-# --------------------------------------------------
-# user authentication helpers
-# --------------------------------------------------
+# ---------- DB helpers ----------
+
+def get_db():
+    """Return a fresh MySQL connection every time."""
+    return mysql.connector.connect(
+        host=os.environ.get("DB_HOST"),
+        user=os.environ.get("DB_USER"),
+        password=os.environ.get("DB_PASSWORD"),
+        database=os.environ.get("DB_NAME"),
+        port=int(os.environ.get("DB_PORT", 3306))
+    )
+
+
+def init_db():
+    """Create tables and default admin on first run."""
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(100) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                role VARCHAR(20) NOT NULL DEFAULT 'user'
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """)
+        conn.commit()
+
+        cur.execute("SELECT COUNT(*) FROM users")
+        count = cur.fetchone()[0] or 0
+        if count == 0:
+            default_username = os.environ.get('ADMIN_USER', 'admin')
+            default_password = os.environ.get('ADMIN_PASS', 'admin123')
+            hash_val = generate_password_hash(default_password)
+            cur.execute(
+                "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, %s)",
+                (default_username, hash_val, 'admin')
+            )
+            conn.commit()
+            print(f"Created default admin account: {default_username}")
+    finally:
+        cur.close()
+        conn.close()
+
+
+init_db()
+
+
+# ---------- Auth helpers ----------
 
 def get_user_by_username(username):
-    cursor.execute("SELECT user_id, username, password_hash, role FROM users WHERE username = %s", (username,))
-    return cursor.fetchone()
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "SELECT user_id, username, password_hash, role FROM users WHERE username = %s",
+            (username,)
+        )
+        return cur.fetchone()
+    finally:
+        cur.close()
+        conn.close()
 
 
 def create_user(username, password, role="user"):
-    """Helper to create a new user; password will be hashed."""
     hash_val = generate_password_hash(password)
-    with db.cursor() as cur:
+    conn = get_db()
+    cur = conn.cursor()
+    try:
         cur.execute(
             "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, %s)",
-            (username, hash_val, role),
+            (username, hash_val, role)
         )
-    db.commit()
+        conn.commit()
+    finally:
+        cur.close()
+        conn.close()
 
-# create a default administrator account if the table is empty
-cursor.execute("SELECT COUNT(*) FROM users")
-count = cursor.fetchone()[0] or 0
-if count == 0:
-    default_username = os.environ.get('ADMIN_USER', 'admin')
-    default_password = os.environ.get('ADMIN_PASS', 'admin123')
-    create_user(default_username, default_password, role='admin')
-    print(f"created default admin account {default_username}/{default_password}")
 
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if session.get('role') != 'admin':
+            flash('Administrator access required to view that page.')
+            return redirect(url_for('home'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ---------- Utility ----------
+
+ALLOWED_EXTENSIONS = {"pdf"}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def format_file_size(bytes_size):
+    if bytes_size is None or bytes_size == 0:
+        return "0 B"
+    for unit in ("B", "KB", "MB", "GB"):
+        if bytes_size < 1024:
+            n = round(bytes_size, 1)
+            s = str(int(n)) if n == int(n) else f"{n:.1f}"
+            return f"{s} {unit}"
+        bytes_size /= 1024
+    return f"{round(bytes_size, 1)} TB"
+
+
+def get_subjects():
+    """Return fresh list of subjects from DB every time — always up to date."""
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        try:
+            cur.execute(
+                "SELECT subject_id, subject_name, semester FROM subjects ORDER BY semester, subject_name"
+            )
+            rows = cur.fetchall()
+            return [{"subject_id": r[0], "subject_name": r[1], "semester": r[2]} for r in rows]
+        except Exception:
+            cur.execute(
+                "SELECT subject_id, subject_name FROM subjects ORDER BY subject_name"
+            )
+            rows = cur.fetchall()
+            return [{"subject_id": r[0], "subject_name": r[1], "semester": None} for r in rows]
+    finally:
+        cur.close()
+        conn.close()
+
+
+# ---------- Routes ----------
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -94,72 +191,21 @@ def logout():
     session.clear()
     return redirect(url_for("home"))
 
-# --------------------------------------------------
 
 @app.route("/")
 def home():
+    paper_count = 0
+    conn = get_db()
+    cur = conn.cursor()
     try:
-        cursor.execute("SELECT COUNT(*) FROM question_papers")
-        paper_count = cursor.fetchone()[0] or 0
+        cur.execute("SELECT COUNT(*) FROM question_papers")
+        paper_count = cur.fetchone()[0] or 0
     except Exception:
-        paper_count = 0
+        pass
+    finally:
+        cur.close()
+        conn.close()
     return render_template("index.html", paper_count=paper_count)
-
-
-ALLOWED_EXTENSIONS = {"pdf"}
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def format_file_size(bytes_size):
-    """Format bytes as human-readable size (e.g. 1.5 MB)."""
-    if bytes_size is None or bytes_size == 0:
-        return "0 B"
-    for unit in ("B", "KB", "MB", "GB"):
-        if bytes_size < 1024:
-            n = round(bytes_size, 1)
-            s = str(int(n)) if n == int(n) else f"{n:.1f}"
-            return f"{s} {unit}"
-        bytes_size /= 1024
-    return f"{round(bytes_size, 1)} TB"
-
-
-def get_subjects():
-    """Return list of dicts: subject_id, subject_name, semester (if column exists)."""
-    try:
-        cursor.execute(
-            "SELECT subject_id, subject_name, semester FROM subjects ORDER BY semester, subject_name"
-        )
-        rows = cursor.fetchall()
-        return [{"subject_id": r[0], "subject_name": r[1], "semester": r[2]} for r in rows]
-    except Exception:
-        cursor.execute("SELECT subject_id, subject_name FROM subjects ORDER BY subject_name")
-        rows = cursor.fetchall()
-        return [{"subject_id": r[0], "subject_name": r[1], "semester": None} for r in rows]
-
-
-# -------- authentication helpers --------
-
-def login_required(f):
-    """Decorator to ensure a user is logged in; redirects to login page if not."""
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('login', next=request.url))
-        return f(*args, **kwargs)
-    return decorated
-
-
-def admin_required(f):
-    """Decorator that allows only users with role 'admin'."""
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if session.get('role') != 'admin':
-            flash('Administrator access required to view that page.')
-            return redirect(url_for('home'))
-        return f(*args, **kwargs)
-    return decorated
 
 
 @app.route("/upload", methods=["GET", "POST"])
@@ -167,9 +213,10 @@ def admin_required(f):
 @admin_required
 def upload_page():
     if request.method == "POST":
-        # FIX 1: Removed unused file_path_abs variable
+        conn = get_db()
+        cur = conn.cursor()
         try:
-            # Subject must be from subjects table (dropdown sends subject_id)
+            # Subject
             subject_raw = request.form.get("subject_id")
             if not subject_raw or subject_raw.strip() == "":
                 return render_template("upload.html", error="Subject is required", subjects=get_subjects())
@@ -178,9 +225,11 @@ def upload_page():
             except ValueError:
                 return render_template("upload.html", error="Invalid subject", subjects=get_subjects())
 
-            # Ensure subject exists in subjects table
-            cursor.execute("SELECT subject_id, subject_name FROM subjects WHERE subject_id = %s", (subject_id,))
-            row = cursor.fetchone()
+            cur.execute(
+                "SELECT subject_id, subject_name FROM subjects WHERE subject_id = %s",
+                (subject_id,)
+            )
+            row = cur.fetchone()
             if not row:
                 return render_template("upload.html", error="Subject not found. Please choose from the list.", subjects=get_subjects())
             subject_id, subject_name = row[0], row[1]
@@ -194,6 +243,7 @@ def upload_page():
             except (ValueError, TypeError) as exc:
                 return render_template("upload.html", error=f"Invalid year: {exc}", subjects=get_subjects())
 
+            # File
             file = request.files.get("file")
             if not file or not file.filename:
                 return render_template("upload.html", error="No file provided", subjects=get_subjects())
@@ -202,7 +252,7 @@ def upload_page():
 
             exam_type = request.form.get("examType") or request.form.get("exam_type") or ""
 
-            # FIX 1: Supabase upload block is now correctly indented inside try:
+            # Upload to Supabase Storage
             file_ext = file.filename.rsplit(".", 1)[1].lower()
             unique_name = f"{subject_id}/{year_int}/{uuid.uuid4()}.{file_ext}"
 
@@ -214,70 +264,64 @@ def upload_page():
 
             file_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(unique_name)
 
-            # FIX 1: DB insert block is now correctly indented inside try:
-            with db.cursor() as cur:
-                cur.execute(
-                    """
-                    INSERT INTO question_papers
-                    (subject_id, year, file_name, file_url, exam_type)
-                    VALUES (%s, %s, %s, %s, %s)
-                    """,
-                    (subject_id, year_int, file.filename, file_url, exam_type),
-                )
-            db.commit()
+            # Save record to MySQL
+            cur.execute(
+                """
+                INSERT INTO question_papers
+                (subject_id, year, file_name, file_url, exam_type)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (subject_id, year_int, file.filename, file_url, exam_type),
+            )
+            conn.commit()
 
             flash("Your question paper has been uploaded successfully.")
             return redirect(url_for("upload_page"))
 
         except Exception as e:
-            db.rollback()
+            conn.rollback()
             app.logger.exception("Upload failed")
-            # FIX 1: Removed useless file_path_abs local file cleanup (Supabase handles storage)
             return render_template("upload.html", error=str(e), subjects=get_subjects())
+        finally:
+            cur.close()
+            conn.close()
 
     return render_template("upload.html", subjects=get_subjects())
 
 
 @app.route("/papers")
 def view_papers():
-    """
-    List available question papers using the fixed question_papers schema:
-    paper_id, subject_id, year, file_name, file_url, upload_date.
-    Semester comes from the subjects table.
-    """
+    conn = get_db()
+    cur = conn.cursor()
     papers = []
-    cursor.execute(
-        """
-        SELECT s.subject_name, s.semester, q.year, q.file_url, q.exam_type
-        FROM question_papers q
-        JOIN subjects s ON q.subject_id = s.subject_id
-        ORDER BY q.year DESC, s.subject_name
-        """
-    )
-    rows = cursor.fetchall()
-
-    # FIX 2: Corrected indentation on the for loop (was indented with extra spaces)
-    for subject_name, semester, year, file_url, exam_type in rows:
-        papers.append(
-            {
+    try:
+        cur.execute(
+            """
+            SELECT s.subject_name, s.semester, q.year, q.file_url, q.exam_type
+            FROM question_papers q
+            JOIN subjects s ON q.subject_id = s.subject_id
+            ORDER BY q.year DESC, s.subject_name
+            """
+        )
+        rows = cur.fetchall()
+        for subject_name, semester, year, file_url, exam_type in rows:
+            papers.append({
                 "subject": subject_name,
                 "year": year,
                 "semester": semester,
                 "department": "",
                 "examType": exam_type or "—",
                 "file_url": file_url,
-            }
-        )
-
-    # Filters: load all subjects from subjects table (not only those with papers)
-    subjects = get_subjects()
-    years = sorted({p["year"] for p in papers}, reverse=True) if papers else []
-
-    return render_template("view.html", papers=papers, subjects=subjects, years=years)
-
-
-# FIX 3: REMOVED /uploads/<path:filename> route entirely
-# Supabase serves files directly via HTTPS public URLs — no local serving needed.
+            })
+        subjects = get_subjects()
+        years = sorted({p["year"] for p in papers}, reverse=True) if papers else []
+        return render_template("view.html", papers=papers, subjects=subjects, years=years)
+    except Exception as e:
+        app.logger.exception("Failed to load papers")
+        return f"Database error: {e}", 500
+    finally:
+        cur.close()
+        conn.close()
 
 
 if __name__ == "__main__":
