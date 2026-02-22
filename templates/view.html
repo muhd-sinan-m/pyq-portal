@@ -18,11 +18,11 @@
                     <div class="university-info">
                         <span class="university-name">Marian College Kuttikkanam PYQ Portal</span>
                         <span class="separator">•</span>
-                
                     </div>
                     <div class="header-links">
                         <a href="#" class="header-link">Help</a>
-                        <a mailto="lmsinan772@gmail.com" class="header-link">Contact</a>
+                        <!-- FIX 1: Changed mailto="..." to href="mailto:..." -->
+                        <a href="mailto:lmsinan772@gmail.com" class="header-link">Contact</a>
                         {% if session.get('user_id') %}
                             <span class="header-link">{{ session.username }}</span>
                             <a href="{{ url_for('logout') }}" class="header-link">Logout</a>
@@ -249,6 +249,7 @@
         </div>
     </footer>
 
+    <!-- FIX 2: Pass papers with file_url to JavaScript (was already correct, keeping as-is) -->
     <script>window.PAPERS_FROM_BACKEND = {{ (papers | default([])) | tojson }};</script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
