@@ -11,7 +11,6 @@
     <style>
         /* ---- ABOUT PAGE SPECIFIC ---- */
 
-        /* Hero */
         .about-hero {
             position: relative;
             padding: 5rem 0 4rem;
@@ -42,7 +41,7 @@
 
         @keyframes lineDrift {
             0%, 100% { opacity: 0.04; }
-            50% { opacity: 0.10; }
+            50%       { opacity: 0.10; }
         }
 
         .about-hero-content {
@@ -124,12 +123,7 @@
             border-radius: 2rem;
             margin-bottom: 1.5rem;
         }
-        .dev-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-}
+
         .mission-text {
             font-family: 'Space Grotesk', sans-serif;
             font-size: clamp(1.5rem, 3vw, 2.25rem);
@@ -139,9 +133,7 @@
             margin-bottom: 1.5rem;
         }
 
-        .mission-text .highlight {
-            color: var(--primary-blue);
-        }
+        .mission-text .highlight { color: var(--primary-blue); }
 
         .blue-rule {
             width: 64px;
@@ -185,7 +177,6 @@
             gap: 2rem;
         }
 
-        /* Developer card — dark, matches CTA section vibe */
         .dev-card {
             position: relative;
             background: var(--gray-900);
@@ -202,7 +193,6 @@
             box-shadow: var(--shadow-xl);
         }
 
-        /* Top accent bar */
         .dev-card::before {
             content: '';
             position: absolute;
@@ -216,7 +206,6 @@
             background: linear-gradient(90deg, var(--primary-purple), var(--accent-cyan));
         }
 
-        /* Glow blob */
         .dev-card .blob {
             position: absolute;
             width: 260px;
@@ -232,7 +221,6 @@
 
         .dev-card:nth-child(1) .blob { background: var(--primary-blue); }
         .dev-card:nth-child(2) .blob { background: var(--primary-purple); }
-
         .dev-card:hover .blob { opacity: 0.15; }
 
         .dev-index {
@@ -241,36 +229,39 @@
             letter-spacing: 0.1em;
             text-transform: uppercase;
             color: var(--gray-500);
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             display: block;
         }
 
+        /* ---- AVATAR IMAGE ---- */
         .dev-avatar {
-            width: 80px;
-            height: 80px;
+            width: 88px;
+            height: 88px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: white;
+            overflow: hidden;
             margin-bottom: 1.5rem;
             position: relative;
             z-index: 1;
             flex-shrink: 0;
-            letter-spacing: 0.04em;
             box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
-            /* Ring around avatar */
-            outline: 3px solid rgba(255,255,255,0.08);
+            outline: 3px solid rgba(255,255,255,0.10);
             outline-offset: 3px;
+            /* fallback gradient shown if image fails to load */
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
         }
 
         .dev-card:nth-child(2) .dev-avatar {
-            background: linear-gradient(135deg, var(--primary-purple), var(--accent-cyan));
             box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
+            background: linear-gradient(135deg, var(--primary-purple), var(--accent-cyan));
+        }
+
+        .dev-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+            display: block;
+            border-radius: 50%;
         }
 
         .dev-name {
@@ -432,7 +423,6 @@
             transform: translate(0);
         }
 
-        /* Stagger delays for cards */
         .dev-card:nth-child(1) { transition-delay: 0s; }
         .dev-card:nth-child(2) { transition-delay: 0.15s; }
 
@@ -456,7 +446,7 @@
                     </div>
                     <div class="header-links">
                         <a href="#" class="header-link">Help</a>
-                        <a href="/cdn-cgi/l/email-protection#264a4b554f48474811111466414b474f4a0845494b" class="header-link">Contact</a>
+                        <a href="mailto:lmsinan772@gmail.com" class="header-link">Contact</a>
                         {% if session.get('user_id') %}
                             <span class="header-link">{{ session.username }}</span>
                             <a href="{{ url_for('logout') }}" class="header-link">Logout</a>
@@ -567,11 +557,13 @@
             </div>
 
             <div class="dev-cards">
-                <!-- Developer 1 -->
+
+                <!-- Developer 1 — Muhammed Sinan M -->
                 <div class="dev-card reveal-left">
                     <div class="blob"></div>
                     <span class="dev-index">01 / Developer</span>
-                    <img src="{{ url_for('static', filename='sinan.jpg') }}" alt="Muhammed Sinan M">
+                    <div class="dev-avatar">
+                        <img src="{{ url_for('static', filename='sinan.jpg') }}" alt="Muhammed Sinan M">
                     </div>
                     <h3 class="dev-name">Muhammed <em>Sinan M</em></h3>
                     <p class="dev-role">Full Stack Developer &amp; Architect</p>
@@ -588,14 +580,14 @@
                     </div>
                 </div>
 
-                <!-- Developer 2 -->
+                <!-- Developer 2 — Daniel George VM -->
                 <div class="dev-card reveal-right">
                     <div class="blob"></div>
                     <span class="dev-index">02 / Developer</span>
                     <div class="dev-avatar">
-                    <img src="{{ url_for('static', filename='daniel.jpg') }}" alt="Daniel George V M">
+                        <img src="{{ url_for('static', filename='daniel.jpg') }}" alt="Daniel George VM">
                     </div>
-                    <h3 class="dev-name">Daniel <em>George V M</em></h3>
+                    <h3 class="dev-name">Daniel <em>George VM</em></h3>
                     <p class="dev-role">Frontend Developer &amp; UI Designer</p>
                     <div class="dev-divider"></div>
                     <p class="dev-bio">
@@ -603,11 +595,13 @@
                     </p>
                     <div class="dev-skills">
                         <span class="skill-tag">UI Design</span>
+                        <span class="skill-tag">JavaScript</span>
                         <span class="skill-tag">CSS</span>
                         <span class="skill-tag">UX</span>
                         <span class="skill-tag">Figma</span>
                     </div>
                 </div>
+
             </div>
         </div>
     </section>
@@ -615,7 +609,7 @@
     <!-- ==================== COLLEGE ==================== -->
     <section class="college-section">
         <div class="college-inner">
-            <span class="college-label reveal">✦ Made with pride</span>
+            <span class="college-label reveal">✦ Made with pride at</span>
             <h2 class="college-name reveal">Marian College<br>Kuttikkanam</h2>
             <p class="college-subtitle reveal">Autonomous College · Kerala, India</p>
             <div class="college-badges reveal">
@@ -654,7 +648,7 @@
                         <h4>Support</h4>
                         <ul>
                             <li><a href="#">Help Center</a></li>
-                            <li><a href="/cdn-cgi/l/email-protection#610d0c12080f000f56565321060c00080d4f020e0c">Contact Us</a></li>
+                            <li><a href="mailto:lmsinan772@gmail.com">Contact Us</a></li>
                             <li><a href="#">FAQ</a></li>
                         </ul>
                     </div>
@@ -671,7 +665,7 @@
         </div>
     </footer>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    <script>
         // Scroll reveal
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(e => {
@@ -689,4 +683,12 @@
                 const rect = card.getBoundingClientRect();
                 const x = (e.clientX - rect.left) / rect.width - 0.5;
                 const y = (e.clientY - rect.top) / rect.height - 0.5;
-                card.style.transform = `translateY(-6px) rotateX(${-y * 5}deg) ro
+                card.style.transform = `translateY(-6px) rotateX(${-y * 5}deg) rotateY(${x * 5}deg)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+            });
+        });
+    </script>
+</body>
+</html>
