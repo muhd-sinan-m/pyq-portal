@@ -29,7 +29,8 @@ if (document.getElementById('papersGrid')) {
             const matchSemester = !semesterValue || paper.semester == semesterValue;
             const matchSearch = !searchValue ||
                 (paper.subject && paper.subject.toLowerCase().includes(searchValue)) ||
-                (paper.file_path && paper.file_path.toLowerCase().includes(searchValue)) ||
+                // FIX 2: Changed paper.file_path to paper.file_url for search
+                (paper.file_url && paper.file_url.toLowerCase().includes(searchValue)) ||
                 (paper.examType && paper.examType.toLowerCase().includes(searchValue)) ||
                 (paper.department && paper.department.toLowerCase().includes(searchValue));
             return matchSubject && matchYear && matchSemester && matchSearch;
@@ -48,7 +49,8 @@ if (document.getElementById('papersGrid')) {
             noResults.style.display = 'none';
             
             papersGrid.innerHTML = filteredPapers.map(paper => {
-                const path = (paper.file_path || '').replace(/\\/g, '/');
+                // FIX 3: Removed old local path manipulation (const path = file_path.replace(...))
+                // FIX 1: Download button now uses paper.file_url (Supabase public URL) directly
                 return `
                 <div class="paper-card">
                     <div class="paper-info">
@@ -73,7 +75,7 @@ if (document.getElementById('papersGrid')) {
                             <span class="info-value">${escapeHtml(paper.size || '—')}</span>
                         </div>
                     </div>
-                    <a href="/${path}" class="btn-download" download>
+                    <a href="${escapeHtml(paper.file_url || '')}" class="btn-download" target="_blank" download>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
@@ -116,7 +118,6 @@ if (document.getElementById('papersGrid')) {
             viewBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
-            // In a real implementation, this would change the grid layout
             const view = btn.dataset.view;
             if (view === 'list') {
                 papersGrid.style.gridTemplateColumns = '1fr';
@@ -200,7 +201,7 @@ if (document.getElementById('uploadForm')) {
         }
 
         // Validate file size (10MB max)
-        const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+        const maxSize = 10 * 1024 * 1024;
         if (file.size > maxSize) {
             showError('fileError', 'File size must not exceed 10MB');
             uploadFile.value = '';
