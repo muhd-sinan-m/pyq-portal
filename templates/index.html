@@ -8,17 +8,599 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* ===================== HERO ENHANCEMENTS ===================== */
+
+        .hero-section {
+            position: relative;
+            padding: 6rem 0 5rem;
+            overflow: hidden;
+            min-height: 92vh;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Animated mesh gradient background */
+        .hero-background {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 40%, rgba(37,99,235,0.10) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 60%, rgba(124,58,237,0.08) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 50% 10%, rgba(6,182,212,0.06) 0%, transparent 50%),
+                var(--bg-secondary);
+            animation: meshShift 12s ease-in-out infinite alternate;
+        }
+
+        @keyframes meshShift {
+            0%   { filter: hue-rotate(0deg) brightness(1); }
+            100% { filter: hue-rotate(8deg) brightness(1.02); }
+        }
+
+        /* Floating orbs */
+        .hero-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            pointer-events: none;
+            animation: orbFloat 8s ease-in-out infinite;
+        }
+
+        .hero-orb-1 {
+            width: 400px; height: 400px;
+            background: rgba(37,99,235,0.12);
+            top: -100px; right: -100px;
+            animation-delay: 0s;
+        }
+
+        .hero-orb-2 {
+            width: 300px; height: 300px;
+            background: rgba(124,58,237,0.10);
+            bottom: -50px; left: -80px;
+            animation-delay: 3s;
+        }
+
+        .hero-orb-3 {
+            width: 200px; height: 200px;
+            background: rgba(6,182,212,0.08);
+            top: 40%; left: 60%;
+            animation-delay: 5s;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50%       { transform: translateY(-30px) scale(1.05); }
+        }
+
+        /* Animated grid dots */
+        .hero-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle, rgba(37,99,235,0.15) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.4;
+            mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+            -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+        }
+
+        /* Hero content */
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 820px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        /* Animated badge */
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.25rem;
+            background: white;
+            border-radius: 2rem;
+            box-shadow: var(--shadow-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 2.5rem;
+            border: 1px solid rgba(37,99,235,0.12);
+            opacity: 0;
+            animation: fadeSlideDown 0.7s ease forwards 0.1s;
+        }
+
+        .badge-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
+            animation: pulseDot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+            50%       { box-shadow: 0 0 0 6px rgba(16,185,129,0.1); }
+        }
+
+        .hero-title {
+            font-size: clamp(2.75rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.08;
+            margin-bottom: 1.75rem;
+            color: var(--text-primary);
+            opacity: 0;
+            animation: fadeSlideDown 0.8s ease forwards 0.3s;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-description {
+            font-size: 1.175rem;
+            line-height: 1.75;
+            color: var(--text-secondary);
+            margin-bottom: 2.75rem;
+            max-width: 620px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0;
+            animation: fadeSlideDown 0.8s ease forwards 0.5s;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 4rem;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeSlideDown 0.8s ease forwards 0.65s;
+        }
+
+        /* Pulse ring on primary CTA */
+        .btn-primary-pulse {
+            position: relative;
+        }
+
+        .btn-primary-pulse::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: calc(var(--radius-md) + 4px);
+            border: 2px solid rgba(37,99,235,0.3);
+            animation: ringPulse 2.5s ease-in-out infinite 1.5s;
+            opacity: 0;
+        }
+
+        @keyframes ringPulse {
+            0%   { transform: scale(1);    opacity: 0.8; }
+            100% { transform: scale(1.15); opacity: 0; }
+        }
+
+        /* Stats row */
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2.5rem;
+            padding: 2rem 2.5rem;
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            max-width: 560px;
+            margin: 0 auto;
+            opacity: 0;
+            animation: fadeSlideUp 0.8s ease forwards 0.85s;
+        }
+
+        .stat-item { text-align: center; }
+
+        .stat-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary-blue);
+            line-height: 1;
+            margin-bottom: 0.375rem;
+        }
+
+        .stat-label {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .stat-divider {
+            width: 1px;
+            height: 2.5rem;
+            background: var(--border-color);
+        }
+
+        @keyframes fadeSlideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===================== FEATURES SECTION ===================== */
+        .features-section {
+            padding: 6rem 0;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .features-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary-blue), var(--primary-purple), transparent);
+            opacity: 0.3;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 3.5rem;
+        }
+
+        .section-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--primary-blue);
+            background: rgba(37,99,235,0.08);
+            padding: 0.35rem 0.85rem;
+            border-radius: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .section-subtitle {
+            font-size: 1.0625rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            padding: 2rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-color);
+            transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(37,99,235,0.03), rgba(124,58,237,0.03));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-xl);
+            border-color: rgba(37,99,235,0.25);
+        }
+
+        .feature-card:hover::after { opacity: 1; }
+
+        .feature-icon-wrapper {
+            width: 3.25rem;
+            height: 3.25rem;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover .feature-icon-wrapper {
+            transform: scale(1.1) rotate(-3deg);
+        }
+
+        .feature-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 0.625rem;
+            color: var(--text-primary);
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-size: 0.9375rem;
+        }
+
+        /* ===================== DEPARTMENTS SECTION ===================== */
+        .departments-section {
+            padding: 6rem 0;
+            background: var(--bg-secondary);
+        }
+
+        .dept-card {
+            padding: 2rem;
+            background: white;
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-color);
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dept-card::before {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple));
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .dept-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-xl);
+            border-color: rgba(37,99,235,0.2);
+        }
+
+        .dept-card:hover::before { transform: scaleX(1); }
+
+        .dept-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .dept-card:hover .dept-icon { transform: scale(1.15); }
+
+        .dept-name {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.375rem;
+        }
+
+        .dept-count {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* ===================== CTA SECTION ===================== */
+        .cta-section {
+            padding: 6rem 0;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-purple) 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated CTA background */
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 80% at 10% 50%, rgba(255,255,255,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 40% 60% at 90% 30%, rgba(255,255,255,0.04) 0%, transparent 50%);
+            animation: ctaShimmer 6s ease-in-out infinite alternate;
+        }
+
+        @keyframes ctaShimmer {
+            0%   { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* CTA moving circles */
+        .cta-circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.1);
+            pointer-events: none;
+        }
+
+        .cta-circle-1 {
+            width: 300px; height: 300px;
+            top: -100px; right: 5%;
+            animation: circleRotate 20s linear infinite;
+        }
+
+        .cta-circle-2 {
+            width: 200px; height: 200px;
+            bottom: -60px; left: 8%;
+            animation: circleRotate 15s linear infinite reverse;
+        }
+
+        @keyframes circleRotate {
+            from { transform: rotate(0deg) scale(1); }
+            to   { transform: rotate(360deg) scale(1.1); }
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .cta-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .cta-description {
+            font-size: 1.125rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.9;
+            line-height: 1.7;
+        }
+
+        /* ===================== SCROLL REVEAL ===================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(32px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-32px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal-left.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Stagger feature cards */
+        .feature-card:nth-child(1) { transition-delay: 0s; }
+        .feature-card:nth-child(2) { transition-delay: 0.1s; }
+        .feature-card:nth-child(3) { transition-delay: 0.2s; }
+        .feature-card:nth-child(4) { transition-delay: 0.3s; }
+
+        /* ===================== FLOATING PAPER ELEMENTS ===================== */
+        .floating-papers {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .floating-paper {
+            position: absolute;
+            width: 48px; height: 60px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            opacity: 0;
+            animation: paperFloat 0.6s ease forwards;
+        }
+
+        .floating-paper::before {
+            content: '';
+            position: absolute;
+            top: 10px; left: 8px; right: 8px;
+            height: 2px;
+            background: var(--gray-200);
+            border-radius: 1px;
+            box-shadow: 0 5px 0 var(--gray-200), 0 10px 0 var(--gray-200), 0 15px 0 var(--gray-200);
+        }
+
+        .floating-paper:nth-child(1) {
+            top: 15%; left: 8%;
+            transform: rotate(-12deg);
+            animation-delay: 1s;
+        }
+        .floating-paper:nth-child(2) {
+            top: 25%; right: 10%;
+            transform: rotate(8deg);
+            animation-delay: 1.2s;
+        }
+        .floating-paper:nth-child(3) {
+            bottom: 20%; left: 6%;
+            transform: rotate(6deg);
+            animation-delay: 1.4s;
+        }
+        .floating-paper:nth-child(4) {
+            bottom: 30%; right: 7%;
+            transform: rotate(-10deg);
+            animation-delay: 1.6s;
+        }
+
+        @keyframes paperFloat {
+            0%   { opacity: 0; transform: translateY(20px) rotate(var(--r, 0deg)); }
+            100% { opacity: 0.6; transform: translateY(0) rotate(var(--r, 0deg)); }
+        }
+
+        /* hover float effect */
+        .floating-paper:nth-child(1) { animation: paperFloat 0.6s ease forwards 1s, floatUp1 6s ease-in-out infinite 1.6s; }
+        .floating-paper:nth-child(2) { animation: paperFloat 0.6s ease forwards 1.2s, floatUp2 7s ease-in-out infinite 1.8s; }
+        .floating-paper:nth-child(3) { animation: paperFloat 0.6s ease forwards 1.4s, floatUp1 8s ease-in-out infinite 2s; }
+        .floating-paper:nth-child(4) { animation: paperFloat 0.6s ease forwards 1.6s, floatUp2 5s ease-in-out infinite 2.2s; }
+
+        @keyframes floatUp1 {
+            0%, 100% { transform: translateY(0) rotate(-12deg); }
+            50%       { transform: translateY(-12px) rotate(-12deg); }
+        }
+        @keyframes floatUp2 {
+            0%, 100% { transform: translateY(0) rotate(8deg); }
+            50%       { transform: translateY(-10px) rotate(8deg); }
+        }
+
+        @media (max-width: 768px) {
+            .floating-paper { display: none; }
+            .hero-stats { gap: 1.5rem; padding: 1.5rem; }
+            .hero-section { min-height: auto; padding: 4rem 0 3rem; }
+        }
+    </style>
 </head>
 <body>
+
     <!-- ==================== HEADER ==================== -->
     <header class="main-header">
         <div class="header-top">
             <div class="container-fluid">
                 <div class="header-top-content">
-                   
-                    <div class="header-links">
-                        <a href="#" class="header-link">Help</a>
-                        <a href="#" class="header-link">Contact</a>
+                    <div class="header-marquee-wrap">
+                        <div class="header-marquee">
+                            <span>✦ Marian College Kuttikkanam</span>
+                            <span class="hm-sep">·</span>
+                            <span>Previous Year Question Papers</span>
+                            <span class="hm-sep">·</span>
+                            <span>Free &amp; Always Available</span>
+                            <span class="hm-sep">·</span>
+                            <span>✦ Marian College Kuttikkanam</span>
+                            <span class="hm-sep">·</span>
+                            <span>Previous Year Question Papers</span>
+                            <span class="hm-sep">·</span>
+                            <span>Free &amp; Always Available</span>
+                            <span class="hm-sep">·</span>
+                        </div>
+                    </div>
+                    <div class="header-links" style="flex-shrink:0;">
+                        <button class="header-link hdr-popup-btn" onclick="openPopup('help')">Help</button>
+                        <button class="header-link hdr-popup-btn" onclick="openPopup('contact')">Contact</button>
                         {% if session.get('user_id') %}
                             <span class="header-link">{{ session.username }}</span>
                             <a href="{{ url_for('logout') }}" class="header-link">Logout</a>
@@ -29,21 +611,29 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="header-main">
             <div class="container-fluid">
                 <div class="header-main-content">
                     <div class="logo-section">
                         <div class="logo-icon">
                             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect width="40" height="40" rx="8" fill="url(#gradient)"/>
-                                <path d="M12 14h16v2H12v-2zm0 5h16v2H12v-2zm0 5h10v2H12v-2z" fill="white"/>
+                                <!-- Abstract open book / knowledge mark -->
                                 <defs>
-                                    <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
-                                        <stop offset="0%" stop-color="#2563EB"/>
-                                        <stop offset="100%" stop-color="#7C3AED"/>
+                                    <linearGradient id="lgMark" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#3B82F6"/>
+                                        <stop offset="100%" stop-color="#8B5CF6"/>
                                     </linearGradient>
                                 </defs>
+                                <!-- Left page -->
+                                <path d="M20 10 C14 10 8 12 8 14 L8 30 C8 30 14 28 20 30 Z" fill="url(#lgMark)" opacity="0.9"/>
+                                <!-- Right page -->
+                                <path d="M20 10 C26 10 32 12 32 14 L32 30 C32 30 26 28 20 30 Z" fill="url(#lgMark)" opacity="0.6"/>
+                                <!-- Spine highlight -->
+                                <line x1="20" y1="10" x2="20" y2="30" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+                                <!-- Star accent -->
+                                <circle cx="32" cy="10" r="3" fill="#F59E0B"/>
+                                <path d="M32 8.2 L32.5 9.5 L34 9.5 L32.8 10.4 L33.2 11.8 L32 11 L30.8 11.8 L31.2 10.4 L30 9.5 L31.5 9.5 Z" fill="white" opacity="0.9"/>
                             </svg>
                         </div>
                         <div class="logo-text">
@@ -51,7 +641,7 @@
                             <p class="logo-subtitle">Previous Year Question Papers</p>
                         </div>
                     </div>
-                    
+
                     <nav class="main-nav">
                         <ul class="nav-list">
                             <li><a href="{{ url_for('home') }}" class="nav-link active">Home</a></li>
@@ -70,28 +660,70 @@
     <!-- ==================== HERO SECTION ==================== -->
     <section class="hero-section">
         <div class="hero-background"></div>
+        <div class="hero-grid"></div>
+        <div class="hero-orb hero-orb-1"></div>
+        <div class="hero-orb hero-orb-2"></div>
+        <div class="hero-orb hero-orb-3"></div>
+
+        <!-- Floating paper decorations -->
+        <div class="floating-papers">
+            <div class="floating-paper"></div>
+            <div class="floating-paper"></div>
+            <div class="floating-paper"></div>
+            <div class="floating-paper"></div>
+        </div>
+
         <div class="container">
             <div class="hero-content">
-                
+                <div class="hero-badge">
+                    <div class="badge-dot"></div>
+                    <span class="badge-text">Marian College Kuttikkanam</span>
+                </div>
+
                 <h1 class="hero-title">
-                    Access Previous Year<br/>
+                    Access Previous Year<br>
                     <span class="gradient-text">Question Papers</span>
                 </h1>
+
                 <p class="hero-description">
-                    Your comprehensive academic resource for exam preparation. Browse, download, 
-                    and contribute to our extensive collection of previous year question papers 
+                    Your comprehensive academic resource for exam preparation. Browse, download,
+                    and contribute to our growing collection of previous year question papers
                     across all departments and subjects.
                 </p>
+
                 <div class="hero-cta">
-                    <a href="{{ url_for('view_papers') }}" class="btn btn-primary btn-large">
+                    <a href="{{ url_for('view_papers') }}" class="btn btn-primary btn-large btn-primary-pulse">
                         <span>Browse Papers</span>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                             <path d="M4 10h12m-6-6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </a>
+                    {% if session.get('role') == 'admin' %}
                     <a href="{{ url_for('upload_page') }}" class="btn btn-secondary btn-large">
-                        <span>Contribute Papers</span>
+                        <span>Upload Papers</span>
                     </a>
+                    {% else %}
+                    <a href="{{ url_for('about') }}" class="btn btn-secondary btn-large">
+                        <span>Learn More</span>
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="statPapers">{{ paper_count|default(0) }}+</div>
+                        <div class="stat-label">Question Papers</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number">Free</div>
+                        <div class="stat-label">Always Free</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">Available</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -100,14 +732,15 @@
     <!-- ==================== DEPARTMENTS SECTION ==================== -->
     <section class="departments-section">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header reveal">
+                <span class="section-tag">Departments</span>
                 <h2 class="section-title">Browse by Department</h2>
                 <p class="section-subtitle">Quick access to department-specific question papers</p>
             </div>
-            
+
             <div class="departments-grid">
-                <a href="{{ url_for('view_papers') }}" class="dept-card">
-                    <div class="dept-icon">💻</div>
+                <a href="{{ url_for('view_papers') }}" class="dept-card reveal">
+                    <span class="dept-icon">💻</span>
                     <h3 class="dept-name">BCA</h3>
                     <p class="dept-count">{{ paper_count|default(0) }} Papers</p>
                 </a>
@@ -117,15 +750,17 @@
 
     <!-- ==================== CTA SECTION ==================== -->
     <section class="cta-section">
+        <div class="cta-circle cta-circle-1"></div>
+        <div class="cta-circle cta-circle-2"></div>
         <div class="container">
-            <div class="cta-content">
+            <div class="cta-content reveal">
                 <h2 class="cta-title">Ready to ace your exams?</h2>
                 <p class="cta-description">
-                    Join thousands of students who are already using PYQ Portal to prepare smarter.
+                    Join students who are already using PYQ Portal to prepare smarter and score higher.
                 </p>
                 <a href="{{ url_for('view_papers') }}" class="btn btn-white btn-large">
                     <span>Get Started Now</span>
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                         <path d="M4 10h12m-6-6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </a>
@@ -134,48 +769,419 @@
     </section>
 
     <!-- ==================== FOOTER ==================== -->
-    <footer class="main-footer">
+    <footer class="mini-footer">
+        <div class="mini-footer-glow"></div>
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-left">
-                    <div class="footer-logo">
-                        <h3>PYQ Portal</h3>
-                        <p>Academic Excellence Through Collaboration</p>
-                    </div>
-                    <p class="footer-copyright">
-                        © 2024 University Academic Portal. All rights reserved.
-                    </p>
+            <div class="mini-footer-inner">
+                <div class="mini-footer-brand">
+                    <svg width="22" height="22" viewBox="0 0 40 40" fill="none">
+                        <defs>
+                            <linearGradient id="fgMark" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#3B82F6"/>
+                                <stop offset="100%" stop-color="#8B5CF6"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M20 10 C14 10 8 12 8 14 L8 30 C8 30 14 28 20 30 Z" fill="url(#fgMark)" opacity="0.9"/>
+                        <path d="M20 10 C26 10 32 12 32 14 L32 30 C32 30 26 28 20 30 Z" fill="url(#fgMark)" opacity="0.6"/>
+                        <line x1="20" y1="10" x2="20" y2="30" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+                        <circle cx="32" cy="10" r="2.5" fill="#F59E0B"/>
+                    </svg>
+                    <span class="mini-footer-name">PYQ Portal</span>
+                    <span class="mini-footer-sep">·</span>
+                    <span class="mini-footer-copy">© 2024 Marian College Kuttikkanam</span>
                 </div>
-                <div class="footer-links">
-                    <div class="footer-column">
-                        <h4>Resources</h4>
-                        <ul>
-                            <li><a href="#">Browse Papers</a></li>
-                            <li><a href="#">Upload Papers</a></li>
-                            <li><a href="#">Guidelines</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Support</h4>
-                        <ul>
-                            <li><a href="#">Help Center</a></li>
-                            <li><a href="#">Contact Us</a></li>
-                            <li><a href="#">FAQ</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Legal</h4>
-                        <ul>
-                            <li><a href="#">Privacy Policy</a></li>
-                            <li><a href="#">Terms of Service</a></li>
-                            <li><a href="#">Disclaimer</a></li>
-                        </ul>
-                    </div>
-                </div>
+                <nav class="mini-footer-nav">
+                    <a href="{{ url_for('view_papers') }}" class="mini-footer-link">Browse</a>
+                    <a href="{{ url_for('about') }}" class="mini-footer-link">About</a>
+                    <button class="mini-footer-link mini-footer-btn" onclick="openPopup('help')">Help</button>
+                    <button class="mini-footer-link mini-footer-btn" onclick="openPopup('contact')">Contact</button>
+                </nav>
             </div>
         </div>
     </footer>
 
+    <!-- ==================== POPUP ==================== -->
+    <div class="popup-overlay" id="popupOverlay" onclick="closePopup()">
+        <div class="popup-card" id="popupCard" onclick="event.stopPropagation()">
+            <div class="popup-header-band"></div>
+            <div class="popup-body">
+            <button class="popup-close" onclick="closePopup()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+            <div class="popup-icon" id="popupIcon"></div>
+            <h3 class="popup-title" id="popupTitle"></h3>
+            <p class="popup-desc" id="popupDesc"></p>
+            <a class="popup-mail-btn" id="popupMailBtn" href="#">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span id="popupMailLabel"></span>
+            </a>
+            <p class="popup-tagline">We usually respond within 24 hours ✦</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* ---- HEADER MARQUEE ---- */
+        .header-top-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            overflow: hidden;
+        }
+
+        .header-marquee-wrap {
+            flex: 1;
+            overflow: hidden;
+            mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+        }
+
+        .header-marquee {
+            display: inline-flex;
+            gap: 1.5rem;
+            white-space: nowrap;
+            animation: marqueeScroll 28s linear infinite;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.85);
+            letter-spacing: 0.02em;
+        }
+
+        .hm-dot { opacity: 0.4; }
+
+        @keyframes marqueeScroll {
+            from { transform: translateX(0); }
+            to   { transform: translateX(-50%); }
+        }
+
+        .header-link-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        /* ---- MINI FOOTER ---- */
+        .mini-footer {
+            background: #0A0A14;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mini-footer::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, #3B82F6 30%, #8B5CF6 70%, transparent 100%);
+            opacity: 0.6;
+        }
+
+        .mini-footer-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 0;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .mini-footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+        }
+
+        .mini-footer-logo {
+            width: 26px; height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mini-footer-logo svg { display: block; }
+
+        .mini-footer-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: white;
+            letter-spacing: -0.01em;
+        }
+
+        .mini-footer-sep {
+            color: rgba(255,255,255,0.2);
+            font-size: 0.75rem;
+            margin: 0 0.25rem;
+        }
+
+        .mini-footer-copy {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.35);
+        }
+
+        .mini-footer-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .mini-footer-link {
+            padding: 0.4rem 0.875rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.45);
+            text-decoration: none;
+            border-radius: 999px;
+            transition: color 0.2s, background 0.2s;
+            font-family: inherit;
+            background: none;
+            border: none;
+            cursor: pointer;
+            letter-spacing: 0.01em;
+        }
+
+        .mini-footer-link:hover {
+            color: white;
+            background: rgba(255,255,255,0.08);
+        }
+
+        /* ---- POPUP ---- */
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(8,8,20,0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .popup-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .popup-card {
+            background: #fff;
+            border-radius: 28px;
+            padding: 0;
+            max-width: 400px;
+            width: 92%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.04);
+            transform: translateY(32px) scale(0.94);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .popup-overlay.active .popup-card {
+            transform: translateY(0) scale(1);
+        }
+
+        /* Color header band */
+        .popup-header-band {
+            height: 6px;
+            background: linear-gradient(90deg, #3B82F6, #8B5CF6, #EC4899);
+            background-size: 200% 100%;
+            animation: bandShift 4s ease infinite;
+        }
+
+        @keyframes bandShift {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .popup-body {
+            padding: 2.5rem 2.25rem 2.25rem;
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 1.25rem; right: 1.25rem;
+            background: #F3F4F6;
+            border: none;
+            border-radius: 50%;
+            width: 32px; height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #9CA3AF;
+            transition: background 0.2s, color 0.2s, transform 0.2s;
+            z-index: 2;
+        }
+
+        .popup-close:hover {
+            background: #E5E7EB;
+            color: #374151;
+            transform: rotate(90deg);
+        }
+
+        .popup-icon {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            position: relative;
+        }
+
+        .popup-icon::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid;
+            border-color: inherit;
+            opacity: 0.2;
+        }
+
+        .popup-title {
+            font-size: 1.375rem;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 0.625rem;
+            letter-spacing: -0.02em;
+        }
+
+        .popup-desc {
+            font-size: 0.9375rem;
+            color: #6B7280;
+            line-height: 1.75;
+            margin-bottom: 2rem;
+        }
+
+        .popup-mail-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 0.875rem 1.75rem;
+            background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+            color: white;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(59,130,246,0.4);
+            letter-spacing: 0.01em;
+        }
+
+        .popup-mail-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(59,130,246,0.45);
+        }
+
+        .popup-tagline {
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #9CA3AF;
+        }
+
+        @media (max-width: 480px) {
+            .mini-footer-copy,
+            .mini-footer-sep { display: none; }
+        }
+    </style>
+
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        const popupData = {
+            help: {
+                icon: '🎓',
+                iconBg: 'rgba(37,99,235,0.1)',
+                title: 'Need Help?',
+                desc: 'Having trouble finding papers or using the portal? Drop us an email and we\'ll get back to you as soon as possible.',
+                mail: 'mailto:lmsinan772@gmail.com?subject=Help Request - PYQ Portal',
+                label: 'lmsinan772@gmail.com'
+            },
+            contact: {
+                icon: '✉️',
+                iconBg: 'rgba(124,58,237,0.1)',
+                title: 'Get in Touch',
+                desc: 'Have a suggestion, found an issue, or want to contribute papers? We\'d love to hear from you.',
+                mail: 'mailto:lmsinan772@gmail.com?subject=Contact - PYQ Portal',
+                label: 'lmsinan772@gmail.com'
+            }
+        };
+
+        function openPopup(type) {
+            const d = popupData[type];
+            const icon = document.getElementById('popupIcon');
+            icon.textContent = d.icon;
+            icon.style.background = d.iconBg;
+            document.getElementById('popupTitle').textContent = d.title;
+            document.getElementById('popupDesc').textContent = d.desc;
+            document.getElementById('popupMailBtn').href = d.mail;
+            document.getElementById('popupMailLabel').textContent = d.label;
+            document.getElementById('popupOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePopup() {
+            document.getElementById('popupOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closePopup();
+        });
+    </script>
+    <script>
+        // Scroll reveal
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) e.target.classList.add('visible');
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.reveal, .reveal-left').forEach(el => observer.observe(el));
+
+        // Smooth number counter for paper count
+        function animateCount(el, target, duration = 1500) {
+            if (target === 0) return;
+            let start = 0;
+            const step = target / (duration / 16);
+            const timer = setInterval(() => {
+                start = Math.min(start + step, target);
+                el.textContent = Math.floor(start) + '+';
+                if (start >= target) clearInterval(timer);
+            }, 16);
+        }
+
+        // Trigger counter when stats come into view
+        const statsEl = document.querySelector('.hero-stats');
+        const paperCountEl = document.getElementById('statPapers');
+        const paperCount = parseInt('{{ paper_count|default(0) }}') || 0;
+
+        if (statsEl && paperCount > 0) {
+            const statsObserver = new IntersectionObserver((entries) => {
+                entries.forEach(e => {
+                    if (e.isIntersecting) {
+                        animateCount(paperCountEl, paperCount);
+                        statsObserver.disconnect();
+                    }
+                });
+            }, { threshold: 0.5 });
+            statsObserver.observe(statsEl);
+        }
+    </script>
 </body>
 </html>
