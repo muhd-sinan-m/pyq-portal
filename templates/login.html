@@ -16,7 +16,20 @@
             align-items: center;
             gap: 1rem;
         }
+html, body {
+    height: 100%;
+}
 
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Make the main content grow to fill available space */
+.login-section {
+    flex: 1;
+}
         .header-college-name {
             font-size: 0.8125rem;
             font-weight: 500;
