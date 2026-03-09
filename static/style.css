@@ -213,6 +213,55 @@ h1, h2, h3, h4, h5, h6 {
     background-color: rgba(37, 99, 235, 0.1);
 }
 
+/* Increase header top height for logo */
+.header-top {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-purple) 100%);
+    color: white;
+    font-size: 0.875rem;
+    padding: 1rem 0; /* Increased from 0.75rem */
+}
+
+/* Header college banner image */
+.header-college-info {
+    display: flex;
+    align-items: center;
+}
+
+.header-college-banner {
+    height: 50px; /* Adjust this based on your image */
+    width: auto;
+    max-width: 400px; /* Prevents image from being too wide */
+    object-fit: contain;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .header-top {
+        padding: 0.875rem 0;
+    }
+    
+    .header-college-banner {
+        height: 40px;
+        max-width: 280px;
+    }
+    
+    .header-top-content {
+        flex-direction: column;
+        gap: 0.75rem;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-top {
+        padding: 0.75rem 0;
+    }
+    
+    .header-college-banner {
+        height: 32px;
+        max-width: 220px;
+    }
+}
 /* ==================== HERO SECTION ==================== */
 .hero-section {
     position: relative;
