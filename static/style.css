@@ -228,10 +228,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .header-college-banner {
-    height: 50px; /* Adjust this based on your image */
+    height: 68px; /* Adjust this based on your image */
     width: auto;
     max-width: 400px; /* Prevents image from being too wide */
     object-fit: contain;
+    filter: brightness(1.15) contrast(1.05);
 }
 
 /* Responsive adjustments */
@@ -241,7 +242,7 @@ h1, h2, h3, h4, h5, h6 {
     }
     
     .header-college-banner {
-        height: 40px;
+        height: 55px;
         max-width: 280px;
     }
     
@@ -258,7 +259,7 @@ h1, h2, h3, h4, h5, h6 {
     }
     
     .header-college-banner {
-        height: 32px;
+        height: 44px;
         max-width: 220px;
     }
 }
