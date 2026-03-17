@@ -65,9 +65,10 @@ body {
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-}
-html, body {
     overflow-x: hidden;
+    max-width: 100%;
+}
+html {
     max-width: 100%;
 }
 h1, h2, h3, h4, h5, h6 {
