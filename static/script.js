@@ -1,3 +1,4 @@
+
 // ==================== PAPERS FROM BACKEND ====================
 // This is set in view.html: window.PAPERS_FROM_BACKEND = {{ papers | tojson }}
 const papers = typeof window.PAPERS_FROM_BACKEND !== 'undefined'
@@ -324,6 +325,59 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                     block: 'start'
                 });
             }
+        }
+    });
+});
+// ==================== MOBILE MENU TOGGLE ====================
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const mobileNav = document.getElementById('mobileNav');
+
+    if (mobileMenuToggle && mobileNav) {
+        // Toggle menu on button click
+        mobileMenuToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            this.classList.toggle('active');
+            mobileNav.classList.toggle('active');
+            
+            // Prevent body scroll when menu is open
+            if (mobileNav.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        });
+
+        // Close mobile menu when clicking on a navigation link
+        const mobileNavLinks = mobileNav.querySelectorAll('a.mobile-nav-link');
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                mobileMenuToggle.classList.remove('active');
+                mobileNav.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (mobileNav.classList.contains('active') && 
+                !mobileMenuToggle.contains(e.target) && 
+                !mobileNav.contains(e.target)) {
+                mobileMenuToggle.classList.remove('active');
+                mobileNav.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+
+    // Active nav link highlighting
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && (href === currentPath || currentPath.includes(href.split('?')[0]))) {
+            link.classList.add('active');
         }
     });
 });
