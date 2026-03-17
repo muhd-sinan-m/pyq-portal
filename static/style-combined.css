@@ -2280,6 +2280,9 @@ html, body {
     .desktop-only {
         display: none !important;
     }
+   .mobile-menu-toggle {
+        display: flex !important;
+    }
 }
 
 /* Orb fixes INSIDE media query so desktop is untouched */
