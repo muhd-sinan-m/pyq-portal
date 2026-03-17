@@ -2243,3 +2243,20 @@
 .mobile-menu-toggle.active span:nth-child(3) {
     transform: rotate(-45deg) translate(7px, -7px);
 }
+.hero-orb-1 {
+    width: 200px;
+    height: 200px;
+    top: -60px;
+    right: -60px;
+}
+.hero-orb-2 {
+    width: 150px;
+    height: 150px;
+}
+.hero-orb-3,
+.floating-paper {
+    display: none;
+}
+.hero-section {
+    min-height: auto;
+}
