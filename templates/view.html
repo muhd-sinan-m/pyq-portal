@@ -13,7 +13,6 @@
 <body>
 
     <!-- ==================== HEADER ==================== -->
-<!-- ==================== HEADER ==================== -->
 <header class="main-header">
     <div class="container-fluid">
         <div class="unified-header">
@@ -51,7 +50,7 @@
             <div class="header-actions">
                 <nav class="main-nav">
                     <ul class="nav-list">
-                        <li><a href="{{ url_for('home') }}" class="nav-link">Home</a></li>
+                        <li><a href="{{ url_for('home') }}" class="nav-link active">Home</a></li>
                         <li><a href="{{ url_for('view_papers') }}" class="nav-link">Browse</a></li>
                         {% if session.get('role') == 'admin' %}
                         <li><a href="{{ url_for('upload_page') }}" class="nav-link">Upload</a></li>
@@ -74,12 +73,12 @@
                         </svg>
                     </button>
                     {% if session.get('user_id') %}
-                    <div class="user-menu">
+                    <div class="user-menu desktop-only">
                         <span class="user-name">{{ session.username }}</span>
                         <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
                     </div>
                     {% else %}
-                    <a href="{{ url_for('login') }}" class="btn-login">Login</a>
+                    <a href="{{ url_for('login') }}" class="btn-login desktop-only">Login</a>
                     {% endif %}
                 </div>
             </div>
