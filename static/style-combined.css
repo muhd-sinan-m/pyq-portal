@@ -2260,3 +2260,16 @@
 .hero-section {
     min-height: auto;
 }
+/* Desktop only — hide on mobile */
+.desktop-only {
+    display: inline-flex;
+}
+
+@media (max-width: 920px) {
+    .desktop-only {
+        display: none !important;
+    }
+    .unified-header {
+        overflow: visible;
+    }
+}
