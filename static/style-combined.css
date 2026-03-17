@@ -2243,23 +2243,6 @@
 .mobile-menu-toggle.active span:nth-child(3) {
     transform: rotate(-45deg) translate(7px, -7px);
 }
-.hero-orb-1 {
-    width: 200px;
-    height: 200px;
-    top: -60px;
-    right: -60px;
-}
-.hero-orb-2 {
-    width: 150px;
-    height: 150px;
-}
-.hero-orb-3,
-.floating-paper {
-    display: none;
-}
-.hero-section {
-    min-height: auto;
-}
 /* Desktop only — hide on mobile */
 .desktop-only {
     display: inline-flex;
@@ -2271,5 +2254,56 @@
     }
     .unified-header {
         overflow: visible;
+    }
+}
+/* =====================================================================
+   FINAL FIXES — paste at very bottom, these override everything above
+   ===================================================================== */
+
+html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+/* Desktop only — hides login/user-menu on mobile */
+.desktop-only {
+    display: inline-flex;
+}
+
+@media (max-width: 920px) {
+    /* Fix: remove overflow hidden — it was clipping the mobile menu */
+    .unified-header {
+        overflow: visible !important;
+    }
+
+    /* Hide login button on mobile — it's now inside the hamburger menu */
+    .desktop-only {
+        display: none !important;
+    }
+}
+
+/* Orb fixes INSIDE media query so desktop is untouched */
+@media (max-width: 768px) {
+    .hero-orb-1 {
+        width: 200px;
+        height: 200px;
+        top: -60px;
+        right: -60px;
+    }
+    .hero-orb-2 {
+        width: 150px;
+        height: 150px;
+        bottom: -30px;
+        left: -40px;
+    }
+    .hero-orb-3,
+    .floating-paper {
+        display: none;
+    }
+    .hero-section {
+        min-height: auto;
+    }
+    .hero-content {
+        padding: 0 1.25rem;
     }
 }
