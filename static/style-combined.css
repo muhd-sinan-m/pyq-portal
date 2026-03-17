@@ -1490,20 +1490,174 @@
    SECTION 6 — RESPONSIVE
    ===================================================================== */
 
-@media (max-width: 768px) {
-    .floating-paper { display: none; }
-    .hero-stats { gap: 1.5rem; padding: 1.5rem; }
-    .hero-section { min-height: auto; padding: 4rem 0 3rem; }
-    .dev-cards { grid-template-columns: 1fr; }
-    .team-intro { flex-direction: column; align-items: flex-start; }
-    .team-intro-text { max-width: 100%; }
+/* ==================== RESPONSIVE ==================== */
+
+/* Large tablets and small desktops */
+@media (max-width: 1100px) {
+    .unified-header {
+        gap: 2rem;
+    }
+
+    .college-logo {
+        height: 50px;
+    }
+
+    .portal-title {
+        font-size: 1.5rem;
+    }
+
+    .nav-link {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
 }
 
+/* Tablets - Hide secondary items, show mobile toggle */
+@media (max-width: 920px) {
+    .unified-header {
+        gap: 1.5rem;
+    }
+
+    .college-logo {
+        height: 44px;
+    }
+
+    .portal-title {
+        font-size: 1.375rem;
+    }
+
+    .portal-subtitle {
+        font-size: 0.65rem;
+    }
+
+    /* Hide main navigation */
+    .main-nav {
+        display: none;
+    }
+
+    /* Hide icon buttons on mobile */
+    .header-user .icon-btn {
+        display: none;
+    }
+
+    /* Show mobile toggle */
+    .mobile-menu-toggle {
+        display: flex;
+    }
+}
+
+/* Mobile phones */
+@media (max-width: 640px) {
+    .unified-header {
+        padding: 1rem 0;
+        gap: 1rem;
+    }
+
+    .college-logo {
+        height: 38px;
+    }
+
+    .portal-logo svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .portal-title {
+        font-size: 1.2rem;
+    }
+
+    .portal-subtitle {
+        font-size: 0.6rem;
+    }
+
+    /* Hide username on small screens */
+    .user-name {
+        display: none;
+    }
+
+    .btn-login,
+    .btn-logout {
+        padding: 0.5rem 1.125rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Very small phones */
 @media (max-width: 480px) {
-    .mini-footer-copy,
-    .mini-footer-sep { display: none; }
+    .unified-header {
+        gap: 0.875rem;
+        padding: 0.875rem 0;
+    }
+
+    .college-logo {
+        height: 34px;
+    }
+
+    .portal-logo svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .portal-title {
+        font-size: 1.075rem;
+    }
+
+    .portal-subtitle {
+        font-size: 0.55rem;
+    }
+
+    .portal-brand {
+        gap: 0.625rem;
+    }
+
+    .btn-login,
+    .btn-logout {
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+    }
+
+    .mobile-menu-toggle {
+        padding: 0.5rem;
+    }
+
+    .mobile-menu-toggle span {
+        width: 22px;
+    }
 }
 
+/* Extra small phones (360px and below) */
+@media (max-width: 380px) {
+    .container-fluid {
+        padding: 0 1rem;
+    }
+
+    .unified-header {
+        gap: 0.625rem;
+    }
+
+    .college-logo {
+        height: 30px;
+    }
+
+    .portal-logo svg {
+        width: 26px;
+        height: 26px;
+    }
+
+    .portal-title {
+        font-size: 1rem;
+    }
+
+    .portal-subtitle {
+        font-size: 0.5rem;
+    }
+
+    .btn-login,
+    .btn-logout {
+        padding: 0.45rem 0.875rem;
+        font-size: 0.7rem;
+    }
+}
 
 /* =====================================================================
    SECTION 7 — UNIFIED HEADER (CLEAN PROFESSIONAL DESIGN)
@@ -1906,4 +2060,84 @@
         padding: 0.5rem 1rem;
         font-size: 0.8rem;
     }
+}
+/* Mobile Navigation - Enhanced */
+.mobile-nav {
+    display: none;
+    padding: 1rem 0;
+    background: rgba(0, 0, 0, 0.15);
+    margin-top: 1rem;
+    border-radius: 1rem;
+    backdrop-filter: blur(10px);
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+}
+
+.mobile-nav.active {
+    display: block;
+    max-height: 500px;
+    opacity: 1;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mobile-nav nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0 0.75rem;
+}
+
+.mobile-nav-link {
+    padding: 0.875rem 1rem;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: 0.625rem;
+    transition: all 0.2s ease;
+    background: none;
+    border: none;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link:active {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.mobile-nav-divider {
+    border: none;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.15);
+    margin: 0.5rem 0;
+}
+
+.mobile-nav-user {
+    padding: 0.75rem 1rem;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.875rem;
+    display: block;
+    font-weight: 500;
+}
+
+.mobile-nav-login,
+.mobile-nav-logout {
+    background: rgba(255, 255, 255, 0.18);
+    font-weight: 700;
 }
