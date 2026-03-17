@@ -2260,7 +2260,11 @@
    FINAL FIXES — paste at very bottom, these override everything above
    ===================================================================== */
 
-html, body {
+html {
+    max-width: 100%;
+}
+
+body {
     overflow-x: hidden;
     max-width: 100%;
 }
