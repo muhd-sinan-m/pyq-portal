@@ -7,52 +7,91 @@ const papers = typeof window.PAPERS_FROM_BACKEND !== 'undefined'
 
 // ==================== VIEW PAPERS PAGE FUNCTIONALITY ====================
 if (document.getElementById('papersGrid')) {
-    const papersGrid = document.getElementById('papersGrid');
-    const noResults = document.getElementById('noResults');
-    const resultsCount = document.getElementById('resultsCount');
+    const papersGrid    = document.getElementById('papersGrid');
+    const noResults     = document.getElementById('noResults');
+    const resultsCount  = document.getElementById('resultsCount');
     const subjectFilter = document.getElementById('subjectFilter');
-    const yearFilter = document.getElementById('yearFilter');
-    const semesterFilter = document.getElementById('semesterFilter');
-    const searchInput = document.getElementById('searchInput');
-    const resetFilters = document.getElementById('resetFilters');
+    const yearFilter    = document.getElementById('yearFilter');
+    const semesterFilter= document.getElementById('semesterFilter');
+    const searchInput   = document.getElementById('searchInput');
+    const resetFilters  = document.getElementById('resetFilters');
+    const semFolders    = document.getElementById('semFolders');
+    const folderPapersView = document.getElementById('folderPapersView');
+    const btnBackFolders   = document.getElementById('btnBackFolders');
+    const folderPapersHeader = document.getElementById('folderPapersHeader');
 
-    // Render papers function
+    let activeSem = null; // which semester folder is open
+
+    // ---- Render semester folders ----
+    function renderFolders() {
+        const sems = [1,2,3,4,5,6];
+        semFolders.innerHTML = sems.map(sem => {
+            const count = papers.filter(p => p.semester == sem).length;
+            const isEmpty = count === 0;
+            return `
+                <div class="sem-folder-card ${isEmpty ? 'sem-folder-empty' : ''}"
+                     onclick="${isEmpty ? '' : `openFolder(${sem})`}">
+                    <span class="sem-folder-icon">📁</span>
+                    <div class="sem-folder-name">Semester ${sem}</div>
+                    <div class="sem-folder-count">${count} ${count === 1 ? 'paper' : 'papers'}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ---- Open a semester folder ----
+    window.openFolder = function(sem) {
+        activeSem = sem;
+        semFolders.style.display = 'none';
+        folderPapersView.style.display = 'block';
+        folderPapersHeader.innerHTML = `
+            <h2>📂 Semester ${sem}</h2>
+            <p>Showing papers for Semester ${sem}</p>
+        `;
+        // set semester filter to match folder
+        semesterFilter.value = sem;
+        renderPapers();
+    };
+
+    // ---- Back to folders ----
+    btnBackFolders.addEventListener('click', () => {
+        activeSem = null;
+        semesterFilter.value = '';
+        folderPapersView.style.display = 'none';
+        semFolders.style.display = 'grid';
+        renderFolders();
+        if (typeof updateFilterBadge === 'function') updateFilterBadge();
+    });
+
+    // ---- Render papers (same as before) ----
     function renderPapers() {
-        const subjectValue = subjectFilter.value.toLowerCase();
-        const yearValue = yearFilter.value;
+        const subjectValue  = subjectFilter.value.toLowerCase();
+        const yearValue     = yearFilter.value;
         const semesterValue = semesterFilter.value;
-        const searchValue = searchInput.value.toLowerCase();
+        const searchValue   = searchInput.value.toLowerCase();
 
-        // Filter papers (year can be number from backend)
         let filteredPapers = papers.filter(paper => {
-            const matchSubject = !subjectValue || (paper.subject && paper.subject.toLowerCase() === subjectValue.toLowerCase());
-            const matchYear = !yearValue || paper.year == yearValue || String(paper.year) === yearValue;
+            const matchSubject  = !subjectValue  || (paper.subject && paper.subject.toLowerCase() === subjectValue);
+            const matchYear     = !yearValue     || paper.year == yearValue || String(paper.year) === yearValue;
             const matchSemester = !semesterValue || paper.semester == semesterValue;
-            const matchSearch = !searchValue ||
-                (paper.subject && paper.subject.toLowerCase().includes(searchValue)) ||
-                // FIX 2: Changed paper.file_path to paper.file_url for search
+            const matchSearch   = !searchValue   ||
+                (paper.subject  && paper.subject.toLowerCase().includes(searchValue))  ||
                 (paper.file_url && paper.file_url.toLowerCase().includes(searchValue)) ||
                 (paper.examType && paper.examType.toLowerCase().includes(searchValue)) ||
                 (paper.department && paper.department.toLowerCase().includes(searchValue));
             return matchSubject && matchYear && matchSemester && matchSearch;
         });
 
-        // Update results count
         const count = filteredPapers.length;
         resultsCount.textContent = `Showing ${count} ${count === 1 ? 'paper' : 'papers'}`;
 
-        // Render papers or show no results
         if (filteredPapers.length === 0) {
             papersGrid.style.display = 'none';
             noResults.style.display = 'block';
         } else {
             papersGrid.style.display = 'grid';
             noResults.style.display = 'none';
-            
-            papersGrid.innerHTML = filteredPapers.map(paper => {
-                // FIX 3: Removed old local path manipulation (const path = file_path.replace(...))
-                // FIX 1: Download button now uses paper.file_url (Supabase public URL) directly
-                return `
+            papersGrid.innerHTML = filteredPapers.map(paper => `
                 <div class="paper-card">
                     <div class="paper-info">
                         <div class="info-item">
@@ -81,8 +120,13 @@ if (document.getElementById('papersGrid')) {
                         Download
                     </a>
                 </div>
-            `;
-            }).join('');
+            `).join('');
+        }
+
+        // if inside a folder, update the header count
+        if (activeSem !== null) {
+            folderPapersHeader.querySelector('p').textContent =
+                `Showing ${count} ${count === 1 ? 'paper' : 'papers'} for Semester ${activeSem}`;
         }
     }
 
@@ -93,21 +137,42 @@ if (document.getElementById('papersGrid')) {
         return div.innerHTML;
     }
 
-    // Event listeners
+    // ---- Filter event listeners ----
     subjectFilter.addEventListener('change', renderPapers);
     yearFilter.addEventListener('change', renderPapers);
     semesterFilter.addEventListener('change', renderPapers);
     searchInput.addEventListener('input', renderPapers);
 
-    // Reset filters
     resetFilters.addEventListener('click', () => {
-        subjectFilter.value = '';
-        yearFilter.value = '';
-        semesterFilter.value = '';
-        searchInput.value = '';
+        subjectFilter.value  = '';
+        yearFilter.value     = '';
+        semesterFilter.value = activeSem || '';
+        searchInput.value    = '';
         renderPapers();
     });
 
+    // ---- View toggle ----
+    const viewBtns = document.querySelectorAll('.view-btn');
+    viewBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            viewBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const view = btn.dataset.view;
+            if (view === 'list') {
+                papersGrid.style.gridTemplateColumns = '1fr';
+                papersGrid.classList.add('view-list');
+                papersGrid.classList.remove('view-grid');
+            } else {
+                papersGrid.style.gridTemplateColumns = '';
+                papersGrid.classList.add('view-grid');
+                papersGrid.classList.remove('view-list');
+            }
+        });
+    });
+
+    // ---- Initial render: show folders ----
+    renderFolders();
+}
     // View toggle functionality
    // View toggle functionality
 const viewBtns = document.querySelectorAll('.view-btn');
