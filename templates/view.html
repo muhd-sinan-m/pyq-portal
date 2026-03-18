@@ -255,16 +255,28 @@
                 </div>
             </div>
 
-            <div class="papers-grid" id="papersGrid"></div>
+           <!-- Folder view -->
+<div class="sem-folders" id="semFolders"></div>
 
-            <div class="no-results" id="noResults" style="display: none;">
-                <div class="no-results-icon">🔍</div>
-                <h3>No papers found</h3>
-                <p>Try adjusting your filters or search terms</p>
-                <button class="btn btn-primary" onclick="document.getElementById('resetFilters').click()">
-                    Reset Filters
-                </button>
-            </div>
+<!-- Papers inside folder -->
+<div class="folder-papers-view" id="folderPapersView" style="display:none;">
+    <button class="btn-back-folders" id="btnBackFolders">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Back to Semesters
+    </button>
+    <div class="folder-papers-header" id="folderPapersHeader"></div>
+    <div class="papers-grid" id="papersGrid"></div>
+    <div class="no-results" id="noResults" style="display:none;">
+        <div class="no-results-icon">🔍</div>
+        <h3>No papers found</h3>
+        <p>Try adjusting your filters or search terms</p>
+        <button class="btn btn-primary" onclick="document.getElementById('resetFilters').click()">
+            Reset Filters
+        </button>
+    </div>
+</div>
         </div>
     </section>
 
