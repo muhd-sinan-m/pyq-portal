@@ -40,18 +40,17 @@ if (document.getElementById('papersGrid')) {
     }
 
     // ---- Open a semester folder ----
-    window.openFolder = function(sem) {
-        activeSem = sem;
-        semFolders.style.display = 'none';
-        folderPapersView.style.display = 'block';
-        folderPapersHeader.innerHTML = `
-            <h2>📂 Semester ${sem}</h2>
-            <p>Showing papers for Semester ${sem}</p>
-        `;
-        // set semester filter to match folder
-        semesterFilter.value = sem;
-        renderPapers();
-    };
+window.openFolder = function(sem) {
+    activeSem = sem;
+    semFolders.style.display = 'none';
+    folderPapersView.style.display = 'block';
+    folderPapersHeader.innerHTML = `
+        <h2>📂 Semester ${sem}</h2>
+        <p>Showing papers for Semester ${sem}</p>
+    `;
+    semesterFilter.value = String(sem);
+    renderPapers();
+};
 
     // ---- Back to folders ----
     btnBackFolders.addEventListener('click', () => {
@@ -73,7 +72,7 @@ if (document.getElementById('papersGrid')) {
         let filteredPapers = papers.filter(paper => {
             const matchSubject  = !subjectValue  || (paper.subject && paper.subject.toLowerCase() === subjectValue);
             const matchYear     = !yearValue     || paper.year == yearValue || String(paper.year) === yearValue;
-            const matchSemester = !semesterValue || paper.semester == semesterValue;
+            const matchSemester = !semesterValue || String(paper.semester) === String(semesterValue);
             const matchSearch   = !searchValue   ||
                 (paper.subject  && paper.subject.toLowerCase().includes(searchValue))  ||
                 (paper.file_url && paper.file_url.toLowerCase().includes(searchValue)) ||
