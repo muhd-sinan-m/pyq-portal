@@ -2336,3 +2336,158 @@ body {
         grid-template-columns: 1fr;
     }
 }
+/* =====================================================================
+   SEMESTER FOLDERS
+   ===================================================================== */
+.sem-folders {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+.sem-folder-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.sem-folder-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple));
+    transform: scaleX(0);
+    transition: transform 0.3s;
+}
+
+.sem-folder-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-xl);
+    border-color: rgba(37,99,235,0.25);
+}
+
+.sem-folder-card:hover::before {
+    transform: scaleX(1);
+}
+
+.sem-folder-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+    transition: transform 0.3s;
+}
+
+.sem-folder-card:hover .sem-folder-icon {
+    transform: scale(1.15);
+}
+
+.sem-folder-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.375rem;
+}
+
+.sem-folder-count {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    background: rgba(37,99,235,0.08);
+    display: inline-block;
+    padding: 0.2rem 0.75rem;
+    border-radius: 2rem;
+    color: var(--primary-blue);
+}
+
+.sem-folder-empty {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.sem-folder-empty:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--border-color);
+}
+
+.sem-folder-empty::before {
+    display: none;
+}
+
+/* Back button */
+.btn-back-folders {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.btn-back-folders:hover {
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+.folder-papers-header {
+    margin-bottom: 1.5rem;
+}
+
+.folder-papers-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.folder-papers-header p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* No folders message */
+.no-folders-msg {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+}
+
+.no-folders-msg .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 640px) {
+    .sem-folders {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .sem-folder-card {
+        padding: 1.5rem 1rem;
+    }
+
+    .sem-folder-icon {
+        font-size: 2.25rem;
+    }
+
+    .sem-folder-name {
+        font-size: 1rem;
+    }
+}
