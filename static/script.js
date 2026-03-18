@@ -113,20 +113,25 @@ if (document.getElementById('papersGrid')) {
     });
 
     // View toggle functionality
-    const viewBtns = document.querySelectorAll('.view-btn');
-    viewBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            viewBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            const view = btn.dataset.view;
-            if (view === 'list') {
-                papersGrid.style.gridTemplateColumns = '1fr';
-            } else {
-                papersGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(600px, 1fr))';
-            }
-        });
+   // View toggle functionality
+const viewBtns = document.querySelectorAll('.view-btn');
+viewBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        viewBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const view = btn.dataset.view;
+        if (view === 'list') {
+            papersGrid.style.gridTemplateColumns = '1fr';
+            papersGrid.classList.add('view-list');
+            papersGrid.classList.remove('view-grid');
+        } else {
+            papersGrid.style.gridTemplateColumns = '';
+            papersGrid.classList.add('view-grid');
+            papersGrid.classList.remove('view-list');
+        }
     });
+});
 
     // Initial render
     renderPapers();
