@@ -71,10 +71,6 @@ if (document.getElementById('papersGrid')) {
                             <span class="info-label">Exam Type</span>
                             <span class="info-value">${escapeHtml(paper.examType || '—')}</span>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">File Size</span>
-                            <span class="info-value">${escapeHtml(paper.size || '—')}</span>
-                        </div>
                     </div>
                     <a href="${escapeHtml(paper.file_url || '')}" class="btn-download" target="_blank" download>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
