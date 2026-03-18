@@ -2317,3 +2317,22 @@ body {
         grid-template-columns: 1fr;
     }
 }
+/* Grid / List view toggle */
+.papers-grid.view-list {
+    grid-template-columns: 1fr !important;
+}
+
+.papers-grid.view-list .paper-card {
+    grid-template-columns: 1fr auto;
+}
+
+.papers-grid.view-grid .paper-card {
+    grid-template-columns: 1fr auto;
+}
+
+@media (max-width: 768px) {
+    .papers-grid.view-list .paper-card,
+    .papers-grid.view-grid .paper-card {
+        grid-template-columns: 1fr;
+    }
+}
