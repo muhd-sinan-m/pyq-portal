@@ -1145,3 +1145,29 @@ textarea.form-control {
         grid-template-columns: 1fr;
     }
 }
+.announcement-banner {
+    background: linear-gradient(90deg, #8b1a1a, #c0392b);
+    color: white;
+    text-align: center;
+    padding: 12px 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.announcement-banner button {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.announcement-banner button:hover {
+    background: rgba(255,255,255,0.35);
+}
