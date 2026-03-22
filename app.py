@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import os
 import psycopg2
-import cloudinary
-import cloudinary.uploader
+from supabase import create_client
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
@@ -11,12 +10,11 @@ import uuid
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')
 
-# ---------- Cloudinary ----------
-cloudinary.config(
-    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.environ.get("CLOUDINARY_API_KEY"),
-    api_secret=os.environ.get("CLOUDINARY_API_SECRET")
-)
+# ---------- Supabase ----------
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET")
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ---------- DB ----------
 def get_db():
@@ -212,23 +210,17 @@ def upload_page():
 
             exam_type = request.form.get("examType") or request.form.get("exam_type") or ""
 
-            # Upload to Cloudinary
-            original_filename = secure_filename(file.filename)
-            public_id = f"pyqportal/pdfs/{subject_id}/{year_int}/{uuid.uuid4()}"
-
-            result = cloudinary.uploader.upload(
-                file,
-                resource_type="raw",
-                public_id=public_id + ".pdf",
-                use_filename=False,
-                unique_filename=False,
-                flags="attachment:false"
+            # Upload to Supabase Storage
+            unique_name = f"{subject_id}/{year_int}/{uuid.uuid4()}.pdf"
+            supabase.storage.from_(SUPABASE_BUCKET).upload(
+                unique_name,
+                file.read(),
+                file_options={"content-type": "application/pdf"}
             )
-
-            cloud_public_id = result["public_id"]
-            file_url = result["secure_url"]
+            file_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(unique_name)
 
             # Save to Supabase PostgreSQL
+            original_filename = secure_filename(file.filename)
             cur.execute(
                 """
                 INSERT INTO question_papers
@@ -236,7 +228,7 @@ def upload_page():
                 VALUES (%s, %s, %s, %s, %s, %s)
                 RETURNING paper_id
                 """,
-                (subject_id, year_int, original_filename, file_url, exam_type, cloud_public_id),
+                (subject_id, year_int, original_filename, file_url, exam_type, unique_name),
             )
             conn.commit()
 
