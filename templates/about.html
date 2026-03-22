@@ -227,17 +227,31 @@
     </section>
 
     <!-- ==================== COLLEGE ==================== -->
-    <section class="college-section">
-        <div class="college-inner">
-            <h2 class="college-name reveal">Marian College<br>Kuttikkanam</h2>
-            <p class="college-subtitle reveal">Autonomous College · Kerala, India</p>
-            <div class="college-badges reveal">
-                <span class="college-badge">Est. 1995</span>
-                <span class="college-badge">NAAC Accredited</span>
-                <span class="college-badge">Kuttikkanam, Kerala</span>
-            </div>
+<section class="college-section" style="
+    background-image: url({{ url_for('static', filename='marian-college-bg.jpg') }});
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    padding: 100px 0;
+">
+    <!-- Dark overlay so text stays readable -->
+    <div style="
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+    "></div>
+
+    <div class="college-inner" style="position: relative; z-index: 1;">
+        <h2 class="college-name reveal" style="color: #ffffff;">Marian College<br>Kuttikkanam</h2>
+        <p class="college-subtitle reveal" style="color: rgba(255,255,255,0.75);">Autonomous College · Kerala, India</p>
+        <div class="college-badges reveal">
+            <span class="college-badge">Est. 1995</span>
+            <span class="college-badge">NAAC Accredited</span>
+            <span class="college-badge">Kuttikkanam, Kerala</span>
         </div>
-    </section>
+    </div>
+</section>
 
     <!-- ==================== FOOTER ==================== -->
     <footer class="mini-footer">
