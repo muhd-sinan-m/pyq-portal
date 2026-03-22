@@ -1,5 +1,5 @@
 Flask
-mysql-connector-python
-supabase
+psycopg2-binary
+cloudinary
 Werkzeug
 gunicorn
