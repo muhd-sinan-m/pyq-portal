@@ -217,15 +217,16 @@ def upload_page():
             public_id = f"pyqportal/pdfs/{subject_id}/{year_int}/{uuid.uuid4()}"
 
             result = cloudinary.uploader.upload(
-                file,
-                resource_type="raw",
-                public_id=public_id,
-                use_filename=True,
-                unique_filename=False
-            )
+                    file,
+                    resource_type="raw",
+                    public_id=public_id,
+                    use_filename=True,
+                    unique_filename=False,
+                    flags="attachment:false"
+                    )
 
             cloud_public_id = result["public_id"]
-            file_url = f"https://res.cloudinary.com/{os.environ.get('CLOUDINARY_CLOUD_NAME')}/raw/upload/fl_attachment:false/{cloud_public_id}.pdf"
+            file_url = result["secure_url"]
 
             # Save to Supabase PostgreSQL
             cur.execute(
