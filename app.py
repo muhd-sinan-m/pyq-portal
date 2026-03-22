@@ -224,8 +224,8 @@ def upload_page():
                 unique_filename=False
             )
 
-            file_url = result["secure_url"]
             cloud_public_id = result["public_id"]
+            file_url = f"https://res.cloudinary.com/{os.environ.get('CLOUDINARY_CLOUD_NAME')}/raw/upload/fl_attachment:false/{cloud_public_id}.pdf"
 
             # Save to Supabase PostgreSQL
             cur.execute(
