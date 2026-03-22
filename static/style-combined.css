@@ -2491,3 +2491,248 @@ body {
         font-size: 1rem;
     }
 }
+/* =====================================================================
+   EXAM TYPE CARDS & FOLDER IMPROVEMENTS
+   ===================================================================== */
+
+/* Semester folder — SVG icon instead of emoji */
+.sem-folder-icon-wrap {
+    width: 64px;
+    height: 54px;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sem-folder-icon-wrap svg {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.3s;
+}
+
+.sem-folder-card:hover .sem-folder-icon-wrap svg {
+    transform: scale(1.12) translateY(-3px);
+}
+
+/* Breadcrumb inside folder */
+.folder-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.breadcrumb-btn {
+    background: none;
+    border: none;
+    color: var(--primary-blue);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+    font-size: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.breadcrumb-btn:hover { color: var(--primary-dark); }
+
+.breadcrumb-sep {
+    color: var(--gray-400);
+    font-size: 1rem;
+}
+
+.breadcrumb-current {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.folder-title-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.folder-title-row h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.folder-total-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+    background: rgba(37,99,235,0.08);
+    color: var(--primary-blue);
+}
+
+/* Exam type grid */
+.exam-type-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.exam-type-card {
+    padding: 1.75rem 1.25rem;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative;
+    overflow: hidden;
+    background: white;
+}
+
+.exam-type-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    transform: scaleX(0);
+    transition: transform 0.3s;
+    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+.exam-type-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+}
+
+.exam-type-card:hover::before { transform: scaleX(1); }
+
+.exam-type-blue { border-top: 3px solid #3B82F6; }
+.exam-type-blue::before { background: #3B82F6; }
+.exam-type-blue:hover { border-color: #3B82F6; }
+
+.exam-type-purple { border-top: 3px solid #8B5CF6; }
+.exam-type-purple::before { background: #8B5CF6; }
+.exam-type-purple:hover { border-color: #8B5CF6; }
+
+.exam-type-green { border-top: 3px solid #10B981; }
+.exam-type-green::before { background: #10B981; }
+.exam-type-green:hover { border-color: #10B981; }
+
+.exam-type-empty {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.exam-type-empty:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.exam-type-icon {
+    font-size: 2.25rem;
+    margin-bottom: 0.75rem;
+    display: block;
+    transition: transform 0.3s;
+}
+
+.exam-type-card:hover .exam-type-icon {
+    transform: scale(1.15);
+}
+
+.exam-type-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.375rem;
+}
+
+.exam-type-count {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 0.2rem 0.75rem;
+    border-radius: 2rem;
+    display: inline-block;
+}
+
+.exam-type-blue .exam-type-count {
+    background: rgba(59,130,246,0.1);
+    color: #2563EB;
+}
+
+.exam-type-purple .exam-type-count {
+    background: rgba(139,92,246,0.1);
+    color: #7C3AED;
+}
+
+.exam-type-green .exam-type-count {
+    background: rgba(16,185,129,0.1);
+    color: #059669;
+}
+
+/* Mobile improvements */
+@media (max-width: 640px) {
+    .sem-folders {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.875rem;
+    }
+
+    .sem-folder-card {
+        padding: 1.25rem 0.875rem;
+    }
+
+    .sem-folder-icon-wrap {
+        width: 48px;
+        height: 40px;
+        margin-bottom: 0.75rem;
+    }
+
+    .sem-folder-name {
+        font-size: 0.9375rem;
+    }
+
+    .sem-folder-count {
+        font-size: 0.75rem;
+        padding: 0.15rem 0.5rem;
+    }
+
+    .exam-type-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+    }
+
+    .exam-type-card {
+        padding: 1.25rem 0.75rem;
+    }
+
+    .exam-type-icon {
+        font-size: 1.75rem;
+    }
+
+    .exam-type-name {
+        font-size: 0.875rem;
+    }
+
+    .folder-title-row h2 {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .exam-type-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+
+    .exam-type-card {
+        padding: 1rem 0.5rem;
+    }
+
+    .exam-type-name {
+        font-size: 0.75rem;
+    }
+}
