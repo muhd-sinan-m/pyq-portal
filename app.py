@@ -1,58 +1,63 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import os
-import mysql.connector
+import psycopg2
+import cloudinary
+import cloudinary.uploader
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
-from supabase import create_client
 import uuid
 
-
 app = Flask(__name__)
-
-# ---------- Supabase ----------
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET")
-
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise RuntimeError("SUPABASE_URL and SUPABASE_KEY must be set as environment variables")
-
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')
 
+# ---------- Cloudinary ----------
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET")
+)
 
-# ---------- DB helpers ----------
-
+# ---------- DB ----------
 def get_db():
-    """Return a fresh MySQL connection every time."""
-    return mysql.connector.connect(
-        host=os.environ.get("DB_HOST"),
-        user=os.environ.get("DB_USER"),
-        password=os.environ.get("DB_PASSWORD"),
-        database=os.environ.get("DB_NAME"),
-        port=int(os.environ.get("DB_PORT", 3306))
-    )
-
+    return psycopg2.connect(os.environ.get("DATABASE_URL"))
 
 def init_db():
-    """Create tables and default admin on first run."""
     conn = get_db()
     cur = conn.cursor()
     try:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
-                user_id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id SERIAL PRIMARY KEY,
                 username VARCHAR(100) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
+                password_hash TEXT NOT NULL,
                 role VARCHAR(20) NOT NULL DEFAULT 'user'
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            );
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS subjects (
+                subject_id SERIAL PRIMARY KEY,
+                subject_name VARCHAR(255) NOT NULL,
+                semester INTEGER
+            );
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS question_papers (
+                paper_id SERIAL PRIMARY KEY,
+                subject_id INTEGER REFERENCES subjects(subject_id),
+                year INTEGER,
+                file_name VARCHAR(255),
+                file_path VARCHAR(255),
+                exam_type VARCHAR(100),
+                upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                file_url TEXT,
+                public_id TEXT
+            );
         """)
         conn.commit()
 
         cur.execute("SELECT COUNT(*) FROM users")
-        count = cur.fetchone()[0] or 0
+        count = cur.fetchone()[0]
         if count == 0:
             default_username = os.environ.get('ADMIN_USER', 'admin')
             default_password = os.environ.get('ADMIN_PASS', 'admin123')
@@ -62,14 +67,12 @@ def init_db():
                 (default_username, hash_val, 'admin')
             )
             conn.commit()
-            print(f"Created default admin account: {default_username}")
+            print(f"Created default admin: {default_username}")
     finally:
         cur.close()
         conn.close()
 
-
 init_db()
-
 
 # ---------- Auth helpers ----------
 
@@ -86,22 +89,6 @@ def get_user_by_username(username):
         cur.close()
         conn.close()
 
-
-def create_user(username, password, role="user"):
-    hash_val = generate_password_hash(password)
-    conn = get_db()
-    cur = conn.cursor()
-    try:
-        cur.execute(
-            "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, %s)",
-            (username, hash_val, role)
-        )
-        conn.commit()
-    finally:
-        cur.close()
-        conn.close()
-
-
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -110,16 +97,14 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
-
 def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if session.get('role') != 'admin':
-            flash('Administrator access required to view that page.')
+            flash('Administrator access required.')
             return redirect(url_for('home'))
         return f(*args, **kwargs)
     return decorated
-
 
 # ---------- Utility ----------
 
@@ -128,40 +113,18 @@ ALLOWED_EXTENSIONS = {"pdf"}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
-def format_file_size(bytes_size):
-    if bytes_size is None or bytes_size == 0:
-        return "0 B"
-    for unit in ("B", "KB", "MB", "GB"):
-        if bytes_size < 1024:
-            n = round(bytes_size, 1)
-            s = str(int(n)) if n == int(n) else f"{n:.1f}"
-            return f"{s} {unit}"
-        bytes_size /= 1024
-    return f"{round(bytes_size, 1)} TB"
-
-
 def get_subjects():
-    """Return fresh list of subjects from DB every time — always up to date."""
     conn = get_db()
     cur = conn.cursor()
     try:
-        try:
-            cur.execute(
-                "SELECT subject_id, subject_name, semester FROM subjects ORDER BY semester, subject_name"
-            )
-            rows = cur.fetchall()
-            return [{"subject_id": r[0], "subject_name": r[1], "semester": r[2]} for r in rows]
-        except Exception:
-            cur.execute(
-                "SELECT subject_id, subject_name FROM subjects ORDER BY subject_name"
-            )
-            rows = cur.fetchall()
-            return [{"subject_id": r[0], "subject_name": r[1], "semester": None} for r in rows]
+        cur.execute(
+            "SELECT subject_id, subject_name, semester FROM subjects ORDER BY semester, subject_name"
+        )
+        rows = cur.fetchall()
+        return [{"subject_id": r[0], "subject_name": r[1], "semester": r[2]} for r in rows]
     finally:
         cur.close()
         conn.close()
-
 
 # ---------- Routes ----------
 
@@ -185,12 +148,10 @@ def login():
             error = "Invalid username or password"
     return render_template("login.html", error=error)
 
-
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("home"))
-
 
 @app.route("/")
 def home():
@@ -206,7 +167,6 @@ def home():
         cur.close()
         conn.close()
     return render_template("index.html", paper_count=paper_count)
-
 
 @app.route("/upload", methods=["GET", "POST"])
 @login_required
@@ -231,7 +191,7 @@ def upload_page():
             )
             row = cur.fetchone()
             if not row:
-                return render_template("upload.html", error="Subject not found. Please choose from the list.", subjects=get_subjects())
+                return render_template("upload.html", error="Subject not found.", subjects=get_subjects())
             subject_id, subject_name = row[0], row[1]
 
             # Year
@@ -252,30 +212,34 @@ def upload_page():
 
             exam_type = request.form.get("examType") or request.form.get("exam_type") or ""
 
-            # Upload to Supabase Storage
-            file_ext = file.filename.rsplit(".", 1)[1].lower()
-            unique_name = f"{subject_id}/{year_int}/{uuid.uuid4()}.{file_ext}"
+            # Upload to Cloudinary
+            original_filename = secure_filename(file.filename)
+            public_id = f"pyqportal/pdfs/{subject_id}/{year_int}/{uuid.uuid4()}"
 
-            supabase.storage.from_(SUPABASE_BUCKET).upload(
-                unique_name,
-                file.read(),
-                file_options={"content-type": "application/pdf"}
+            result = cloudinary.uploader.upload(
+                file,
+                resource_type="raw",
+                public_id=public_id,
+                use_filename=True,
+                unique_filename=False
             )
 
-            file_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(unique_name)
+            file_url = result["secure_url"]
+            cloud_public_id = result["public_id"]
 
-            # Save record to MySQL
+            # Save to Supabase PostgreSQL
             cur.execute(
                 """
                 INSERT INTO question_papers
-                (subject_id, year, file_name, file_url, exam_type)
-                VALUES (%s, %s, %s, %s, %s)
+                (subject_id, year, file_name, file_url, exam_type, public_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING paper_id
                 """,
-                (subject_id, year_int, file.filename, file_url, exam_type),
+                (subject_id, year_int, original_filename, file_url, exam_type, cloud_public_id),
             )
             conn.commit()
 
-            flash("Your question paper has been uploaded successfully.")
+            flash("Question paper uploaded successfully.")
             return redirect(url_for("upload_page"))
 
         except Exception as e:
@@ -287,7 +251,6 @@ def upload_page():
             conn.close()
 
     return render_template("upload.html", subjects=get_subjects())
-
 
 @app.route("/papers")
 def view_papers():
@@ -322,9 +285,10 @@ def view_papers():
     finally:
         cur.close()
         conn.close()
+
 @app.route("/about")
 def about():
     return render_template("about.html")
-    
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)), debug=False)
