@@ -779,7 +779,7 @@
 
 .floating-paper::before {
     content: '';
-    position: absolute;
+    position: fixed;
     top: 10px; left: 8px; right: 8px;
     height: 2px;
     background: var(--gray-200);
