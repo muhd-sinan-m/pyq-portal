@@ -807,7 +807,39 @@
     50%       { transform: translateY(-10px) rotate(8deg); }
 }
 
+/* Folded corner effect */
+.floating-paper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    background: var(--gray-100);
+    clip-path: polygon(100% 0, 0 0, 100% 100%);
+    border-radius: 0 4px 0 0;
+}
 
+/* Slight glow on papers */
+.floating-paper {
+    transition: box-shadow 0.3s ease;
+}
+
+.floating-paper:nth-child(odd) {
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+}
+
+.floating-paper:nth-child(even) {
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.1);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .floating-paper {
+        animation: none !important;
+        opacity: 0.4;
+    }
+}
 /* =====================================================================
    SECTION 3 — BROWSE PAPERS (view) PAGE
    ===================================================================== */
