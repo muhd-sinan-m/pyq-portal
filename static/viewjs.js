@@ -148,3 +148,18 @@ document.querySelectorAll('.filter-select').forEach(el => {
 window.addEventListener('load', () => {
     setTimeout(animateCards, 300);
 });
+/* ── Force-download helper ── */
+function forceDownload(url, filename) {
+    fetch(url)
+        .then(res => res.blob())
+        .then(blob => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename || 'question-paper.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+        })
+        .catch(() => window.open(url, '_blank'));
+}

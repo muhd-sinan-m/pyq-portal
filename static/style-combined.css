@@ -2828,3 +2828,44 @@ body {
     color: white;
     transform: translateY(-2px);
 }
+.paper-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.btn-view-paper,
+.btn-download-paper {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    font-family: inherit;
+    border: none;
+    flex: 1;
+    justify-content: center;
+}
+
+.btn-view-paper {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+}
+.btn-view-paper:hover {
+    background: rgba(59, 130, 246, 0.18);
+    transform: translateY(-1px);
+}
+
+.btn-download-paper {
+    background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+    color: white;
+}
+.btn-download-paper:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
