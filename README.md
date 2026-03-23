@@ -21,20 +21,14 @@
 
 ## 📸 Screenshots
 
-### 🏠 Home Page
-![Home Page](screenshots/home.png)
-
-### 📂 Browse Papers — Semester View
-![Browse Page](screenshots/browse.png)
-
-### 📄 Inside a Semester — Exam Type View
-![Semester View](screenshots/semester.png)
-
-### 👨‍💻 About Page — Meet the Developers
-![About Page](screenshots/about.png)
-
-<br/>
-
+<p>
+  <img src="screenshots/home.png" width="49%"/>
+  <img src="screenshots/browse.png" width="49%"/>
+</p>
+<p>
+  <img src="screenshots/semester.png" width="49%"/>
+  <img src="screenshots/about.png" width="49%"/>
+</p>
 ## ✨ Features
 
 - 📁 **Semester-based folder navigation** — Papers organized by Semester 1 to 6
@@ -183,7 +177,10 @@ We built PYQ Portal to change that. A clean, fast, and permanently free archive 
 
 ## 📄 License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project was built as a student initiative at Marian College Kuttikkanam.  
+All rights reserved © 2026 Muhammed Sinan M & Daniel George VM.
+
+Feel free to take inspiration — but please don't copy and deploy as your own.
 
 <br/>
 
@@ -192,7 +189,6 @@ This project is open source and available under the [MIT License](LICENSE).
 - **Marian College Kuttikkanam** — for being an institution that encourages students to build real things
 - **Supabase** — for the generous free tier that makes this project possible
 - **Render** — for free hosting that keeps the portal always alive
-- **All BCA seniors** — who uploaded their papers to help future students
 
 <br/>
 
