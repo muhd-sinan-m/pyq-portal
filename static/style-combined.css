@@ -2803,3 +2803,28 @@ body {
         display: flex;
     }
 }
+.dev-card {
+    position: relative; /* needed for the LinkedIn button positioning */
+}
+
+.dev-linkedin-btn {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: rgba(10, 102, 194, 0.1);
+    color: #0A66C2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.2s, color 0.2s;
+}
+
+.dev-linkedin-btn:hover {
+    background: #0A66C2;
+    color: white;
+    transform: translateY(-2px);
+}
