@@ -202,12 +202,33 @@
             </div>
 
             <div class="departments-grid">
-                <a href="{{ url_for('view_papers') }}" class="dept-card reveal">
-                    <span class="dept-icon">💻</span>
-                    <h3 class="dept-name">BCA</h3>
-                    <p class="dept-count">{{ paper_count|default(0) }} Papers</p>
-                </a>
-            </div>
+    <a href="{{ url_for('view_papers') }}" class="dept-card reveal">
+        <span class="dept-icon">💻</span>
+        <h3 class="dept-name">BCA</h3>
+        <p class="dept-count">{{ paper_count|default(0) }} Papers</p>
+    </a>
+
+    <!-- Coming soon cards -->
+    <div class="dept-card dept-coming-soon reveal">
+        <span class="dept-icon">📊</span>
+        <h3 class="dept-name">BCom</h3>
+        <p class="dept-soon-badge">Coming Soon</p>
+    </div>
+
+    <div class="dept-card dept-coming-soon reveal">
+        <span class="dept-icon">📈</span>
+        <h3 class="dept-name">BBA</h3>
+        <p class="dept-soon-badge">Coming Soon</p>
+    </div>
+
+    <div class="dept-card dept-coming-soon reveal">
+        <span class="dept-icon">📐</span>
+        <h3 class="dept-name">BSc Mathematics</h3>
+        <p class="dept-soon-badge">Coming Soon</p>
+    </div>
+</div>
+
+<p class="dept-more-note reveal">More departments being added soon — stay tuned! 🚀</p>>
         </div>
     </section>
 

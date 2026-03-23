@@ -1,6 +1,5 @@
 # 📚 PYQ Portal — Previous Year Question Papers
-
-> **Built by BCA students, for BCA students.**  
+ 
 > A free, fast, and always-available archive of previous year question papers — designed to make every junior student's exam preparation a little easier.
 
 <br/>
