@@ -19,16 +19,6 @@
 
 <br/>
 
-## 📸 Screenshots
-
-<p>
-  <img src="screenshots/home.png" width="49%"/>
-  <img src="screenshots/browse.png" width="49%"/>
-</p>
-<p>
-  <img src="screenshots/semester.png" width="49%"/>
-  <img src="screenshots/about.png" width="49%"/>
-</p>
 ## ✨ Features
 
 - 📁 **Semester-based folder navigation** — Papers organized by Semester 1 to 6
@@ -55,7 +45,18 @@
 | Fonts | Plus Jakarta Sans · Space Grotesk |
 
 <br/>
+## 📸 Screenshots
 
+<p>
+  <img src="screenshots/home.png" width="49%"/>
+  <img src="screenshots/browse.png" width="49%"/>
+</p>
+<p>
+  <img src="screenshots/semester.png" width="49%"/>
+  <img src="screenshots/about.png" width="49%"/>
+</p>
+
+<br/>
 ## 🗂️ Project Structure
 
 ```
