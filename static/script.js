@@ -25,26 +25,44 @@ if (document.getElementById('semFolders')) {
     const EXAM_ICONS  = { 'SEA I': '📄', 'SEA II': '📋', 'ISA': '📝' };
     const EXAM_COLORS = { 'SEA I': 'blue', 'SEA II': 'purple', 'ISA': 'green' };
 
-    // ---- Filter section helpers ----                             // ← ADDED
-    function showFiltersSection() {                                 // ← ADDED
-        const section = document.getElementById('filtersSection'); // ← ADDED
-        if (section) section.style.display = '';                   // ← ADDED
-    }                                                              // ← ADDED
+    // ---- Filter section visibility ----
+    function showFiltersSection() {
+        const section = document.getElementById('filtersSection');
+        if (section) section.style.display = '';
+    }
 
-    function hideFiltersSection() {                                // ← ADDED
-        const section = document.getElementById('filtersSection'); // ← ADDED
-        if (section) section.style.display = 'none';              // ← ADDED
-        const wrapper = document.getElementById('filtersCardWrapper'); // ← ADDED
-        const btn     = document.getElementById('filterToggleBtn');    // ← ADDED
-        if (wrapper) wrapper.classList.remove('visible');          // ← ADDED
-        if (btn)     btn.classList.remove('open');                 // ← ADDED
-    }                                                              // ← ADDED
+    function hideFiltersSection() {
+        const section = document.getElementById('filtersSection');
+        if (section) section.style.display = 'none';
+        const wrapper = document.getElementById('filtersCardWrapper');
+        const btn     = document.getElementById('filterToggleBtn');
+        if (wrapper) wrapper.classList.remove('visible');
+        if (btn)     btn.classList.remove('open');
+    }
+
+    // ---- Context-aware subject filter ----
+    function filterSubjectsBySem(sem) {
+        subjectFilter.querySelectorAll('option').forEach(opt => {
+            if (!opt.value) return;
+            opt.hidden = opt.dataset.semester && String(opt.dataset.semester) !== String(sem);
+        });
+        if (subjectFilter.value) {
+            const selected = subjectFilter.querySelector(`option[value="${subjectFilter.value}"]`);
+            if (selected && selected.hidden) subjectFilter.value = '';
+        }
+    }
+
+    function resetSubjectFilter() {
+        subjectFilter.querySelectorAll('option').forEach(opt => opt.hidden = false);
+        subjectFilter.value = '';
+    }
 
     // ---- Render semester folders ----
     function renderFolders() {
         semFolders.style.display = 'grid';
         folderPapersView.style.display = 'none';
-        hideFiltersSection();                                      // ← ADDED
+        hideFiltersSection();
+        resetSubjectFilter();
         const sems = [1,2,3,4,5,6];
         semFolders.innerHTML = sems.map(sem => {
             const count = papers.filter(p => String(p.semester) === String(sem)).length;
@@ -75,9 +93,9 @@ if (document.getElementById('semFolders')) {
         activeType = null;
         semFolders.style.display = 'none';
         folderPapersView.style.display = 'block';
-        hideFiltersSection();                                      // ← ADDED
+        hideFiltersSection();
+        resetSubjectFilter();
 
-        // Build exam type sub-folders
         const typeCards = EXAM_TYPES.map(type => {
             const count = papers.filter(p =>
                 String(p.semester) === String(sem) &&
@@ -109,7 +127,6 @@ if (document.getElementById('semFolders')) {
             <div class="exam-type-grid" id="examTypeGrid">${typeCards}</div>
         `;
 
-        // Hide papers grid — show only type cards
         papersGrid.style.display = 'none';
         noResults.style.display  = 'none';
         resultsCount.textContent = '';
@@ -119,9 +136,9 @@ if (document.getElementById('semFolders')) {
     window.openExamType = function(sem, type) {
         activeType = type;
         semesterFilter.value = String(sem);
-        showFiltersSection();                                      // ← ADDED
+        showFiltersSection();
+        filterSubjectsBySem(sem);
 
-        // Update breadcrumb
         folderPapersHeader.innerHTML = `
             <div class="folder-breadcrumb">
                 <button class="breadcrumb-btn" onclick="renderFolders()">All Semesters</button>

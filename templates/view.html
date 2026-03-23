@@ -170,7 +170,7 @@
                         <select id="subjectFilter" class="filter-select">
                             <option value="">All Subjects</option>
                             {% for s in subjects %}
-                            <option value="{{ s.subject_name }}">{{ s.subject_name }}</option>
+                         <option value="{{ s.subject_name }}" data-semester="{{ s.semester }}">{{ s.subject_name }}</option>
                             {% endfor %}
                         </select>
                     </div>
