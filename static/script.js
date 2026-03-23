@@ -167,6 +167,21 @@ if (document.getElementById('semFolders')) {
             if (typeof updateFilterBadge === 'function') updateFilterBadge();
         }
     });
+    // ---- Floating back button (mobile scroll) ----
+const btnBackFloat = document.getElementById('btnBackFloat');
+
+btnBackFloat.addEventListener('click', () => {
+    btnBackFolders.click();
+});
+
+window.addEventListener('scroll', () => {
+    if (folderPapersView.style.display === 'none') {
+        btnBackFloat.classList.remove('visible');
+        return;
+    }
+    const rect = btnBackFolders.getBoundingClientRect();
+    btnBackFloat.classList.toggle('visible', rect.bottom < 0);
+}, { passive: true });
 
     // ---- Render papers ----
     function renderPapers(forceType) {
