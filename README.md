@@ -87,21 +87,6 @@ pyq-portal/
 
 <br/>
 
-## ⚙️ Environment Variables
-
-Create a `.env` file in the project root (never commit this to GitHub):
-
-```env
-DATABASE_URL=postgresql://postgres:PASSWORD@host:5432/postgres
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your_anon_public_key
-SUPABASE_BUCKET=question-papers
-SECRET_KEY=your_secret_key
-ADMIN_USER=admin
-ADMIN_PASS=your_admin_password
-```
-
-<br/>
 
 ## 🚀 Local Development
 
@@ -138,50 +123,6 @@ Open `http://localhost:10000` in your browser.
 
 <br/>
 
-## 🗄️ Database Setup
-
-This project uses **Supabase PostgreSQL**. Tables are created automatically on first run via `init_db()`.
-
-**Manual setup (if needed) — run in Supabase SQL Editor:**
-
-```sql
-CREATE TABLE subjects (
-    subject_id SERIAL PRIMARY KEY,
-    subject_name VARCHAR(255) NOT NULL,
-    semester INTEGER
-);
-
-CREATE TABLE question_papers (
-    paper_id SERIAL PRIMARY KEY,
-    subject_id INTEGER REFERENCES subjects(subject_id),
-    year INTEGER,
-    file_name VARCHAR(255),
-    exam_type VARCHAR(100),
-    upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    file_url TEXT,
-    public_id TEXT
-);
-
-CREATE TABLE users (
-    user_id SERIAL PRIMARY KEY,
-    username VARCHAR(100) UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    role VARCHAR(50) DEFAULT 'admin'
-);
-```
-
-**Enable Supabase Storage policies:**
-```sql
-CREATE POLICY "Allow public uploads"
-ON storage.objects FOR INSERT TO public
-WITH CHECK (bucket_id = 'question-papers');
-
-CREATE POLICY "Allow public reads"
-ON storage.objects FOR SELECT TO public
-USING (bucket_id = 'question-papers');
-```
-
-<br/>
 
 ## ☁️ Deployment (Render)
 
@@ -204,32 +145,6 @@ gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --keep-alive 5
 
 **6.** Deploy — your portal will be live at your Render URL!
 
-> 💡 **Tip:** Use [UptimeRobot](https://uptimerobot.com) (free) to ping your site every 5 minutes and prevent Render free tier from sleeping.
-
-<br/>
-
-## 📋 Admin Guide
-
-**Login:** Go to `/login` and enter your admin credentials.
-
-**Upload a paper:**
-1. Login as admin
-2. Click **Upload** in the navigation
-3. Select subject, year, semester, exam type
-4. Upload PDF file (max 10MB)
-5. Click **Upload Paper**
-
-**Change admin password:**
-```python
-from werkzeug.security import generate_password_hash
-print(generate_password_hash('YourNewPassword'))
-```
-Run this locally, copy the hash, then update in Supabase:
-```sql
-UPDATE users SET password_hash = 'YOUR_HASH' WHERE username = 'admin';
-```
-
-<br/>
 
 ## 👨‍💻 Developers
 
@@ -282,10 +197,6 @@ This project is open source and available under the [MIT License](LICENSE).
 <br/>
 
 ---
-
-<p align="center">
-  Made with ❤️ by BCA Students · Marian College Kuttikkanam · 2026
-</p>
 
 <p align="center">
   <a href="https://pyqportal.app">🌐 Live Site</a>
