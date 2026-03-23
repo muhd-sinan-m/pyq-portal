@@ -21,14 +21,30 @@ if (document.getElementById('semFolders')) {
     let activeSem  = null;
     let activeType = null;
 
-    const EXAM_TYPES = ['SEA I', 'SEA II', 'ISA'];
-    const EXAM_ICONS = { 'SEA I': '📄', 'SEA II': '📋', 'ISA': '📝' };
+    const EXAM_TYPES  = ['SEA I', 'SEA II', 'ISA'];
+    const EXAM_ICONS  = { 'SEA I': '📄', 'SEA II': '📋', 'ISA': '📝' };
     const EXAM_COLORS = { 'SEA I': 'blue', 'SEA II': 'purple', 'ISA': 'green' };
+
+    // ---- Filter section helpers ----                             // ← ADDED
+    function showFiltersSection() {                                 // ← ADDED
+        const section = document.getElementById('filtersSection'); // ← ADDED
+        if (section) section.style.display = '';                   // ← ADDED
+    }                                                              // ← ADDED
+
+    function hideFiltersSection() {                                // ← ADDED
+        const section = document.getElementById('filtersSection'); // ← ADDED
+        if (section) section.style.display = 'none';              // ← ADDED
+        const wrapper = document.getElementById('filtersCardWrapper'); // ← ADDED
+        const btn     = document.getElementById('filterToggleBtn');    // ← ADDED
+        if (wrapper) wrapper.classList.remove('visible');          // ← ADDED
+        if (btn)     btn.classList.remove('open');                 // ← ADDED
+    }                                                              // ← ADDED
 
     // ---- Render semester folders ----
     function renderFolders() {
         semFolders.style.display = 'grid';
         folderPapersView.style.display = 'none';
+        hideFiltersSection();                                      // ← ADDED
         const sems = [1,2,3,4,5,6];
         semFolders.innerHTML = sems.map(sem => {
             const count = papers.filter(p => String(p.semester) === String(sem)).length;
@@ -59,6 +75,7 @@ if (document.getElementById('semFolders')) {
         activeType = null;
         semFolders.style.display = 'none';
         folderPapersView.style.display = 'block';
+        hideFiltersSection();                                      // ← ADDED
 
         // Build exam type sub-folders
         const typeCards = EXAM_TYPES.map(type => {
@@ -102,6 +119,7 @@ if (document.getElementById('semFolders')) {
     window.openExamType = function(sem, type) {
         activeType = type;
         semesterFilter.value = String(sem);
+        showFiltersSection();                                      // ← ADDED
 
         // Update breadcrumb
         folderPapersHeader.innerHTML = `
@@ -239,15 +257,16 @@ if (document.getElementById('semFolders')) {
     // ---- Initial render ----
     renderFolders();
 }
+
 // ==================== UPLOAD PAGE FUNCTIONALITY ====================
 if (document.getElementById('uploadForm')) {
-    const uploadForm    = document.getElementById('uploadForm');
-    const uploadFile    = document.getElementById('uploadFile');
+    const uploadForm     = document.getElementById('uploadForm');
+    const uploadFile     = document.getElementById('uploadFile');
     const fileUploadArea = document.getElementById('fileUploadArea');
-    const fileSelected  = document.getElementById('fileSelected');
-    const fileName      = document.getElementById('fileName');
-    const fileSize      = document.getElementById('fileSize');
-    const removeFile    = document.getElementById('removeFile');
+    const fileSelected   = document.getElementById('fileSelected');
+    const fileName       = document.getElementById('fileName');
+    const fileSize       = document.getElementById('fileSize');
+    const removeFile     = document.getElementById('removeFile');
 
     fileUploadArea.addEventListener('click', () => uploadFile.click());
 
@@ -324,11 +343,11 @@ if (document.getElementById('uploadForm')) {
         document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
 
         let isValid = true;
-        if (!document.getElementById('uploadSubject').value) { showError('subjectError', 'Please select a subject'); isValid = false; }
-        if (!document.getElementById('uploadYear').value)    { showError('yearError', 'Please select a year'); isValid = false; }
-        if (!document.getElementById('uploadSemester').value){ showError('semesterError', 'Please select a semester'); isValid = false; }
-        if (!document.getElementById('uploadDepartment').value){ showError('departmentError', 'Please select a department'); isValid = false; }
-        if (!document.getElementById('uploadExamType').value){ showError('examTypeError', 'Please select an exam type'); isValid = false; }
+        if (!document.getElementById('uploadSubject').value)    { showError('subjectError', 'Please select a subject'); isValid = false; }
+        if (!document.getElementById('uploadYear').value)       { showError('yearError', 'Please select a year'); isValid = false; }
+        if (!document.getElementById('uploadSemester').value)   { showError('semesterError', 'Please select a semester'); isValid = false; }
+        if (!document.getElementById('uploadDepartment').value) { showError('departmentError', 'Please select a department'); isValid = false; }
+        if (!document.getElementById('uploadExamType').value)   { showError('examTypeError', 'Please select an exam type'); isValid = false; }
 
         const file = uploadFile.files[0];
         if (!file) { showError('fileError', 'Please select a PDF file'); isValid = false; }

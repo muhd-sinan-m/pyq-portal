@@ -131,102 +131,88 @@
         </div>
     </section>
 
-    <!-- ==================== FILTERS SECTION ==================== -->
-    <section class="filters-section">
-        <div class="container">
 
-            <div class="filter-toggle-bar">
-                <button class="btn-filter-toggle" id="filterToggleBtn" onclick="toggleFilters()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="4" y1="6" x2="20" y2="6"></line>
-                        <line x1="8" y1="12" x2="16" y2="12"></line>
-                        <line x1="11" y1="18" x2="13" y2="18"></line>
-                    </svg>
-                    Filter Papers
-                    <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                </button>
-                <span class="active-badge" id="activeFilterBadge" style="display:none;"></span>
-            </div>
+<!-- ==================== FILTERS SECTION ==================== -->
+<section class="filters-section" id="filtersSection" style="display:none;">
+    <div class="container">
 
-            <div class="filters-card-wrapper" id="filtersCardWrapper">
-                <div class="filters-card">
-                    <div class="filters-header">
-                        <h2 class="filters-title">Filter Papers</h2>
-                        <button class="btn-reset" id="resetFilters">Reset All</button>
+        <div class="filter-toggle-bar">
+            <button class="btn-filter-toggle" id="filterToggleBtn" onclick="toggleFilters()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                    <line x1="11" y1="18" x2="13" y2="18"></line>
+                </svg>
+                Filter Papers
+                <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+            <span class="active-badge" id="activeFilterBadge" style="display:none;"></span>
+        </div>
+
+        <div class="filters-card-wrapper" id="filtersCardWrapper">
+            <div class="filters-card">
+                <div class="filters-header">
+                    <h2 class="filters-title">Filter Papers</h2>
+                    <button class="btn-reset" id="resetFilters">Reset All</button>
+                </div>
+                <div class="filters-grid">
+
+                    <div class="filter-group">
+                        <label class="filter-label" for="subjectFilter">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                            Subject
+                        </label>
+                        <select id="subjectFilter" class="filter-select">
+                            <option value="">All Subjects</option>
+                            {% for s in subjects %}
+                            <option value="{{ s.subject_name }}">{{ s.subject_name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <div class="filters-grid">
-                        <div class="filter-group">
-                            <label class="filter-label" for="subjectFilter">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                                </svg>
-                                Subject
-                            </label>
-                            <select id="subjectFilter" class="filter-select">
-                                <option value="">All Subjects</option>
-                                {% for s in subjects %}
-                                <option value="{{ s.subject_name }}">{{ s.subject_name }}{% if s.semester %} (Sem {{ s.semester }}){% endif %}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
 
-                        <div class="filter-group">
-                            <label class="filter-label" for="yearFilter">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                </svg>
-                                Year
-                            </label>
-                            <select id="yearFilter" class="filter-select">
-                                <option value="">All Years</option>
-                                {% for y in years %}
-                                <option value="{{ y }}">{{ y }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="filter-group">
-                            <label class="filter-label" for="semesterFilter">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                                </svg>
-                                Semester
-                            </label>
-                            <select id="semesterFilter" class="filter-select">
-                                <option value="">All Semesters</option>
-                                <option value="1">Semester 1</option>
-                                <option value="2">Semester 2</option>
-                                <option value="3">Semester 3</option>
-                                <option value="4">Semester 4</option>
-                                <option value="5">Semester 5</option>
-                                <option value="6">Semester 6</option>
-                                <option value="7">Semester 7</option>
-                                <option value="8">Semester 8</option>
-                            </select>
-                        </div>
-
-                        <div class="filter-group">
-                            <label class="filter-label" for="searchInput">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <circle cx="11" cy="11" r="8"></circle>
-                                    <path d="m21 21-4.35-4.35"></path>
-                                </svg>
-                                Search
-                            </label>
-                            <input type="text" id="searchInput" class="filter-input" placeholder="Search by keywords...">
-                        </div>
+                    <div class="filter-group">
+                        <label class="filter-label" for="yearFilter">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            Year
+                        </label>
+                        <select id="yearFilter" class="filter-select">
+                            <option value="">All Years</option>
+                            {% for y in years %}
+                            <option value="{{ y }}">{{ y }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" for="searchInput">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            Search
+                        </label>
+                        <input type="text" id="searchInput" class="filter-input" placeholder="Search by keywords...">
+                    </div>
+
                 </div>
             </div>
-
         </div>
-    </section>
+
+    </div>
+</section>
+
+<!-- Hidden semester value — set by folder navigation, not shown to user -->
+<input type="hidden" id="semesterFilter" value="">
 
     <!-- ==================== RESULTS SECTION ==================== -->
     <!-- ==================== RESULTS SECTION ==================== -->

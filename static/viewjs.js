@@ -44,6 +44,22 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closePopup();
 });
 
+/* ── Filter section visibility ── */
+function showFilters() {
+    const section = document.getElementById('filtersSection');
+    if (section) section.style.display = '';
+}
+
+function hideFilters() {
+    const section = document.getElementById('filtersSection');
+    if (section) section.style.display = 'none';
+    /* Also close the filter panel if open */
+    const wrapper = document.getElementById('filtersCardWrapper');
+    const btn     = document.getElementById('filterToggleBtn');
+    if (wrapper) wrapper.classList.remove('visible');
+    if (btn)     btn.classList.remove('open');
+}
+
 /* ── Filter toggle ── */
 function toggleFilters() {
     const wrapper = document.getElementById('filtersCardWrapper');
@@ -58,7 +74,6 @@ function updateFilterBadge() {
     const values = [
         document.getElementById('subjectFilter').value,
         document.getElementById('yearFilter').value,
-        document.getElementById('semesterFilter').value,
         document.getElementById('searchInput').value.trim()
     ];
     const count = values.filter(Boolean).length;
@@ -71,7 +86,7 @@ function updateFilterBadge() {
     }
 }
 
-['subjectFilter', 'yearFilter', 'semesterFilter', 'searchInput'].forEach(id => {
+['subjectFilter', 'yearFilter', 'searchInput'].forEach(id => {
     document.getElementById(id).addEventListener('change', updateFilterBadge);
     document.getElementById(id).addEventListener('input',  updateFilterBadge);
 });
@@ -86,7 +101,6 @@ function animateCards() {
     cards.forEach((card, i) => {
         card.classList.add('paper-card-anim');
         card.style.transitionDelay = `${i * 60}ms`;
-        /* small rAF delay so transition triggers after class is applied */
         requestAnimationFrame(() => {
             requestAnimationFrame(() => card.classList.add('card-visible'));
         });
@@ -100,11 +114,10 @@ function reAnimateCards() {
         card.classList.remove('card-visible');
         card.style.transitionDelay = '0ms';
     });
-    /* short pause so removal is applied before re-adding */
     setTimeout(animateCards, 30);
 }
 
-/* Observe DOM mutations in papersGrid (cards added by script.js filtering) */
+/* Observe DOM mutations in papersGrid */
 const grid = document.getElementById('papersGrid');
 if (grid) {
     const mo = new MutationObserver(() => animateCards());
@@ -112,7 +125,7 @@ if (grid) {
 }
 
 /* ── Filter inputs trigger re-animation ── */
-['subjectFilter', 'yearFilter', 'semesterFilter', 'searchInput'].forEach(id => {
+['subjectFilter', 'yearFilter', 'searchInput'].forEach(id => {
     document.getElementById(id).addEventListener('change', () => setTimeout(reAnimateCards, 80));
     document.getElementById(id).addEventListener('input',  () => setTimeout(reAnimateCards, 80));
 });
@@ -133,6 +146,5 @@ document.querySelectorAll('.filter-select').forEach(el => {
 
 /* ── Initial entrance after page load ── */
 window.addEventListener('load', () => {
-    /* small delay so script.js has time to render initial cards */
     setTimeout(animateCards, 300);
 });
