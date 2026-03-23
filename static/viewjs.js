@@ -148,8 +148,23 @@ document.querySelectorAll('.filter-select').forEach(el => {
 window.addEventListener('load', () => {
     setTimeout(animateCards, 300);
 });
+/* ── Toast notification ── */
+function showToast(message, duration = 3000) {
+    let toast = document.getElementById('pyqToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'pyqToast';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add('toast-visible');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove('toast-visible'), duration);
+}
+
 /* ── Force-download helper ── */
 function forceDownload(url, filename) {
+    showToast('⬇️ Downloading… please wait');
     fetch(url)
         .then(res => res.blob())
         .then(blob => {
@@ -160,6 +175,10 @@ function forceDownload(url, filename) {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(a.href);
+            showToast('✅ Download started!');
         })
-        .catch(() => window.open(url, '_blank'));
+        .catch(() => {
+            showToast('⚠️ Could not download — opening instead');
+            window.open(url, '_blank');
+        });
 }

@@ -2869,3 +2869,37 @@ body {
     opacity: 0.9;
     transform: translateY(-1px);
 }
+/* ── Download toast ── */
+#pyqToast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1F2937;
+    color: white;
+    padding: 0.65rem 1.4rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s, transform 0.25s;
+    z-index: 9999;
+    white-space: nowrap;
+}
+#pyqToast.toast-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+@media (min-width: 600px) and (max-width: 1024px) {
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    .results-section {
+        flex: 1;
+    }
+}
