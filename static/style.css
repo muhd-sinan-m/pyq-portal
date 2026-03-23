@@ -390,28 +390,95 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==================== CTA SECTION ==================== */
-.cta-section {
-    padding: 5rem 0;
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-purple) 100%);
-    color: white;
-}
-
-.cta-content {
-    text-align: center;
+.cta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
     max-width: 700px;
-    margin: 0 auto;
+    margin: 0 auto 1.5rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.03);
 }
 
-.cta-title {
-    font-size: 2.5rem;
+.cta-left {
+    padding: 32px;
+    text-align: left;
+}
+
+.cta-divider-v {
+    background: rgba(255,255,255,0.08);
+}
+
+.cta-right {
+    padding: 32px;
+    text-align: left;
+}
+
+.cta-tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #818cf8;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.cta-big {
+    font-size: 28px;
     font-weight: 800;
-    margin-bottom: 1rem;
+    color: white;
+    line-height: 1.2;
+    margin-bottom: 10px;
 }
 
-.cta-description {
-    font-size: 1.25rem;
-    margin-bottom: 2rem;
-    opacity: 0.95;
+.cta-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+}
+
+.cta-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.cta-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+}
+
+.cta-list li::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #818cf8;
+    flex-shrink: 0;
+}
+
+.cta-note {
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+    text-align: center;
+    margin-top: 1rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .cta-grid {
+        grid-template-columns: 1fr;
+    }
+    .cta-divider-v {
+        height: 1px;
+        width: 100%;
+    }
 }
 
 /* ==================== PAGE HEADER ==================== */
