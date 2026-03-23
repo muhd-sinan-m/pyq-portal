@@ -390,11 +390,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==================== CTA SECTION ==================== */
+.cta-section {
+    padding: 40px 0 !important;
+}
+
 .cta-grid {
     display: grid;
     grid-template-columns: 1fr 1px 1fr;
-    max-width: 700px;
-    margin: 0 auto 1.5rem;
+    max-width: 600px;
+    margin: 0 auto 1rem;
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 16px;
     overflow: hidden;
@@ -402,7 +406,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .cta-left {
-    padding: 32px;
+    padding: 24px;
     text-align: left;
 }
 
@@ -411,7 +415,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .cta-right {
-    padding: 32px;
+    padding: 24px;
     text-align: left;
 }
 
@@ -421,15 +425,15 @@ h1, h2, h3, h4, h5, h6 {
     letter-spacing: 2px;
     color: #818cf8;
     text-transform: uppercase;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .cta-big {
-    font-size: 28px;
+    font-size: 22px;
     font-weight: 800;
     color: white;
     line-height: 1.2;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .cta-sub {
@@ -442,7 +446,7 @@ h1, h2, h3, h4, h5, h6 {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     margin-top: 4px;
 }
 
@@ -467,10 +471,9 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 12px;
     color: rgba(255,255,255,0.3);
     text-align: center;
-    margin-top: 1rem;
+    margin-top: 0.8rem;
 }
 
-/* Mobile responsive */
 @media (max-width: 768px) {
     .cta-grid {
         grid-template-columns: 1fr;
@@ -480,7 +483,6 @@ h1, h2, h3, h4, h5, h6 {
         width: 100%;
     }
 }
-
 /* ==================== PAGE HEADER ==================== */
 .page-header {
     padding: 3rem 0 2rem;
