@@ -2768,3 +2768,12 @@ body {
         font-size: 0.75rem;
     }
 }
+/* Upload page header fix — must be LAST */
+@media (max-width: 920px) {
+    .upload-page .main-header,
+    .upload-page .container-fluid,
+    .upload-page .unified-header {
+        overflow: hidden !important;
+        max-width: 100vw;
+    }
+}
