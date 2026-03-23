@@ -1279,3 +1279,18 @@ textarea.form-control {
 .announcement-banner button:hover {
     background: rgba(255,255,255,0.35);
 }
+@media (max-width: 768px) {
+    .upload-page .main-header {
+        overflow: hidden;
+    }
+
+    .upload-page .unified-header {
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .upload-page .container-fluid {
+        padding: 0 1rem;
+        overflow: hidden;
+    }
+}
