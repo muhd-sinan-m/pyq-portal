@@ -3,7 +3,7 @@ psycopg2-binary
 supabase
 Werkzeug
 gunicorn
-google-generativeai>=0.8.0
+google-genai
 requests
 flask-limiter
 flask-compress

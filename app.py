@@ -8,7 +8,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import uuid
 import requests
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_compress import Compress
@@ -17,13 +18,12 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')
 Compress(app)
 
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-gemini_model = genai.GenerativeModel("gemini-2.5-flash")
-
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=[]
+    default_limits=[],
+    storage_uri="memory://"
 )
 
 # ---------- Supabase ----------
@@ -136,7 +136,6 @@ def allowed_file(filename):
 def analyze_with_gemini(pdf_url, subject_name):
     import tempfile, os as _os
 
-    # Download PDF
     r = requests.get(pdf_url, timeout=15)
     r.raise_for_status()
 
@@ -152,12 +151,24 @@ Respond with:
 3. Question pattern observations (2-3 lines)"""
 
     try:
-        uploaded = genai.upload_file(tmp_path, mime_type='application/pdf')
-        response = gemini_model.generate_content([uploaded, prompt])
+        # Upload PDF
+        with open(tmp_path, 'rb') as f:
+            uploaded = client.files.upload(
+                file=f,
+                config=types.UploadFileConfig(mime_type='application/pdf')
+            )
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[uploaded, prompt]
+        )
+
+        # Cleanup
         try:
-            genai.delete_file(uploaded.name)
+            client.files.delete(name=uploaded.name)
         except:
             pass
+
         return response.text
     finally:
         _os.unlink(tmp_path)
