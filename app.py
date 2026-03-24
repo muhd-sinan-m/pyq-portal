@@ -324,7 +324,7 @@ def analyze_paper(paper_id):
     cur = conn.cursor()
     try:
         cur.execute("""
-            SELECT q.file_url, q.exam_type, q.year, s.subject_name
+            SELECT q.file_url, q.exam_type, q.year, s.subject_name, q.ai_analysis
             FROM question_papers q
             JOIN subjects s ON q.subject_id = s.subject_id
             WHERE q.paper_id = %s
@@ -332,16 +332,33 @@ def analyze_paper(paper_id):
         row = cur.fetchone()
         if not row:
             return jsonify({"error": "Paper not found"}), 404
-        file_url, exam_type, year, subject_name = row
+
+        file_url, exam_type, year, subject_name, ai_analysis = row
+
+        # ✅ Already analysed — return cached result instantly
+        if ai_analysis:
+            return jsonify({"subject": subject_name, "year": year,
+                            "exam_type": exam_type, "predictions": ai_analysis})
+
+        # 🔄 Not analysed yet — call Gemini
         try:
             predictions = analyze_with_gemini(file_url, subject_name)
         except Exception as e:
             err = str(e).lower()
             if "quota" in err or "rate" in err or "429" in err or "resource_exhausted" in err:
-                return jsonify({"error": "Daily analysis limit reached. Please try again tomorrow.Sorry for the inconvenience.😊❤️"}), 429
+                return jsonify({"error": "Daily analysis limit reached. Please try again tomorrow. Sorry for the inconvenience.😊❤️"}), 429
             app.logger.exception("Gemini analysis failed")
             return jsonify({"error": "Analysis failed. Please try again later."}), 500
-        return jsonify({"subject": subject_name, "year": year, "exam_type": exam_type, "predictions": predictions})
+
+        # 💾 Save to DB so next time it's instant
+        cur.execute(
+            "UPDATE question_papers SET ai_analysis = %s WHERE paper_id = %s",
+            (predictions, paper_id)
+        )
+        conn.commit()
+
+        return jsonify({"subject": subject_name, "year": year,
+                        "exam_type": exam_type, "predictions": predictions})
     finally:
         cur.close()
         conn.close()
