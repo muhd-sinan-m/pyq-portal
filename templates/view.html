@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <title>Browse Papers - PYQ Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -348,14 +349,14 @@
                 </div>
                 <div id="analyseSubject" style="font-weight:700; color:#111827; font-size:1rem;"></div>
             </div>
-            <button onclick="document.getElementById('analyseModal').style.display='none'"
+            <button onclick="closeAnalyseModal()"
                     style="background:#F3F4F6; border:none; border-radius:50%; width:32px; height:32px;
                            cursor:pointer; font-size:1.1rem; display:flex; align-items:center;
                            justify-content:center; color:#6B7280;">✕</button>
         </div>
         <div style="padding:1.5rem 1.75rem; overflow-y:auto; flex:1;">
-            <pre id="analyseResult" style="white-space:pre-wrap; font-family:'Plus Jakarta Sans',sans-serif;
-                 font-size:0.9rem; line-height:1.75; color:#374151; margin:0;"></pre>
+            <div id="analyseResult" style="font-family:'Plus Jakarta Sans',sans-serif;
+     font-size:0.9rem; line-height:1.75; color:#374151;"></div>
         </div>
     </div>
 </div>

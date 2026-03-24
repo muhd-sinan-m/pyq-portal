@@ -260,19 +260,54 @@ window.addEventListener('scroll', () => {
             `).join('');
         }
     }
-    window.analysePaper = async function(paperId, subject) {
-    showToast('🤖 Analysing… this may take a few seconds');
+    let analyseController = null;
+
+window.analysePaper = async function(paperId, subject) {
+    if (analyseController) analyseController.abort();
+    analyseController = new AbortController();
+
+    document.getElementById('analyseSubject').textContent = subject;
+    document.getElementById('analyseResult').innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center;
+                    justify-content:center; padding:3rem; gap:1rem; color:#6B7280;">
+            <svg style="animation:spin 1s linear infinite" width="36" height="36"
+                 viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            <span style="font-weight:600;">Analysing paper with AI…</span>
+            <span style="font-size:0.8rem;">This may take 15–20 seconds</span>
+            <button onclick="closeAnalyseModal()"
+                style="margin-top:0.5rem; padding:0.4rem 1.2rem; border-radius:8px;
+                       border:1px solid #E5E7EB; background:white; cursor:pointer;
+                       font-family:inherit; font-size:0.85rem; color:#6B7280;">
+                Cancel
+            </button>
+        </div>`;
+    document.getElementById('analyseModal').style.display = 'flex';
+
     try {
-        const res = await fetch(`/analyze/${paperId}`);
+        const res = await fetch(`/analyze/${paperId}`, { signal: analyseController.signal });
         const data = await res.json();
-        if (data.error) { showToast('⚠️ ' + data.error); return; }
-        document.getElementById('analyseSubject').textContent = data.subject + ' — ' + data.exam_type + ' ' + data.year;
-        document.getElementById('analyseResult').textContent = data.predictions;
-        document.getElementById('analyseModal').style.display = 'flex';
+        if (data.error) {
+            document.getElementById('analyseResult').innerHTML =
+                `<p style="color:#EF4444;">⚠️ ${data.error}</p>`;
+            return;
+        }
+        document.getElementById('analyseSubject').textContent =
+            data.subject + ' — ' + data.exam_type + ' ' + data.year;
+        document.getElementById('analyseResult').innerHTML =
+            marked.parse(data.predictions);
     } catch(e) {
-        showToast('⚠️ Analysis failed. Try again.');
+        if (e.name === 'AbortError') return;
+        document.getElementById('analyseResult').innerHTML =
+            `<p style="color:#EF4444;">⚠️ Analysis failed. Please try again.</p>`;
     }
-}
+};
+
+window.closeAnalyseModal = function() {
+    if (analyseController) { analyseController.abort(); analyseController = null; }
+    document.getElementById('analyseModal').style.display = 'none';
+};
     function escapeHtml(text) {
         if (text == null) return '';
         const div = document.createElement('div');
