@@ -37,7 +37,14 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 db_pool = pool.SimpleConnectionPool(1, 10, os.environ.get("DATABASE_URL"))
 
 def get_db():
-    return db_pool.getconn()
+    try:
+        conn = db_pool.getconn()
+        cur = conn.cursor()
+        cur.execute("SELECT 1")
+        cur.close()
+        return conn
+    except:
+        return psycopg2.connect(os.environ.get("DATABASE_URL"))
 
 def return_db(conn):
     db_pool.putconn(conn)
@@ -162,6 +169,7 @@ Respond with:
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=[uploaded, prompt]
+            config={"timeout": 60}
         )
 
         # Cleanup
