@@ -12,7 +12,7 @@ import google.generativeai as genai
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+gemini_model = genai.GenerativeModel("gemini-2.5-flash")
 
 # ---------- Supabase ----------
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
