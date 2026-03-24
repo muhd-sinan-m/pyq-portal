@@ -366,16 +366,23 @@ def analyze_paper(paper_id):
             app.logger.exception("Gemini analysis failed")
             return jsonify({"error": "Analysis failed. Please try again later."}), 500
 
-        # Save to DB — next request is instant
-        cur.execute(
-            "UPDATE question_papers SET ai_analysis = %s WHERE paper_id = %s",
-            (predictions, paper_id)
-        )
-        conn.commit()
+        # Save to DB
+        try:
+            cur.execute(
+                "UPDATE question_papers SET ai_analysis = %s WHERE paper_id = %s",
+                (predictions, paper_id)
+            )
+            conn.commit()
+        except Exception as e:
+            app.logger.exception("Failed to cache analysis")
+            conn.rollback()
 
         return jsonify({"subject": subject_name, "year": year,
                         "exam_type": exam_type, "predictions": predictions,
                         "cached": False})
+    except Exception as e:
+        app.logger.exception("analyze_paper failed")
+        return jsonify({"error": "Analysis failed. Please try again later."}), 500
     finally:
         cur.close()
         return_db(conn)
