@@ -344,7 +344,6 @@ def about():
     return render_template("about.html")
 
 @app.route("/analyze/<int:paper_id>")
-@limiter.limit("3 per hour")
 def analyze_paper(paper_id):
     conn = get_db()
     cur = conn.cursor()
@@ -361,19 +360,27 @@ def analyze_paper(paper_id):
 
         file_url, exam_type, year, subject_name, ai_analysis = row
 
-        # Return cached result instantly
+        # ✅ Cached — no limit, return instantly
         if ai_analysis:
             return jsonify({"subject": subject_name, "year": year,
                             "exam_type": exam_type, "predictions": ai_analysis,
                             "cached": True})
 
-        # Call Gemini for first time
+        # 🔒 Not cached — check rate limit before calling Gemini
+        try:
+            limiter.check()
+        except Exception:
+            return jsonify({"error": "Too many requests. Please wait before analysing a new paper."}), 429
+
+        # Call Gemini
         try:
             predictions = analyze_with_gemini(file_url, subject_name)
         except Exception as e:
             err = str(e).lower()
             if "quota" in err or "rate" in err or "429" in err or "resource_exhausted" in err:
                 return jsonify({"error": "Daily analysis limit reached. Please try again tomorrow. Sorry for the inconvenience.😊❤️"}), 429
+            if "503" in err or "unavailable" in err or "high demand" in err:
+                return jsonify({"error": "AI servers are busy right now. Please try again in a few minutes.🙏"}), 503
             app.logger.exception("Gemini analysis failed")
             return jsonify({"error": "Analysis failed. Please try again later."}), 500
 
