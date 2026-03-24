@@ -119,7 +119,7 @@ def analyze_with_gemini(pdf_url, subject_name):
     import tempfile, os as _os
     
     # Download PDF
-    r = requests.get(pdf_url)
+    r = requests.get(pdf_url,timeout=15)
     with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
         tmp.write(r.content)
         tmp_path = tmp.name
@@ -331,9 +331,16 @@ def analyze_paper(paper_id):
         """, (paper_id,))
         row = cur.fetchone()
         if not row:
-            return {"error": "Paper not found"}, 404
+            return jsonify({"error": "Paper not found"}), 404
         file_url, exam_type, year, subject_name = row
-        predictions = analyze_with_gemini(file_url, subject_name)
+        try:
+            predictions = analyze_with_gemini(file_url, subject_name)
+        except Exception as e:
+            err = str(e).lower()
+            if "quota" in err or "rate" in err or "429" in err or "resource_exhausted" in err:
+                return jsonify({"error": "Daily analysis limit reached. Please try again tomorrow.Sorry for the inconvenience.😊❤️"}), 429
+            app.logger.exception("Gemini analysis failed")
+            return jsonify({"error": "Analysis failed. Please try again later."}), 500
         return jsonify({"subject": subject_name, "year": year, "exam_type": exam_type, "predictions": predictions})
     finally:
         cur.close()
