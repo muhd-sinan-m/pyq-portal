@@ -168,7 +168,7 @@ Respond with:
 
         response = client.models.generate_content(
             model="gemini-2.5-flash",
-            contents=[uploaded, prompt]
+            contents=[uploaded, prompt],
             config={"timeout": 60}
         )
 
