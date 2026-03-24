@@ -6,9 +6,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import uuid
-import pdfplumber
 import requests
-import io
 import google.generativeai as genai
 
 app = Flask(__name__)
@@ -117,25 +115,35 @@ ALLOWED_EXTENSIONS = {"pdf"}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def extract_text_from_url(pdf_url):
-    response = requests.get(pdf_url)
-    with pdfplumber.open(io.BytesIO(response.content)) as pdf:
-        text = "\n".join(page.extract_text() or "" for page in pdf.pages)
-    return text.strip()
-def predict_questions(paper_text, subject_name):
-    prompt = f"""
-You are an exam preparation assistant for {subject_name}.
-Below is a previous year question paper. Analyze the pattern, topics, and frequency of questions, then predict the 10 most likely questions for the next exam.
---- QUESTION PAPER ---
-{paper_text[:8000]}
---- END ---
+def analyze_with_gemini(pdf_url, subject_name):
+    import tempfile, os as _os
+    
+    # Download PDF
+    r = requests.get(pdf_url)
+    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+        tmp.write(r.content)
+        tmp_path = tmp.name
+    
+    try:
+        # Upload directly to Gemini (works for scanned PDFs too)
+        uploaded = genai.upload_file(tmp_path, mime_type='application/pdf')
+        
+        prompt = f"""You are an exam preparation assistant for {subject_name}.
+Analyze this previous year question paper and predict the most likely questions for the next exam.
 Respond with:
 1. Top 10 predicted questions (numbered)
 2. Key topics to focus on (bullet points)
-3. Question pattern observations (2-3 lines)
-"""
-    response = gemini_model.generate_content(prompt)
-    return response.text
+3. Question pattern observations (2-3 lines)"""
+        
+        response = gemini_model.generate_content([uploaded, prompt])
+        
+        # Clean up uploaded file from Gemini
+        try: genai.delete_file(uploaded.name)
+        except: pass
+        
+        return response.text
+    finally:
+        _os.unlink(tmp_path)
 
 def get_subjects():
     conn = get_db()
@@ -325,10 +333,7 @@ def analyze_paper(paper_id):
         if not row:
             return {"error": "Paper not found"}, 404
         file_url, exam_type, year, subject_name = row
-        paper_text = extract_text_from_url(file_url)
-        if not paper_text:
-            return {"error": "Could not extract text from PDF"}, 400
-        predictions = predict_questions(paper_text, subject_name)
+        predictions = analyze_with_gemini(file_url, subject_name)
         return jsonify({"subject": subject_name, "year": year, "exam_type": exam_type, "predictions": predictions})
     finally:
         cur.close()

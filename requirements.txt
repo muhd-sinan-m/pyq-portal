@@ -3,5 +3,5 @@ psycopg2-binary
 supabase
 Werkzeug
 gunicorn
-pdfplumber
 google-generativeai
+requests
