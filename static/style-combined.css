@@ -2830,8 +2830,9 @@ body {
 }
 .paper-card-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.4rem;
     margin-top: 1rem;
+    flex-wrap: wrap;
 }
 
 .btn-view-paper,
@@ -2902,4 +2903,25 @@ body {
     .results-section {
         flex: 1;
     }
+}
+.btn-analyse-paper {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    flex: 1;
+    justify-content: center;
+    background: rgba(139, 92, 246, 0.1);
+    color: #7C3AED;
+    transition: background 0.2s, transform 0.15s;
+}
+.btn-analyse-paper:hover {
+    background: rgba(139, 92, 246, 0.18);
+    transform: translateY(-1px);
 }

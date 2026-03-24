@@ -249,12 +249,30 @@ window.addEventListener('scroll', () => {
                             </svg>
                             Download
                         </button>
+                        <button class="btn-analyse-paper" onclick="analysePaper(${paper.paper_id}, '${escapeHtml(paper.subject)}')">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                 <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+                            </svg>
+                            Analyse
+                        </button>
                     </div>
                 </div>
             `).join('');
         }
     }
-
+    async function analysePaper(paperId, subject) {
+    showToast('🤖 Analysing… this may take a few seconds');
+    try {
+        const res = await fetch(`/analyze/${paperId}`);
+        const data = await res.json();
+        if (data.error) { showToast('⚠️ ' + data.error); return; }
+        document.getElementById('analyseSubject').textContent = data.subject + ' — ' + data.exam_type + ' ' + data.year;
+        document.getElementById('analyseResult').textContent = data.predictions;
+        document.getElementById('analyseModal').style.display = 'flex';
+    } catch(e) {
+        showToast('⚠️ Analysis failed. Try again.');
+    }
+}
     function escapeHtml(text) {
         if (text == null) return '';
         const div = document.createElement('div');

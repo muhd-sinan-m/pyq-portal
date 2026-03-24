@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 import os
 import psycopg2
 from supabase import create_client
@@ -6,9 +6,15 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import uuid
+import pdfplumber
+import requests
+import io
+import google.generativeai as genai
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+gemini_model = genai.GenerativeModel("gemini-1.5-flash")
 
 # ---------- Supabase ----------
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -110,6 +116,26 @@ ALLOWED_EXTENSIONS = {"pdf"}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def extract_text_from_url(pdf_url):
+    response = requests.get(pdf_url)
+    with pdfplumber.open(io.BytesIO(response.content)) as pdf:
+        text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+    return text.strip()
+def predict_questions(paper_text, subject_name):
+    prompt = f"""
+You are an exam preparation assistant for {subject_name}.
+Below is a previous year question paper. Analyze the pattern, topics, and frequency of questions, then predict the 10 most likely questions for the next exam.
+--- QUESTION PAPER ---
+{paper_text[:8000]}
+--- END ---
+Respond with:
+1. Top 10 predicted questions (numbered)
+2. Key topics to focus on (bullet points)
+3. Question pattern observations (2-3 lines)
+"""
+    response = gemini_model.generate_content(prompt)
+    return response.text
 
 def get_subjects():
     conn = get_db()
@@ -253,14 +279,14 @@ def view_papers():
     try:
         cur.execute(
             """
-            SELECT s.subject_name, s.semester, q.year, q.file_url, q.exam_type
+            SELECT s.subject_name, s.semester, q.year, q.file_url, q.exam_type, q.paper_id
             FROM question_papers q
             JOIN subjects s ON q.subject_id = s.subject_id
             ORDER BY q.year DESC, s.subject_name
             """
         )
         rows = cur.fetchall()
-        for subject_name, semester, year, file_url, exam_type in rows:
+        for subject_name, semester, year, file_url, exam_type, paper_id in rows:
             papers.append({
                 "subject": subject_name,
                 "year": year,
@@ -268,6 +294,7 @@ def view_papers():
                 "department": "",
                 "examType": exam_type or "—",
                 "file_url": file_url,
+                "paper_id": paper_id
             })
         subjects = get_subjects()
         years = sorted({p["year"] for p in papers}, reverse=True) if papers else []
@@ -282,6 +309,30 @@ def view_papers():
 @app.route("/about")
 def about():
     return render_template("about.html")
+
+@app.route("/analyze/<int:paper_id>")
+def analyze_paper(paper_id):
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT q.file_url, q.exam_type, q.year, s.subject_name
+            FROM question_papers q
+            JOIN subjects s ON q.subject_id = s.subject_id
+            WHERE q.paper_id = %s
+        """, (paper_id,))
+        row = cur.fetchone()
+        if not row:
+            return {"error": "Paper not found"}, 404
+        file_url, exam_type, year, subject_name = row
+        paper_text = extract_text_from_url(file_url)
+        if not paper_text:
+            return {"error": "Could not extract text from PDF"}, 400
+        predictions = predict_questions(paper_text, subject_name)
+        return jsonify({"subject": subject_name, "year": year, "exam_type": exam_type, "predictions": predictions})
+    finally:
+        cur.close()
+        conn.close()
 
 @app.errorhandler(404)
 def page_not_found(e):
