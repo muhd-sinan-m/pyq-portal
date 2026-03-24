@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 import os
 import psycopg2
+import time
 from psycopg2 import pool
 from supabase import create_client
 from werkzeug.utils import secure_filename
@@ -25,7 +26,7 @@ limiter = Limiter(
     default_limits=[],
     storage_uri="memory://"
 )
-
+request_log = {}
 # ---------- Supabase ----------
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
@@ -355,52 +356,86 @@ def analyze_paper(paper_id):
             WHERE q.paper_id = %s
         """, (paper_id,))
         row = cur.fetchone()
+
         if not row:
             return jsonify({"error": "Paper not found"}), 404
 
         file_url, exam_type, year, subject_name, ai_analysis = row
 
-        # ✅ Cached — no limit, return instantly
+        # ✅ 1. RETURN CACHED RESULT (NO LIMIT)
         if ai_analysis:
-            return jsonify({"subject": subject_name, "year": year,
-                            "exam_type": exam_type, "predictions": ai_analysis,
-                            "cached": True})
+            return jsonify({
+                "subject": subject_name,
+                "year": year,
+                "exam_type": exam_type,
+                "predictions": ai_analysis,
+                "cached": True
+            })
 
-        # 🔒 Not cached — check rate limit before calling Gemini
-        try:
-            limiter.check()
-        except Exception:
-            return jsonify({"error": "Too many requests. Please wait before analysing a new paper."}), 429
+        # 🔒 2. RATE LIMIT (ONLY FOR NEW ANALYSIS)
+        user_ip = request.remote_addr
+        now = time.time()
 
-        # Call Gemini
+        request_log.setdefault(user_ip, [])
+
+        # keep only last 1 hour (3600 seconds)
+        request_log[user_ip] = [t for t in request_log[user_ip] if now - t < 3600]
+
+        if len(request_log[user_ip]) >= 3:
+            return jsonify({
+                "error": "Too many requests. You can analyse only 3 papers per hour. Please try later."
+            }), 429
+
+        # record this request
+        request_log[user_ip].append(now)
+
+        # 🤖 3. CALL GEMINI
         try:
             predictions = analyze_with_gemini(file_url, subject_name)
         except Exception as e:
             err = str(e).lower()
-            if "quota" in err or "rate" in err or "429" in err or "resource_exhausted" in err:
-                return jsonify({"error": "Daily analysis limit reached. Please try again tomorrow. Sorry for the inconvenience.😊❤️"}), 429
-            if "503" in err or "unavailable" in err or "high demand" in err:
-                return jsonify({"error": "AI servers are busy right now. Please try again in a few minutes.🙏"}), 503
-            app.logger.exception("Gemini analysis failed")
-            return jsonify({"error": "Analysis failed. Please try again later."}), 500
 
-        # Save to DB
+            if "quota" in err or "rate" in err or "429" in err or "resource_exhausted" in err:
+                return jsonify({
+                    "error": "Daily analysis limit reached. Please try again tomorrow. 😊"
+                }), 429
+
+            if "503" in err or "unavailable" in err or "high demand" in err:
+                return jsonify({
+                    "error": "AI servers are busy right now. Please try again in a few minutes. 🙏"
+                }), 503
+
+            app.logger.exception("Gemini analysis failed")
+            return jsonify({
+                "error": "Analysis failed. Please try again later."
+            }), 500
+
+        # 💾 4. SAVE RESULT (CACHE)
         try:
             cur.execute(
                 "UPDATE question_papers SET ai_analysis = %s WHERE paper_id = %s",
                 (predictions, paper_id)
             )
             conn.commit()
-        except Exception as e:
+        except Exception:
             app.logger.exception("Failed to cache analysis")
             conn.rollback()
 
-        return jsonify({"subject": subject_name, "year": year,
-                        "exam_type": exam_type, "predictions": predictions,
-                        "cached": False})
-    except Exception as e:
+        # 📤 5. RETURN RESULT
+        return jsonify({
+            "subject": subject_name,
+            "year": year,
+            "exam_type": exam_type,
+            "predictions": predictions,
+            "cached": False
+        })
+
+    except Exception:
         app.logger.exception("analyze_paper failed")
-        return jsonify({"error": "Analysis failed. Please try again later."}), 500
+        return jsonify({
+            "error": "Analysis failed. Please try again later."
+        }), 500
+
     finally:
         cur.close()
         return_db(conn)
