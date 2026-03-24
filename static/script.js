@@ -260,7 +260,7 @@ window.addEventListener('scroll', () => {
             `).join('');
         }
     }
-    async function analysePaper(paperId, subject) {
+    window.analysePaper = async function analysePaper(paperId, subject) {
     showToast('🤖 Analysing… this may take a few seconds');
     try {
         const res = await fetch(`/analyze/${paperId}`);
