@@ -5,3 +5,5 @@ Werkzeug
 gunicorn
 google-generativeai>=0.8.0
 requests
+flask-limiter
+flask-compress
