@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 import os
 import psycopg2
+from psycopg2 import pool
 from supabase import create_client
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -8,11 +9,22 @@ from functools import wraps
 import uuid
 import requests
 import google.generativeai as genai
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_compress import Compress
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')
+Compress(app)
+
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 gemini_model = genai.GenerativeModel("gemini-2.5-flash")
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[]
+)
 
 # ---------- Supabase ----------
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -20,9 +32,14 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# ---------- DB ----------
+# ---------- DB (Connection Pool) ----------
+db_pool = pool.SimpleConnectionPool(1, 10, os.environ.get("DATABASE_URL"))
+
 def get_db():
-    return psycopg2.connect(os.environ.get("DATABASE_URL"))
+    return db_pool.getconn()
+
+def return_db(conn):
+    db_pool.putconn(conn)
 
 def init_db():
     conn = get_db()
@@ -53,7 +70,8 @@ def init_db():
                 exam_type VARCHAR(100),
                 upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 file_url TEXT,
-                public_id TEXT
+                public_id TEXT,
+                ai_analysis TEXT
             );
         """)
         conn.commit()
@@ -72,7 +90,7 @@ def init_db():
             print(f"Created default admin: {default_username}")
     finally:
         cur.close()
-        conn.close()
+        return_db(conn)
 
 init_db()
 
@@ -89,7 +107,7 @@ def get_user_by_username(username):
         return cur.fetchone()
     finally:
         cur.close()
-        conn.close()
+        return_db(conn)
 
 def login_required(f):
     @wraps(f)
@@ -117,30 +135,29 @@ def allowed_file(filename):
 
 def analyze_with_gemini(pdf_url, subject_name):
     import tempfile, os as _os
-    
+
     # Download PDF
-    r = requests.get(pdf_url,timeout=15)
+    r = requests.get(pdf_url, timeout=15)
+    r.raise_for_status()
+
     with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
         tmp.write(r.content)
         tmp_path = tmp.name
-    
-    try:
-        # Upload directly to Gemini (works for scanned PDFs too)
-        uploaded = genai.upload_file(tmp_path, mime_type='application/pdf')
-        
-        prompt = f"""You are an exam preparation assistant for {subject_name}.
+
+    prompt = f"""You are an exam preparation assistant for {subject_name}.
 Analyze this previous year question paper and predict the most likely questions for the next exam.
 Respond with:
 1. Top 10 predicted questions (numbered)
 2. Key topics to focus on (bullet points)
 3. Question pattern observations (2-3 lines)"""
-        
+
+    try:
+        uploaded = genai.upload_file(tmp_path, mime_type='application/pdf')
         response = gemini_model.generate_content([uploaded, prompt])
-        
-        # Clean up uploaded file from Gemini
-        try: genai.delete_file(uploaded.name)
-        except: pass
-        
+        try:
+            genai.delete_file(uploaded.name)
+        except:
+            pass
         return response.text
     finally:
         _os.unlink(tmp_path)
@@ -156,7 +173,7 @@ def get_subjects():
         return [{"subject_id": r[0], "subject_name": r[1], "semester": r[2]} for r in rows]
     finally:
         cur.close()
-        conn.close()
+        return_db(conn)
 
 # ---------- Routes ----------
 
@@ -197,7 +214,7 @@ def home():
         pass
     finally:
         cur.close()
-        conn.close()
+        return_db(conn)
     return render_template("index.html", paper_count=paper_count)
 
 @app.route("/upload", methods=["GET", "POST"])
@@ -208,7 +225,6 @@ def upload_page():
         conn = get_db()
         cur = conn.cursor()
         try:
-            # Subject
             subject_raw = request.form.get("subject_id")
             if not subject_raw or subject_raw.strip() == "":
                 return render_template("upload.html", error="Subject is required", subjects=get_subjects())
@@ -226,7 +242,6 @@ def upload_page():
                 return render_template("upload.html", error="Subject not found.", subjects=get_subjects())
             subject_id, subject_name = row[0], row[1]
 
-            # Year
             year = request.form.get("year")
             try:
                 if not year or not str(year).strip():
@@ -235,7 +250,6 @@ def upload_page():
             except (ValueError, TypeError) as exc:
                 return render_template("upload.html", error=f"Invalid year: {exc}", subjects=get_subjects())
 
-            # File
             file = request.files.get("file")
             if not file or not file.filename:
                 return render_template("upload.html", error="No file provided", subjects=get_subjects())
@@ -244,7 +258,6 @@ def upload_page():
 
             exam_type = request.form.get("examType") or request.form.get("exam_type") or ""
 
-            # Upload to Supabase Storage
             unique_name = f"{subject_id}/{year_int}/{uuid.uuid4()}.pdf"
             supabase.storage.from_(SUPABASE_BUCKET).upload(
                 unique_name,
@@ -253,7 +266,6 @@ def upload_page():
             )
             file_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(unique_name)
 
-            # Save to Supabase PostgreSQL
             original_filename = secure_filename(file.filename)
             cur.execute(
                 """
@@ -275,7 +287,7 @@ def upload_page():
             return render_template("upload.html", error=str(e), subjects=get_subjects())
         finally:
             cur.close()
-            conn.close()
+            return_db(conn)
 
     return render_template("upload.html", subjects=get_subjects())
 
@@ -287,14 +299,15 @@ def view_papers():
     try:
         cur.execute(
             """
-            SELECT s.subject_name, s.semester, q.year, q.file_url, q.exam_type, q.paper_id
+            SELECT s.subject_name, s.semester, q.year, q.file_url, q.exam_type, q.paper_id,
+                   CASE WHEN q.ai_analysis IS NOT NULL THEN true ELSE false END as is_analysed
             FROM question_papers q
             JOIN subjects s ON q.subject_id = s.subject_id
             ORDER BY q.year DESC, s.subject_name
             """
         )
         rows = cur.fetchall()
-        for subject_name, semester, year, file_url, exam_type, paper_id in rows:
+        for subject_name, semester, year, file_url, exam_type, paper_id, is_analysed in rows:
             papers.append({
                 "subject": subject_name,
                 "year": year,
@@ -302,7 +315,8 @@ def view_papers():
                 "department": "",
                 "examType": exam_type or "—",
                 "file_url": file_url,
-                "paper_id": paper_id
+                "paper_id": paper_id,
+                "is_analysed": is_analysed
             })
         subjects = get_subjects()
         years = sorted({p["year"] for p in papers}, reverse=True) if papers else []
@@ -312,13 +326,14 @@ def view_papers():
         return f"Database error: {e}", 500
     finally:
         cur.close()
-        conn.close()
+        return_db(conn)
 
 @app.route("/about")
 def about():
     return render_template("about.html")
 
 @app.route("/analyze/<int:paper_id>")
+@limiter.limit("3 per hour")
 def analyze_paper(paper_id):
     conn = get_db()
     cur = conn.cursor()
@@ -335,12 +350,13 @@ def analyze_paper(paper_id):
 
         file_url, exam_type, year, subject_name, ai_analysis = row
 
-        # ✅ Already analysed — return cached result instantly
+        # Return cached result instantly
         if ai_analysis:
             return jsonify({"subject": subject_name, "year": year,
-                            "exam_type": exam_type, "predictions": ai_analysis})
+                            "exam_type": exam_type, "predictions": ai_analysis,
+                            "cached": True})
 
-        # 🔄 Not analysed yet — call Gemini
+        # Call Gemini for first time
         try:
             predictions = analyze_with_gemini(file_url, subject_name)
         except Exception as e:
@@ -350,7 +366,7 @@ def analyze_paper(paper_id):
             app.logger.exception("Gemini analysis failed")
             return jsonify({"error": "Analysis failed. Please try again later."}), 500
 
-        # 💾 Save to DB so next time it's instant
+        # Save to DB — next request is instant
         cur.execute(
             "UPDATE question_papers SET ai_analysis = %s WHERE paper_id = %s",
             (predictions, paper_id)
@@ -358,10 +374,29 @@ def analyze_paper(paper_id):
         conn.commit()
 
         return jsonify({"subject": subject_name, "year": year,
-                        "exam_type": exam_type, "predictions": predictions})
+                        "exam_type": exam_type, "predictions": predictions,
+                        "cached": False})
     finally:
         cur.close()
-        conn.close()
+        return_db(conn)
+
+# ---------- Admin: refresh analysis ----------
+@app.route("/analyze/<int:paper_id>/refresh")
+@login_required
+@admin_required
+def refresh_analysis(paper_id):
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "UPDATE question_papers SET ai_analysis = NULL WHERE paper_id = %s",
+            (paper_id,)
+        )
+        conn.commit()
+        return jsonify({"message": "Cache cleared. Next analyse will regenerate."})
+    finally:
+        cur.close()
+        return_db(conn)
 
 @app.errorhandler(404)
 def page_not_found(e):
