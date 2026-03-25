@@ -167,7 +167,7 @@ Respond with:
             )
 
         response = client.models.generate_content(
-            model="gemini-3.1-flash-lite",
+            model="gemini-3.1-flash-lite-preview",
             contents=[uploaded, prompt]
         )
 
@@ -386,7 +386,7 @@ def analyze_paper(paper_id):
         request_log.setdefault(user_ip, [])
         request_log[user_ip] = [t for t in request_log[user_ip] if now - t < 3600]
 
-        if len(request_log[user_ip]) >= 3:
+        if len(request_log[user_ip]) >= 5:
             return jsonify({
                 "error": "Too many requests. You can analyse only 3 papers per hour. Please try later."
             }), 429
