@@ -379,13 +379,11 @@ def analyze_paper(paper_id):
                 "cached": True
             })
 
-        # 🔒 2. RATE LIMIT (ONLY FOR NEW ANALYSIS)
+        # 🔒 2. RATE LIMIT CHECK (ONLY FOR NEW ANALYSIS)
         user_ip = request.remote_addr
         now = time.time()
 
         request_log.setdefault(user_ip, [])
-
-        # keep only last 1 hour (3600 seconds)
         request_log[user_ip] = [t for t in request_log[user_ip] if now - t < 3600]
 
         if len(request_log[user_ip]) >= 3:
@@ -393,13 +391,12 @@ def analyze_paper(paper_id):
                 "error": "Too many requests. You can analyse only 3 papers per hour. Please try later."
             }), 429
 
-        # record this request
-        request_log[user_ip].append(now)
-
         # 🤖 3. CALL GEMINI
         try:
             predictions = analyze_with_gemini(file_url, subject_name)
+            request_log[user_ip].append(now)  # ✅ only count on success
         except Exception as e:
+            app.logger.exception("Gemini analysis failed: %s", str(e))
             err = str(e).lower()
 
             if "quota" in err or "rate" in err or "429" in err or "resource_exhausted" in err:
@@ -412,7 +409,6 @@ def analyze_paper(paper_id):
                     "error": "AI servers are busy right now. Please try again in a few minutes. 🙏"
                 }), 503
 
-            app.logger.exception("Gemini analysis failed")
             return jsonify({
                 "error": "Analysis failed. Please try again later."
             }), 500
