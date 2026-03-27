@@ -27,6 +27,7 @@ limiter = Limiter(
     storage_uri="memory://"
 )
 request_log = {}
+
 # ---------- Supabase ----------
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
@@ -159,7 +160,6 @@ Respond with:
 3. Question pattern observations (2-3 lines)"""
 
     try:
-        # Upload PDF
         with open(tmp_path, 'rb') as f:
             uploaded = client.files.upload(
                 file=f,
@@ -171,7 +171,6 @@ Respond with:
             contents=[uploaded, prompt]
         )
 
-        # Cleanup
         try:
             client.files.delete(name=uploaded.name)
         except:
@@ -194,7 +193,9 @@ def get_subjects():
         cur.close()
         return_db(conn)
 
-# ---------- Routes ----------
+# ================================================================
+# ROUTES
+# ================================================================
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -369,7 +370,7 @@ def analyze_paper(paper_id):
 
         file_url, exam_type, year, subject_name, ai_analysis = row
 
-        # ✅ 1. RETURN CACHED RESULT (NO LIMIT)
+        # 1. RETURN CACHED RESULT (NO LIMIT)
         if ai_analysis:
             return jsonify({
                 "subject": subject_name,
@@ -379,7 +380,7 @@ def analyze_paper(paper_id):
                 "cached": True
             })
 
-        # 🔒 2. RATE LIMIT CHECK (ONLY FOR NEW ANALYSIS)
+        # 2. RATE LIMIT CHECK (ONLY FOR NEW ANALYSIS)
         user_ip = request.remote_addr
         now = time.time()
 
@@ -391,10 +392,10 @@ def analyze_paper(paper_id):
                 "error": "Too many requests. You can analyse only 3 papers per hour. Please try later."
             }), 429
 
-        # 🤖 3. CALL GEMINI
+        # 3. CALL GEMINI
         try:
             predictions = analyze_with_gemini(file_url, subject_name)
-            request_log[user_ip].append(now)  # ✅ only count on success
+            request_log[user_ip].append(now)
         except Exception as e:
             app.logger.exception("Gemini analysis failed: %s", str(e))
             err = str(e).lower()
@@ -413,7 +414,7 @@ def analyze_paper(paper_id):
                 "error": "Analysis failed. Please try again later."
             }), 500
 
-        # 💾 4. SAVE RESULT (CACHE)
+        # 4. SAVE RESULT (CACHE)
         try:
             cur.execute(
                 "UPDATE question_papers SET ai_analysis = %s WHERE paper_id = %s",
@@ -424,7 +425,7 @@ def analyze_paper(paper_id):
             app.logger.exception("Failed to cache analysis")
             conn.rollback()
 
-        # 📤 5. RETURN RESULT
+        # 5. RETURN RESULT
         return jsonify({
             "subject": subject_name,
             "year": year,
@@ -443,7 +444,6 @@ def analyze_paper(paper_id):
         cur.close()
         return_db(conn)
 
-# ---------- Admin: refresh analysis ----------
 @app.route("/analyze/<int:paper_id>/refresh")
 @login_required
 @admin_required
@@ -460,6 +460,284 @@ def refresh_analysis(paper_id):
     finally:
         cur.close()
         return_db(conn)
+
+# ================================================================
+# ADMIN PANEL
+# ================================================================
+
+@app.route("/admin")
+@login_required
+@admin_required
+def admin_panel():
+    return render_template("admin.html")
+
+
+@app.route("/admin/api/stats")
+@login_required
+@admin_required
+def admin_stats():
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT COUNT(*) FROM subjects")
+        total_subjects = cur.fetchone()[0] or 0
+
+        cur.execute("SELECT COUNT(*) FROM question_papers")
+        total_papers = cur.fetchone()[0] or 0
+
+        cur.execute("SELECT COUNT(*) FROM question_papers WHERE ai_analysis IS NOT NULL")
+        papers_with_ai = cur.fetchone()[0] or 0
+
+        cur.execute(
+            "SELECT COUNT(*) FROM question_papers WHERE upload_date >= NOW() - INTERVAL '30 days'"
+        )
+        recent_uploads = cur.fetchone()[0] or 0
+
+        return jsonify({
+            "total_subjects": total_subjects,
+            "total_papers": total_papers,
+            "papers_with_ai": papers_with_ai,
+            "recent_uploads": recent_uploads,
+        })
+    finally:
+        cur.close()
+        return_db(conn)
+
+
+@app.route("/admin/api/subjects", methods=["GET"])
+@login_required
+@admin_required
+def admin_get_subjects():
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT s.subject_id, s.subject_name, s.semester,
+                   COUNT(q.paper_id) AS paper_count
+            FROM subjects s
+            LEFT JOIN question_papers q ON q.subject_id = s.subject_id
+            GROUP BY s.subject_id, s.subject_name, s.semester
+            ORDER BY s.semester NULLS LAST, s.subject_name
+        """)
+        rows = cur.fetchall()
+        return jsonify([
+            {
+                "subject_id": r[0],
+                "subject_name": r[1],
+                "semester": r[2],
+                "paper_count": r[3],
+            }
+            for r in rows
+        ])
+    finally:
+        cur.close()
+        return_db(conn)
+
+
+@app.route("/admin/api/subjects", methods=["POST"])
+@login_required
+@admin_required
+def admin_create_subject():
+    data = request.get_json()
+    name = (data.get("subject_name") or "").strip()
+    semester = data.get("semester")
+
+    if not name:
+        return jsonify({"error": "Subject name is required"}), 400
+    if semester is not None:
+        try:
+            semester = int(semester)
+            if not 1 <= semester <= 8:
+                raise ValueError
+        except (ValueError, TypeError):
+            return jsonify({"error": "Semester must be between 1 and 8"}), 400
+
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "INSERT INTO subjects (subject_name, semester) VALUES (%s, %s) RETURNING subject_id",
+            (name, semester)
+        )
+        new_id = cur.fetchone()[0]
+        conn.commit()
+        return jsonify({"subject_id": new_id, "subject_name": name, "semester": semester}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        return_db(conn)
+
+
+@app.route("/admin/api/subjects/<int:subject_id>", methods=["PUT"])
+@login_required
+@admin_required
+def admin_update_subject(subject_id):
+    data = request.get_json()
+    name = (data.get("subject_name") or "").strip()
+    semester = data.get("semester")
+
+    if not name:
+        return jsonify({"error": "Subject name is required"}), 400
+    if semester is not None:
+        try:
+            semester = int(semester)
+            if not 1 <= semester <= 8:
+                raise ValueError
+        except (ValueError, TypeError):
+            return jsonify({"error": "Semester must be between 1 and 8"}), 400
+
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "UPDATE subjects SET subject_name=%s, semester=%s WHERE subject_id=%s RETURNING subject_id",
+            (name, semester, subject_id)
+        )
+        if cur.fetchone() is None:
+            return jsonify({"error": "Subject not found"}), 404
+        conn.commit()
+        return jsonify({"subject_id": subject_id, "subject_name": name, "semester": semester})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        return_db(conn)
+
+
+@app.route("/admin/api/subjects/<int:subject_id>", methods=["DELETE"])
+@login_required
+@admin_required
+def admin_delete_subject(subject_id):
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("DELETE FROM subjects WHERE subject_id=%s RETURNING subject_id", (subject_id,))
+        if cur.fetchone() is None:
+            return jsonify({"error": "Subject not found"}), 404
+        conn.commit()
+        return jsonify({"message": "Deleted"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        return_db(conn)
+
+
+@app.route("/admin/api/papers", methods=["GET"])
+@login_required
+@admin_required
+def admin_get_papers():
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT q.paper_id, s.subject_name, s.semester, q.year,
+                   q.exam_type, q.file_url, q.upload_date, q.ai_analysis,
+                   q.public_id
+            FROM question_papers q
+            LEFT JOIN subjects s ON q.subject_id = s.subject_id
+            ORDER BY q.upload_date DESC NULLS LAST
+        """)
+        rows = cur.fetchall()
+        return jsonify([
+            {
+                "paper_id": r[0],
+                "subject_name": r[1] or "Unknown",
+                "semester": r[2],
+                "year": r[3],
+                "exam_type": r[4],
+                "file_url": r[5],
+                "upload_date": r[6].isoformat() if r[6] else None,
+                "ai_analysis": r[7],
+                "public_id": r[8],
+            }
+            for r in rows
+        ])
+    finally:
+        cur.close()
+        return_db(conn)
+
+
+@app.route("/admin/api/papers/<int:paper_id>", methods=["DELETE"])
+@login_required
+@admin_required
+def admin_delete_paper(paper_id):
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "SELECT public_id FROM question_papers WHERE paper_id=%s",
+            (paper_id,)
+        )
+        row = cur.fetchone()
+        if row is None:
+            return jsonify({"error": "Paper not found"}), 404
+
+        public_id = row[0]
+
+        if public_id:
+            try:
+                supabase.storage.from_(SUPABASE_BUCKET).remove([public_id])
+            except Exception:
+                pass
+
+        cur.execute("DELETE FROM question_papers WHERE paper_id=%s", (paper_id,))
+        conn.commit()
+        return jsonify({"message": "Deleted"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        return_db(conn)
+
+
+@app.route("/admin/api/change-password", methods=["POST"])
+@login_required
+@admin_required
+def admin_change_password():
+    data = request.get_json()
+    current_password = data.get("current_password", "")
+    new_password = data.get("new_password", "")
+
+    if not new_password or len(new_password) < 6:
+        return jsonify({"error": "New password must be at least 6 characters"}), 400
+
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "SELECT user_id, password_hash FROM users WHERE user_id=%s",
+            (session["user_id"],)
+        )
+        row = cur.fetchone()
+        if not row:
+            return jsonify({"error": "User not found"}), 404
+
+        if not check_password_hash(row[1], current_password):
+            return jsonify({"error": "Current password is incorrect"}), 401
+
+        new_hash = generate_password_hash(new_password)
+        cur.execute(
+            "UPDATE users SET password_hash=%s WHERE user_id=%s",
+            (new_hash, row[0])
+        )
+        conn.commit()
+        return jsonify({"message": "Password updated successfully"})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        return_db(conn)
+
+# ================================================================
+# ERROR HANDLERS
+# ================================================================
 
 @app.errorhandler(404)
 def page_not_found(e):
