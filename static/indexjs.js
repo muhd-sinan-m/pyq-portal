@@ -85,3 +85,36 @@ if (statsEl && paperCountEl) {
         statsObserver.observe(statsEl);
     }
 }
+// Carousel dot indicators
+document.querySelectorAll('[data-carousel]').forEach(function(track) {
+    var dotsContainer = track.closest('.tips-sem-block').querySelector('[data-dots]');
+    var cards = track.querySelectorAll('.tips-card');
+    if (!dotsContainer || cards.length === 0) return;
+
+    // Build dots
+    cards.forEach(function(_, i) {
+        var dot = document.createElement('div');
+        dot.className = 'tips-dot-item' + (i === 0 ? ' active' : '');
+        dot.addEventListener('click', function() {
+            cards[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        });
+        dotsContainer.appendChild(dot);
+    });
+
+    var dots = dotsContainer.querySelectorAll('.tips-dot-item');
+
+    // Update active dot on scroll
+    track.addEventListener('scroll', function() {
+        var center = track.scrollLeft + track.offsetWidth / 2;
+        var closest = 0;
+        var minDist = Infinity;
+        cards.forEach(function(card, i) {
+            var cardCenter = card.offsetLeft + card.offsetWidth / 2;
+            var dist = Math.abs(center - cardCenter);
+            if (dist < minDist) { minDist = dist; closest = i; }
+        });
+        dots.forEach(function(d, i) {
+            d.classList.toggle('active', i === closest);
+        });
+    }, { passive: true });
+});

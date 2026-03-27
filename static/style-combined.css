@@ -2940,42 +2940,68 @@ body {
     margin-bottom: 2.5rem;
 }
 
-/* Row of semester blocks side by side */
+/* Grid of semester blocks — auto-adjusts for any number */
 .tips-sems-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0;
 }
 
 /* Each semester column */
 .tips-sem-block {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.85rem;
+    padding: 0 1.75rem;
 }
 
-.tips-sem-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--gray-400);
+/* Divider between blocks */
+.tips-sem-block + .tips-sem-block {
+    border-left: 1px solid var(--border-color);
+}
+
+/* Semester label — highlighted pill */
+.tips-sem-header {
     padding-left: 4px;
 }
 
-/* Carousel container — clips overflow and holds blur overlays */
+.tips-sem-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1rem 0.4rem 0.6rem;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.tips-sem-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+    flex-shrink: 0;
+}
+
+/* Carousel outer wrapper — clips overflow */
 .tips-carousel-wrapper {
     position: relative;
     overflow: hidden;
     border-radius: var(--radius-xl);
 }
 
-/* Blur fade overlays on left and right */
+/* Blur fade on edges */
 .tips-carousel-fade {
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 60px;
+    width: 56px;
     z-index: 2;
     pointer-events: none;
 }
@@ -2990,7 +3016,7 @@ body {
     background: linear-gradient(to left, #F9FAFB 20%, transparent);
 }
 
-/* The scrollable track */
+/* Horizontal scroll track */
 .tips-carousel-track {
     display: flex;
     gap: 14px;
@@ -2998,14 +3024,14 @@ body {
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    padding: 8px 48px 12px;
+    padding: 8px 44px 12px;
 }
 
 .tips-carousel-track::-webkit-scrollbar {
     display: none;
 }
 
-/* Individual subject card — sized to show peek of neighbors */
+/* Individual card — 85% width to show peek of neighbors */
 .tips-card {
     flex: 0 0 85%;
     scroll-snap-align: center;
@@ -3087,9 +3113,39 @@ body {
     line-height: 1.5;
 }
 
+/* Dot indicators */
+.tips-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding-top: 2px;
+    min-height: 16px;
+}
+
+.tips-dot-item {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--gray-300);
+    transition: width 0.3s ease, background 0.3s ease;
+    cursor: pointer;
+}
+
+.tips-dot-item.active {
+    width: 18px;
+    background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple));
+}
+
+/* Responsive */
 @media (max-width: 640px) {
-    .tips-sems-row {
-        grid-template-columns: 1fr;
+    .tips-sem-block {
+        padding: 0 0.5rem;
+    }
+    .tips-sem-block + .tips-sem-block {
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        padding-top: 1.75rem;
+        margin-top: 0.5rem;
     }
     .tips-card {
         flex: 0 0 82%;
