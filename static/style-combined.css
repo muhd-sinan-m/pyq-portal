@@ -2929,79 +2929,86 @@ body {
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }
 }
-/* ==================== TIPS SCROLL SECTION ==================== */
+/* ==================== TIPS SECTION ==================== */
 .tips-section {
-    padding: 5rem 0 3rem;
+    padding: 5rem 0 4rem;
     background: var(--bg-secondary);
 }
 
 .tips-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
 }
 
-.tips-scroll-wrapper {
+/* Row of semester blocks side by side */
+.tips-sems-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+/* Each semester column */
+.tips-sem-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.tips-sem-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+    padding-left: 4px;
+}
+
+/* Carousel container — clips overflow and holds blur overlays */
+.tips-carousel-wrapper {
     position: relative;
     overflow: hidden;
+    border-radius: var(--radius-xl);
 }
 
-.tips-blur-left,
-.tips-blur-right {
+/* Blur fade overlays on left and right */
+.tips-carousel-fade {
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 80px;
+    width: 60px;
     z-index: 2;
     pointer-events: none;
 }
 
-.tips-blur-left {
+.tips-carousel-fade--left {
     left: 0;
-    background: linear-gradient(to right, #F9FAFB 30%, transparent);
+    background: linear-gradient(to right, #F9FAFB 20%, transparent);
 }
 
-.tips-blur-right {
+.tips-carousel-fade--right {
     right: 0;
-    background: linear-gradient(to left, #F9FAFB 30%, transparent);
+    background: linear-gradient(to left, #F9FAFB 20%, transparent);
 }
 
-.tips-scroll-track {
+/* The scrollable track */
+.tips-carousel-track {
     display: flex;
-    gap: 28px;
+    gap: 14px;
     overflow-x: auto;
-    padding: 16px 80px 32px;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    padding: 8px 48px 12px;
 }
 
-.tips-scroll-track::-webkit-scrollbar {
+.tips-carousel-track::-webkit-scrollbar {
     display: none;
 }
 
-.tips-sem-block {
-    flex: 0 0 auto;
-    width: 380px;
-    scroll-snap-align: start;
-}
-
-.tips-sem-label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    color: var(--gray-400);
-    margin-bottom: 12px;
-    padding-left: 2px;
-}
-
-.tips-sem-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
+/* Individual subject card — sized to show peek of neighbors */
 .tips-card {
+    flex: 0 0 85%;
+    scroll-snap-align: center;
     background: white;
     border-radius: var(--radius-xl);
     border: 1px solid var(--border-color);
@@ -3025,7 +3032,7 @@ body {
 .tips-exam-badge {
     padding: 0.25rem 0.75rem;
     border-radius: 999px;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -3080,15 +3087,11 @@ body {
     line-height: 1.5;
 }
 
-@media (max-width: 600px) {
-    .tips-sem-block {
-        width: 300px;
+@media (max-width: 640px) {
+    .tips-sems-row {
+        grid-template-columns: 1fr;
     }
-    .tips-scroll-track {
-        padding: 16px 40px 24px;
-    }
-    .tips-blur-left,
-    .tips-blur-right {
-        width: 40px;
+    .tips-card {
+        flex: 0 0 82%;
     }
 }
