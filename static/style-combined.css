@@ -3178,20 +3178,79 @@ body {
 
 /* Responsive */
 @media (max-width: 640px) {
-    .tips-sem-block {
-        padding: 0 0.25rem;
+    .tips-sems-row {
+        grid-template-columns: 1fr;
+        gap: 0;
     }
+
+    .tips-sem-block {
+        padding: 0;
+    }
+
     .tips-sem-block + .tips-sem-block {
         border-left: none;
         border-top: 1px solid var(--border-color);
-        padding-top: 2rem;
+        padding-top: 1.75rem;
         margin-top: 0.5rem;
     }
-    .tips-card {
-        flex: 0 0 82%;
+
+    .tips-carousel-outer {
+        gap: 4px;
     }
+
     .tips-arrow {
-        width: 30px;
-        height: 30px;
+        width: 28px;
+        height: 28px;
+        flex-shrink: 0;
+    }
+
+    .tips-arrow svg {
+        width: 13px;
+        height: 13px;
+    }
+
+    /* Remove big side padding so card has more room */
+    .tips-carousel-track {
+        padding: 8px 8px 12px;
+        gap: 10px;
+    }
+
+    /* Wider card on mobile */
+    .tips-card {
+        flex: 0 0 90%;
+        padding: 1.1rem;
+    }
+
+    /* Stack badge above title instead of side by side */
+    .tips-card-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+    }
+
+    .tips-subject {
+        font-size: 0.95rem;
+        line-height: 1.35;
+    }
+
+    .tips-list {
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .tips-list li {
+        font-size: 0.82rem;
+        line-height: 1.5;
+    }
+
+    .tips-card-foot {
+        font-size: 0.75rem;
+        padding-top: 0.7rem;
+    }
+
+    .tips-sem-pill {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.9rem 0.4rem 0.7rem;
     }
 }
