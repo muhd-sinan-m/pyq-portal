@@ -132,3 +132,23 @@ document.querySelectorAll('.tips-sem-block').forEach(function(block) {
 
     updateState(0);
 });
+// Enable click-drag scrolling on desktop
+document.querySelectorAll('.tips-carousel-track').forEach(function(track) {
+    var isDown = false, startX, scrollLeft;
+    track.addEventListener('mousedown', function(e) {
+        isDown = true;
+        track.style.cursor = 'grabbing';
+        startX = e.pageX - track.offsetLeft;
+        scrollLeft = track.scrollLeft;
+    });
+    document.addEventListener('mouseup', function() {
+        isDown = false;
+        track.style.cursor = '';
+    });
+    track.addEventListener('mousemove', function(e) {
+        if (!isDown) return;
+        e.preventDefault();
+        var x = e.pageX - track.offsetLeft;
+        track.scrollLeft = scrollLeft - (x - startX);
+    });
+});
