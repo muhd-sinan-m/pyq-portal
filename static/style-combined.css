@@ -3187,7 +3187,6 @@ body {
     .tips-header h2 { font-size: 1.65rem; }
     .tips-header p  { font-size: 0.875rem; }
 
-    /* Single column, no side border */
     .tips-sems-row {
         grid-template-columns: 1fr;
         min-width: 0;
@@ -3213,9 +3212,8 @@ body {
         padding: 0.35rem 0.9rem 0.35rem 0.65rem;
     }
 
-    /* Compact arrows */
     .tips-carousel-outer {
-        gap: 2px;
+        gap: 4px;
         min-width: 0;
         overflow: hidden;
     }
@@ -3230,20 +3228,19 @@ body {
         height: 12px;
     }
 
-    /* Track: minimal padding, horizontal-only touch */
     .tips-carousel-track {
-        padding: 4px 2px 8px;
-        gap: 8px;
-        scroll-padding-inline: 2px;
-        touch-action: pan-x;
+        padding: 4px 0 8px;
+        gap: 0;                      /* flush between cards */
+        scroll-padding-inline: 0;
+        touch-action: pan-y;         /* vertical page scroll free */
+        scroll-snap-type: x mandatory;
     }
 
-    /* Hide edge fades — lets peek show clearly */
     .tips-carousel-fade { display: none; }
 
-    /* 83% width so next card always peeks */
+    /* Full width — no blurred partial card on side */
     .tips-card {
-        flex: 0 0 83%;
+        flex: 0 0 100%;
         padding: 1rem;
         min-height: unset;
         height: auto;
@@ -3252,7 +3249,6 @@ body {
         min-width: 0;
     }
 
-    /* Stack badge above title */
     .tips-card-top {
         flex-direction: column;
         align-items: flex-start;
