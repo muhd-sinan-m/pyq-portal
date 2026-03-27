@@ -85,36 +85,50 @@ if (statsEl && paperCountEl) {
         statsObserver.observe(statsEl);
     }
 }
-// Carousel dot indicators
-document.querySelectorAll('[data-carousel]').forEach(function(track) {
-    var dotsContainer = track.closest('.tips-sem-block').querySelector('[data-dots]');
-    var cards = track.querySelectorAll('.tips-card');
-    if (!dotsContainer || cards.length === 0) return;
+document.querySelectorAll('.tips-sem-block').forEach(function(block) {
+    var track = block.querySelector('[data-carousel]');
+    var dotsContainer = block.querySelector('[data-dots]');
+    var prevBtn = block.querySelector('.tips-arrow--prev');
+    var nextBtn = block.querySelector('.tips-arrow--next');
+    var cards = track ? track.querySelectorAll('.tips-card') : [];
+    if (!track || cards.length === 0) return;
+
+    var currentIndex = 0;
 
     // Build dots
     cards.forEach(function(_, i) {
         var dot = document.createElement('div');
         dot.className = 'tips-dot-item' + (i === 0 ? ' active' : '');
-        dot.addEventListener('click', function() {
-            cards[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        });
+        dot.addEventListener('click', function() { scrollToCard(i); });
         dotsContainer.appendChild(dot);
     });
 
     var dots = dotsContainer.querySelectorAll('.tips-dot-item');
 
-    // Update active dot on scroll
+    function scrollToCard(index) {
+        index = Math.max(0, Math.min(index, cards.length - 1));
+        cards[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+
+    function updateState(index) {
+        currentIndex = index;
+        dots.forEach(function(d, i) { d.classList.toggle('active', i === index); });
+        if (prevBtn) prevBtn.disabled = index === 0;
+        if (nextBtn) nextBtn.disabled = index === cards.length - 1;
+    }
+
+    if (prevBtn) prevBtn.addEventListener('click', function() { scrollToCard(currentIndex - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function() { scrollToCard(currentIndex + 1); });
+
     track.addEventListener('scroll', function() {
         var center = track.scrollLeft + track.offsetWidth / 2;
-        var closest = 0;
-        var minDist = Infinity;
+        var closest = 0, minDist = Infinity;
         cards.forEach(function(card, i) {
-            var cardCenter = card.offsetLeft + card.offsetWidth / 2;
-            var dist = Math.abs(center - cardCenter);
+            var dist = Math.abs((card.offsetLeft + card.offsetWidth / 2) - center);
             if (dist < minDist) { minDist = dist; closest = i; }
         });
-        dots.forEach(function(d, i) {
-            d.classList.toggle('active', i === closest);
-        });
+        updateState(closest);
     }, { passive: true });
+
+    updateState(0);
 });
