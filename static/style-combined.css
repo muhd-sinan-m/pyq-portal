@@ -3232,7 +3232,7 @@ body {
         padding: 4px 0 8px;
         gap: 0;                      /* flush between cards */
         scroll-padding-inline: 0;
-        touch-action: pan-y;         /* vertical page scroll free */
+        touch-action: auto;         /* vertical page scroll free */
         scroll-snap-type: x mandatory;
     }
 
