@@ -48,7 +48,11 @@ def get_db():
         return psycopg2.connect(os.environ.get("DATABASE_URL"))
 
 def return_db(conn):
-    db_pool.putconn(conn)
+    try:
+        db_pool.putconn(conn)
+    except Exception as e:
+        app.logger.warning(f"putconn failed, closing directly: {e}")
+        conn.close()
 
 def init_db():
     conn = get_db()
