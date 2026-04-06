@@ -7,3 +7,4 @@ google-genai
 requests
 flask-limiter
 flask-compress
+python-dotenv
