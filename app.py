@@ -16,8 +16,52 @@ from flask_limiter.util import get_remote_address
 from flask_compress import Compress
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')
+app.secret_key = os.environ.get('SECRET_KEY')
 Compress(app)
+
+@app.after_request
+def apply_security_headers(response):
+
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+
+    # Uncomment after confirming HTTPS on Cloudflare
+    # response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+
+        # JS — self + jsdelivr (marked.js) + Google Analytics + inline scripts
+        "script-src 'self' 'unsafe-inline' "
+        "https://cdn.jsdelivr.net "
+        "https://www.googletagmanager.com; "
+
+        # CSS — self + inline styles (used in login, admin, error pages)
+        "style-src 'self' 'unsafe-inline' "
+        "https://fonts.googleapis.com; "
+
+        # Fonts — Google Fonts
+        "font-src 'self' "
+        "https://fonts.gstatic.com; "
+
+        # Images — self + data URIs
+        "img-src 'self' data:; "
+
+        # API calls — self + Google Analytics
+        "connect-src 'self' "
+        "https://www.google-analytics.com; "
+
+        # PDFs open in new tab from Supabase storage
+        "frame-src https://*.supabase.co; "
+
+        # No plugins, objects, or base tag hijacking
+        "object-src 'none'; "
+        "base-uri 'self';"
+    )
+
+    return response
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 limiter = Limiter(
@@ -202,6 +246,7 @@ def get_subjects():
 # ================================================================
 
 @app.route("/login", methods=["GET", "POST"])
+@limiter.limit("10 per minute")
 def login():
     error = None
     if request.method == "POST":
@@ -347,7 +392,7 @@ def view_papers():
         return render_template("view.html", papers=papers, subjects=subjects, years=years)
     except Exception as e:
         app.logger.exception("Failed to load papers")
-        return f"Database error: {e}", 500
+        return render_template("500.html"), 500
     finally:
         cur.close()
         return_db(conn)
