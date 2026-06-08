@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import uuid
 import requests
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from flask_limiter import Limiter
@@ -16,8 +17,52 @@ from flask_limiter.util import get_remote_address
 from flask_compress import Compress
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')
+app.secret_key = os.environ.get('SECRET_KEY')
 Compress(app)
+load_dotenv()
+@app.after_request
+def apply_security_headers(response):
+
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+
+    # Uncomment after confirming HTTPS on Cloudflare
+    # response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+
+        # JS — self + jsdelivr (marked.js) + Google Analytics + inline scripts
+        "script-src 'self' 'unsafe-inline' "
+        "https://cdn.jsdelivr.net "
+        "https://www.googletagmanager.com; "
+
+        # CSS — self + inline styles (used in login, admin, error pages)
+        "style-src 'self' 'unsafe-inline' "
+        "https://fonts.googleapis.com; "
+
+        # Fonts — Google Fonts
+        "font-src 'self' "
+        "https://fonts.gstatic.com; "
+
+        # Images — self + data URIs
+        "img-src 'self' data:; "
+
+        # API calls — self + Google Analytics
+        "connect-src 'self' "
+        "https://www.google-analytics.com; "
+
+        # PDFs open in new tab from Supabase storage
+        "frame-src https://*.supabase.co; "
+
+        # No plugins, objects, or base tag hijacking
+        "object-src 'none'; "
+        "base-uri 'self';"
+    )
+
+    return response
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 limiter = Limiter(
@@ -34,8 +79,15 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# ---------- Staging Supabase (new project) ----------
+STAGING_SUPABASE_URL = os.environ.get("STAGING_SUPABASE_URL")
+STAGING_SUPABASE_KEY = os.environ.get("STAGING_SUPABASE_KEY")
+STAGING_BUCKET = os.environ.get("STAGING_SUPABASE_BUCKET", "pending-uploads")
+staging_supabase = create_client(STAGING_SUPABASE_URL, STAGING_SUPABASE_KEY)
+
 # ---------- DB (Connection Pool) ----------
 db_pool = pool.SimpleConnectionPool(1, 10, os.environ.get("DATABASE_URL"))
+
 
 def get_db():
     try:
@@ -47,12 +99,14 @@ def get_db():
     except:
         return psycopg2.connect(os.environ.get("DATABASE_URL"))
 
+
 def return_db(conn):
     try:
         db_pool.putconn(conn)
     except Exception as e:
         app.logger.warning(f"putconn failed, closing directly: {e}")
         conn.close()
+
 
 def init_db():
     conn = get_db()
@@ -105,9 +159,11 @@ def init_db():
         cur.close()
         return_db(conn)
 
+
 init_db()
 
 # ---------- Auth helpers ----------
+
 
 def get_user_by_username(username):
     conn = get_db()
@@ -122,6 +178,7 @@ def get_user_by_username(username):
         cur.close()
         return_db(conn)
 
+
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -129,6 +186,7 @@ def login_required(f):
             return redirect(url_for('login', next=request.url))
         return f(*args, **kwargs)
     return decorated
+
 
 def admin_required(f):
     @wraps(f)
@@ -141,13 +199,17 @@ def admin_required(f):
 
 # ---------- Utility ----------
 
+
 ALLOWED_EXTENSIONS = {"pdf"}
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 def analyze_with_gemini(pdf_url, subject_name):
-    import tempfile, os as _os
+    import tempfile
+    import os as _os
 
     r = requests.get(pdf_url, timeout=15)
     r.raise_for_status()
@@ -184,6 +246,7 @@ Respond with:
     finally:
         _os.unlink(tmp_path)
 
+
 def get_subjects():
     conn = get_db()
     cur = conn.cursor()
@@ -201,7 +264,9 @@ def get_subjects():
 # ROUTES
 # ================================================================
 
+
 @app.route("/login", methods=["GET", "POST"])
+@limiter.limit("10 per minute")
 def login():
     error = None
     if request.method == "POST":
@@ -221,10 +286,12 @@ def login():
             error = "Invalid username or password"
     return render_template("login.html", error=error)
 
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("home"))
+
 
 @app.route("/")
 def home():
@@ -240,6 +307,7 @@ def home():
         cur.close()
         return_db(conn)
     return render_template("index.html", paper_count=paper_count)
+
 
 @app.route("/upload", methods=["GET", "POST"])
 @login_required
@@ -270,7 +338,8 @@ def upload_page():
             try:
                 if not year or not str(year).strip():
                     raise ValueError("Year is required")
-                year_int = int(str(year).split("-", 1)[0].strip()) if "-" in str(year) else int(year)
+                year_int = int(str(year).split("-", 1)
+                               [0].strip()) if "-" in str(year) else int(year)
             except (ValueError, TypeError) as exc:
                 return render_template("upload.html", error=f"Invalid year: {exc}", subjects=get_subjects())
 
@@ -280,7 +349,8 @@ def upload_page():
             if not allowed_file(file.filename):
                 return render_template("upload.html", error="Only PDF files are allowed", subjects=get_subjects())
 
-            exam_type = request.form.get("examType") or request.form.get("exam_type") or ""
+            exam_type = request.form.get(
+                "examType") or request.form.get("exam_type") or ""
 
             unique_name = f"{subject_id}/{year_int}/{uuid.uuid4()}.pdf"
             supabase.storage.from_(SUPABASE_BUCKET).upload(
@@ -288,7 +358,8 @@ def upload_page():
                 file.read(),
                 file_options={"content-type": "application/pdf"}
             )
-            file_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(unique_name)
+            file_url = supabase.storage.from_(
+                SUPABASE_BUCKET).get_public_url(unique_name)
 
             original_filename = secure_filename(file.filename)
             cur.execute(
@@ -298,7 +369,8 @@ def upload_page():
                 VALUES (%s, %s, %s, %s, %s, %s)
                 RETURNING paper_id
                 """,
-                (subject_id, year_int, original_filename, file_url, exam_type, unique_name),
+                (subject_id, year_int, original_filename,
+                 file_url, exam_type, unique_name),
             )
             conn.commit()
 
@@ -314,6 +386,7 @@ def upload_page():
             return_db(conn)
 
     return render_template("upload.html", subjects=get_subjects())
+
 
 @app.route("/papers")
 def view_papers():
@@ -331,30 +404,34 @@ def view_papers():
             """
         )
         rows = cur.fetchall()
-        for subject_name, semester, year, file_url, exam_type, paper_id, is_analysed in rows:
+
+        for subject_name, semester, year, _, exam_type, paper_id, is_analysed in rows:
             papers.append({
                 "subject": subject_name,
                 "year": year,
                 "semester": semester,
                 "department": "",
                 "examType": exam_type or "—",
-                "file_url": file_url,
+                "download_url": f"/download/{paper_id}",
                 "paper_id": paper_id,
                 "is_analysed": is_analysed
             })
+
         subjects = get_subjects()
         years = sorted({p["year"] for p in papers}, reverse=True) if papers else []
         return render_template("view.html", papers=papers, subjects=subjects, years=years)
+
     except Exception as e:
         app.logger.exception("Failed to load papers")
         return f"Database error: {e}", 500
     finally:
         cur.close()
         return_db(conn)
-
+        
 @app.route("/about")
 def about():
     return render_template("about.html")
+
 
 @app.route("/analyze/<int:paper_id>")
 def analyze_paper(paper_id):
@@ -389,7 +466,8 @@ def analyze_paper(paper_id):
         now = time.time()
 
         request_log.setdefault(user_ip, [])
-        request_log[user_ip] = [t for t in request_log[user_ip] if now - t < 3600]
+        request_log[user_ip] = [
+            t for t in request_log[user_ip] if now - t < 3600]
 
         if len(request_log[user_ip]) >= 5:
             return jsonify({
@@ -448,6 +526,234 @@ def analyze_paper(paper_id):
         cur.close()
         return_db(conn)
 
+# ================================================================
+# USER UPLOAD (STAGING)
+# ================================================================
+
+@app.route("/user-upload", methods=["GET", "POST"])
+@limiter.limit("5 per hour")
+def user_upload():
+    if request.method == "POST":
+        subject_raw = request.form.get("subject_id", "").strip()
+        year = request.form.get("year", "").strip()
+        exam_type = request.form.get("exam_type", "").strip()
+        file = request.files.get("file")
+
+        # --- Validate ---
+        if not subject_raw or not year or not file or not file.filename:
+            return render_template("user_upload.html",
+                                   error="All fields are required.",
+                                   subjects=get_subjects())
+        if not allowed_file(file.filename):
+            return render_template("user_upload.html",
+                                   error="Only PDF files allowed.",
+                                   subjects=get_subjects())
+        try:
+            subject_id = int(subject_raw)
+            year_int = int(year)
+            if year_int < 2000 or year_int > 2100:
+                raise ValueError
+        except ValueError:
+            return render_template("user_upload.html",
+                                   error="Invalid subject or year.",
+                                   subjects=get_subjects())
+
+        # --- Upload to staging bucket ---
+        staging_path = f"pending/{subject_id}/{year_int}/{uuid.uuid4()}.pdf"
+        try:
+            file_bytes = file.read()
+            staging_supabase.storage.from_(STAGING_BUCKET).upload(
+                staging_path,
+                file_bytes,
+                file_options={"content-type": "application/pdf"}
+            )
+        except Exception:
+            app.logger.exception("Staging upload failed")
+            return render_template("user_upload.html",
+                                   error="Upload failed. Please try again.",
+                                   subjects=get_subjects())
+
+        # --- Save pending record ---
+        conn = get_db()
+        cur = conn.cursor()
+        try:
+            original_filename = secure_filename(file.filename)
+            cur.execute("""
+                INSERT INTO pending_papers
+                (subject_id, year, exam_type, file_name, staging_path, submitted_by_ip)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (subject_id, year_int, exam_type, original_filename,
+                  staging_path, request.remote_addr))
+            conn.commit()
+        except Exception:
+            app.logger.exception("Failed to save pending record")
+            conn.rollback()
+            # Clean up staging file if DB insert fails
+            try:
+                staging_supabase.storage.from_(STAGING_BUCKET).remove([staging_path])
+            except Exception:
+                pass
+            return render_template("user_upload.html",
+                                   error="Submission failed. Please try again.",
+                                   subjects=get_subjects())
+        finally:
+            cur.close()
+            return_db(conn)
+
+        return render_template("user_upload.html", success=True, subjects=get_subjects())
+
+    return render_template("user_upload.html", subjects=get_subjects())
+
+
+# ================================================================
+# ADMIN — PENDING PAPERS
+# ================================================================
+
+@app.route("/admin/api/pending", methods=["GET"])
+@login_required
+@admin_required
+def admin_get_pending():
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT p.id, s.subject_name, s.semester, p.year, p.exam_type,
+                   p.file_name, p.staging_path, p.submitted_by_ip,
+                   p.submitted_at, p.status
+            FROM pending_papers p
+            LEFT JOIN subjects s ON p.subject_id = s.subject_id
+            WHERE p.status = 'pending'
+            ORDER BY p.submitted_at DESC
+        """)
+        rows = cur.fetchall()
+        results = []
+        for r in rows:
+            # Generate signed URL valid for 1 hour
+            try:
+                signed = staging_supabase.storage.from_(STAGING_BUCKET).create_signed_url(
+                    r[6], 3600
+                )
+                preview_url = signed.get("signedURL") or signed.get("signed_url", "")
+            except Exception:
+                preview_url = ""
+
+            results.append({
+                "id": r[0],
+                "subject_name": r[1],
+                "semester": r[2],
+                "year": r[3],
+                "exam_type": r[4],
+                "file_name": r[5],
+                "staging_path": r[6],
+                "submitted_by_ip": r[7],
+                "submitted_at": r[8].isoformat() if r[8] else None,
+                "status": r[9],
+                "preview_url": preview_url
+            })
+        return jsonify(results)
+    finally:
+        cur.close()
+        return_db(conn)
+
+
+@app.route("/admin/api/pending/<int:pending_id>/approve", methods=["POST"])
+@login_required
+@admin_required
+def approve_pending(pending_id):
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT p.subject_id, p.year, p.exam_type, p.file_name, p.staging_path
+            FROM pending_papers p
+            WHERE p.id = %s AND p.status = 'pending'
+        """, (pending_id,))
+        row = cur.fetchone()
+        if not row:
+            return jsonify({"error": "Pending paper not found"}), 404
+
+        subject_id, year, exam_type, file_name, staging_path = row
+
+        # 1. Download from staging
+        file_bytes = staging_supabase.storage.from_(STAGING_BUCKET).download(staging_path)
+
+        # 2. Upload to main bucket
+        final_path = f"{subject_id}/{year}/{uuid.uuid4()}.pdf"
+        supabase.storage.from_(SUPABASE_BUCKET).upload(
+            final_path,
+            file_bytes,
+            file_options={"content-type": "application/pdf"}
+        )
+        final_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(final_path)
+
+        # 3. Insert into question_papers
+        cur.execute("""
+            INSERT INTO question_papers
+            (subject_id, year, file_name, file_url, exam_type, public_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (subject_id, year, file_name, final_url, exam_type, final_path))
+
+        # 4. Mark as approved
+        cur.execute(
+            "UPDATE pending_papers SET status = 'approved' WHERE id = %s",
+            (pending_id,)
+        )
+        conn.commit()
+
+        # 5. Delete from staging (non-critical)
+        try:
+            staging_supabase.storage.from_(STAGING_BUCKET).remove([staging_path])
+        except Exception:
+            pass
+
+        return jsonify({"message": "Approved and published successfully."})
+
+    except Exception as e:
+        conn.rollback()
+        app.logger.exception("Approve failed")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        return_db(conn)
+
+
+@app.route("/admin/api/pending/<int:pending_id>/reject", methods=["POST"])
+@login_required
+@admin_required
+def reject_pending(pending_id):
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "SELECT staging_path FROM pending_papers WHERE id = %s AND status = 'pending'",
+            (pending_id,)
+        )
+        row = cur.fetchone()
+        if not row:
+            return jsonify({"error": "Not found"}), 404
+
+        # 1. Delete from staging
+        try:
+            staging_supabase.storage.from_(STAGING_BUCKET).remove([row[0]])
+        except Exception:
+            pass
+
+        # 2. Mark as rejected
+        cur.execute(
+            "UPDATE pending_papers SET status = 'rejected' WHERE id = %s",
+            (pending_id,)
+        )
+        conn.commit()
+        return jsonify({"message": "Rejected and removed."})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        return_db(conn)
+
+
 @app.route("/analyze/<int:paper_id>/refresh")
 @login_required
 @admin_required
@@ -465,9 +771,27 @@ def refresh_analysis(paper_id):
         cur.close()
         return_db(conn)
 
+@app.route("/download/<int:paper_id>")
+def download_paper(paper_id):
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "SELECT file_url FROM question_papers WHERE paper_id = %s",
+            (paper_id,)
+        )
+        row = cur.fetchone()
+        if not row:
+            return "Paper not found", 404
+        return redirect(row[0])
+    finally:
+        cur.close()
+        return_db(conn)
+        
 # ================================================================
 # ADMIN PANEL
 # ================================================================
+
 
 @app.route("/admin")
 @login_required
@@ -489,7 +813,8 @@ def admin_stats():
         cur.execute("SELECT COUNT(*) FROM question_papers")
         total_papers = cur.fetchone()[0] or 0
 
-        cur.execute("SELECT COUNT(*) FROM question_papers WHERE ai_analysis IS NOT NULL")
+        cur.execute(
+            "SELECT COUNT(*) FROM question_papers WHERE ai_analysis IS NOT NULL")
         papers_with_ai = cur.fetchone()[0] or 0
 
         cur.execute(
@@ -618,7 +943,8 @@ def admin_delete_subject(subject_id):
     conn = get_db()
     cur = conn.cursor()
     try:
-        cur.execute("DELETE FROM subjects WHERE subject_id=%s RETURNING subject_id", (subject_id,))
+        cur.execute(
+            "DELETE FROM subjects WHERE subject_id=%s RETURNING subject_id", (subject_id,))
         if cur.fetchone() is None:
             return jsonify({"error": "Subject not found"}), 404
         conn.commit()
@@ -689,7 +1015,8 @@ def admin_delete_paper(paper_id):
             except Exception:
                 pass
 
-        cur.execute("DELETE FROM question_papers WHERE paper_id=%s", (paper_id,))
+        cur.execute(
+            "DELETE FROM question_papers WHERE paper_id=%s", (paper_id,))
         conn.commit()
         return jsonify({"message": "Deleted"}), 200
     except Exception as e:
@@ -743,13 +1070,17 @@ def admin_change_password():
 # ERROR HANDLERS
 # ================================================================
 
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
+
 
 @app.errorhandler(500)
 def server_error(e):
     return render_template('500.html'), 500
 
+
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)), debug=False)
+    app.run(host='0.0.0.0', port=int(
+        os.environ.get('PORT', 10000)), debug=False)

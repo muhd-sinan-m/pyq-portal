@@ -4,14 +4,12 @@
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <meta charset="UTF-8">
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel — PYQ Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* ===== RESET & BASE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -56,16 +54,9 @@
             min-height: 100vh;
         }
 
-        h1,h2,h3,h4,h5,h6 {
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-        }
+        h1,h2,h3,h4,h5,h6 { font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
 
-        /* ===== LAYOUT ===== */
-        .admin-layout {
-            display: flex;
-            min-height: 100vh;
-        }
+        .admin-layout { display: flex; min-height: 100vh; }
 
         /* ===== SIDEBAR ===== */
         .sidebar {
@@ -100,23 +91,10 @@
             flex-shrink: 0;
         }
 
-        .brand-text h2 {
-            font-size: 1.125rem;
-            color: var(--text-primary);
-            line-height: 1.2;
-        }
+        .brand-text h2 { font-size: 1.125rem; color: var(--text-primary); line-height: 1.2; }
+        .brand-text span { font-size: .75rem; color: var(--text-secondary); font-weight: 500; }
 
-        .brand-text span {
-            font-size: .75rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .sidebar-nav {
-            flex: 1;
-            padding: 1rem .75rem;
-            overflow-y: auto;
-        }
+        .sidebar-nav { flex: 1; padding: 1rem .75rem; overflow-y: auto; }
 
         .nav-section-label {
             font-size: .6875rem;
@@ -147,10 +125,7 @@
             margin-bottom: .125rem;
         }
 
-        .nav-link:hover {
-            background: var(--gray-50);
-            color: var(--text-primary);
-        }
+        .nav-link:hover { background: var(--gray-50); color: var(--text-primary); }
 
         .nav-link.active {
             background: linear-gradient(135deg, rgba(37,99,235,.1) 0%, rgba(124,58,237,.07) 100%);
@@ -159,6 +134,30 @@
         }
 
         .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; stroke-width: 2; }
+
+        .nav-link-label { flex: 1; }
+
+        /* pending badge on nav */
+        .nav-badge {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 5px;
+            background: var(--accent-orange);
+            color: white;
+            border-radius: 999px;
+            font-size: .6875rem;
+            font-weight: 700;
+            line-height: 1;
+            animation: pulse-badge 2s infinite;
+        }
+        .nav-badge.visible { display: inline-flex; }
+        @keyframes pulse-badge {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,.5); }
+            50% { box-shadow: 0 0 0 5px rgba(245,158,11,0); }
+        }
 
         .sidebar-footer {
             padding: 1rem 1.25rem;
@@ -182,17 +181,8 @@
             color: white; font-weight: 700; font-size: .8125rem;
         }
 
-        .admin-info span:first-child {
-            display: block;
-            font-weight: 600;
-            font-size: .875rem;
-            color: var(--text-primary);
-        }
-
-        .admin-info span:last-child {
-            font-size: .75rem;
-            color: var(--text-secondary);
-        }
+        .admin-info span:first-child { display: block; font-weight: 600; font-size: .875rem; color: var(--text-primary); }
+        .admin-info span:last-child { font-size: .75rem; color: var(--text-secondary); }
 
         /* ===== MAIN CONTENT ===== */
         .main-content {
@@ -215,11 +205,7 @@
             z-index: 50;
         }
 
-        .topbar-left {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
+        .topbar-left { display: flex; align-items: center; gap: 1rem; }
 
         .mobile-menu-btn {
             display: none;
@@ -231,22 +217,10 @@
             color: var(--text-secondary);
         }
 
-        .page-title-area h1 {
-            font-size: 1.375rem;
-            color: var(--text-primary);
-        }
+        .page-title-area h1 { font-size: 1.375rem; color: var(--text-primary); }
+        .page-title-area p { font-size: .875rem; color: var(--text-secondary); margin-top: .125rem; }
 
-        .page-title-area p {
-            font-size: .875rem;
-            color: var(--text-secondary);
-            margin-top: .125rem;
-        }
-
-        .topbar-actions {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-        }
+        .topbar-actions { display: flex; align-items: center; gap: .75rem; }
 
         .btn-back {
             display: flex;
@@ -265,24 +239,18 @@
             cursor: pointer;
         }
 
-        .btn-back:hover {
-            background: var(--gray-100);
-            color: var(--text-primary);
-        }
+        .btn-back:hover { background: var(--gray-100); color: var(--text-primary); }
 
-        .content-area {
-            flex: 1;
-            padding: 2rem;
-        }
+        .content-area { flex: 1; padding: 2rem; }
 
-        /* ===== SECTIONS (tab panels) ===== */
+        /* ===== SECTIONS ===== */
         .section { display: none; }
         .section.active { display: block; }
 
         /* ===== STAT CARDS ===== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.25rem;
             margin-bottom: 2rem;
         }
@@ -308,10 +276,11 @@
             opacity: .08;
         }
 
-        .stat-card.blue::before { background: var(--primary-blue); }
+        .stat-card.blue::before   { background: var(--primary-blue); }
         .stat-card.purple::before { background: var(--primary-purple); }
-        .stat-card.green::before { background: var(--accent-green); }
+        .stat-card.green::before  { background: var(--accent-green); }
         .stat-card.orange::before { background: var(--accent-orange); }
+        .stat-card.cyan::before   { background: var(--accent-cyan); }
 
         .stat-icon {
             width: 44px; height: 44px;
@@ -320,10 +289,11 @@
             margin-bottom: 1rem;
         }
 
-        .stat-icon.blue { background: rgba(37,99,235,.1); color: var(--primary-blue); }
+        .stat-icon.blue   { background: rgba(37,99,235,.1);  color: var(--primary-blue); }
         .stat-icon.purple { background: rgba(124,58,237,.1); color: var(--primary-purple); }
-        .stat-icon.green { background: rgba(16,185,129,.1); color: var(--accent-green); }
+        .stat-icon.green  { background: rgba(16,185,129,.1); color: var(--accent-green); }
         .stat-icon.orange { background: rgba(245,158,11,.1); color: var(--accent-orange); }
+        .stat-icon.cyan   { background: rgba(6,182,212,.1);  color: var(--accent-cyan); }
 
         .stat-icon svg { width: 22px; height: 22px; stroke-width: 2; }
 
@@ -336,11 +306,7 @@
             margin-bottom: .375rem;
         }
 
-        .stat-label {
-            font-size: .875rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
+        .stat-label { font-size: .875rem; color: var(--text-secondary); font-weight: 500; }
 
         /* ===== WELCOME CARD ===== */
         .welcome-card {
@@ -365,7 +331,7 @@
         .welcome-card h2 { font-size: 1.5rem; margin-bottom: .5rem; }
         .welcome-card p { opacity: .8; font-size: .9375rem; }
 
-        /* ===== CARD COMPONENT ===== */
+        /* ===== CARD ===== */
         .card {
             background: var(--bg-primary);
             border: 1px solid var(--border-color);
@@ -382,12 +348,7 @@
             gap: 1rem;
         }
 
-        .card-title {
-            font-size: 1.0625rem;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
+        .card-title { font-size: 1.0625rem; font-weight: 700; color: var(--text-primary); }
         .card-body { padding: 0; }
 
         /* ===== BUTTONS ===== */
@@ -419,6 +380,9 @@
 
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(37,99,235,.45); }
 
+        .btn-success { background: var(--accent-green); color: white; }
+        .btn-success:hover { background: #059669; transform: translateY(-1px); }
+
         .btn-danger { background: var(--accent-red); color: white; }
         .btn-danger:hover { background: #dc2626; transform: translateY(-1px); }
 
@@ -429,6 +393,9 @@
         }
 
         .btn-ghost:hover { background: var(--bg-secondary); color: var(--text-primary); }
+
+        .btn-sm { padding: .4375rem .875rem; font-size: .8125rem; }
+        .btn-sm svg { width: 14px; height: 14px; }
 
         .btn-icon {
             width: 34px; height: 34px;
@@ -447,16 +414,14 @@
 
         .btn-icon svg { width: 15px; height: 15px; stroke-width: 2; }
         .btn-icon:hover { background: var(--bg-secondary); color: var(--text-primary); }
-        .btn-icon.edit:hover { background: rgba(37,99,235,.08); color: var(--primary-blue); border-color: rgba(37,99,235,.2); }
-        .btn-icon.delete:hover { background: rgba(239,68,68,.08); color: var(--accent-red); border-color: rgba(239,68,68,.2); }
+        .btn-icon.edit:hover   { background: rgba(37,99,235,.08);  color: var(--primary-blue); border-color: rgba(37,99,235,.2); }
+        .btn-icon.delete:hover { background: rgba(239,68,68,.08);  color: var(--accent-red);   border-color: rgba(239,68,68,.2); }
+        .btn-icon.approve:hover { background: rgba(16,185,129,.08); color: var(--accent-green); border-color: rgba(16,185,129,.2); }
 
         /* ===== TABLE ===== */
         .table-wrapper { overflow-x: auto; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        table { width: 100%; border-collapse: collapse; }
 
         thead th {
             padding: .875rem 1.25rem;
@@ -470,23 +435,13 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        thead th:first-child { border-radius: 0; }
-
-        tbody tr {
-            border-bottom: 1px solid var(--border-color);
-            transition: background .15s;
-        }
-
+        tbody tr { border-bottom: 1px solid var(--border-color); transition: background .15s; }
         tbody tr:last-child { border-bottom: none; }
         tbody tr:hover { background: var(--bg-secondary); }
 
-        tbody td {
-            padding: 1rem 1.25rem;
-            font-size: .9375rem;
-            color: var(--text-primary);
-        }
+        tbody td { padding: 1rem 1.25rem; font-size: .9375rem; color: var(--text-primary); }
 
-        .td-actions { display: flex; gap: .5rem; }
+        .td-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 
         /* ===== BADGE ===== */
         .badge {
@@ -498,24 +453,16 @@
             font-weight: 600;
         }
 
-        .badge-blue { background: rgba(37,99,235,.1); color: var(--primary-blue); }
+        .badge-blue   { background: rgba(37,99,235,.1);  color: var(--primary-blue); }
         .badge-purple { background: rgba(124,58,237,.1); color: var(--primary-purple); }
-        .badge-green { background: rgba(16,185,129,.1); color: var(--accent-green); }
-        .badge-gray { background: var(--gray-100); color: var(--gray-500); }
+        .badge-green  { background: rgba(16,185,129,.1); color: var(--accent-green); }
+        .badge-orange { background: rgba(245,158,11,.1); color: var(--accent-orange); }
+        .badge-gray   { background: var(--gray-100);     color: var(--gray-500); }
+        .badge-cyan   { background: rgba(6,182,212,.1);  color: var(--accent-cyan); }
 
         /* ===== FORM ===== */
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: .375rem;
-            margin-bottom: 1.125rem;
-        }
-
-        .form-label {
-            font-weight: 600;
-            font-size: .875rem;
-            color: var(--text-primary);
-        }
+        .form-group { display: flex; flex-direction: column; gap: .375rem; margin-bottom: 1.125rem; }
+        .form-label { font-weight: 600; font-size: .875rem; color: var(--text-primary); }
 
         .form-control {
             padding: .75rem 1rem;
@@ -536,14 +483,9 @@
         }
 
         .form-control::placeholder { color: var(--gray-400); }
-
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
-        .form-error {
-            font-size: .8125rem;
-            color: var(--accent-red);
-            display: none;
-        }
+        .form-error { font-size: .8125rem; color: var(--accent-red); display: none; }
 
         /* ===== MODAL ===== */
         .modal-overlay {
@@ -616,6 +558,8 @@
         }
 
         .confirm-icon svg { width: 26px; height: 26px; stroke-width: 2; color: var(--accent-red); }
+        .confirm-icon.green-icon { background: rgba(16,185,129,.1); }
+        .confirm-icon.green-icon svg { color: var(--accent-green); }
 
         .confirm-text { text-align: center; }
         .confirm-text h3 { margin-bottom: .5rem; }
@@ -647,37 +591,23 @@
             font-size: .9375rem;
         }
 
-        @keyframes toastIn {
-            from { opacity: 0; transform: translateX(12px); }
-            to   { opacity: 1; transform: translateX(0); }
-        }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
 
         .toast.success { border-left-color: var(--accent-green); }
         .toast.error   { border-left-color: var(--accent-red); }
-        .toast-icon    { flex-shrink: 0; }
+        .toast-icon { flex-shrink: 0; }
         .toast-icon svg { width: 18px; height: 18px; stroke-width: 2.5; }
         .toast.success .toast-icon { color: var(--accent-green); }
         .toast.error   .toast-icon { color: var(--accent-red); }
-        .toast-msg     { font-weight: 500; color: var(--text-primary); }
+        .toast-msg { font-weight: 500; color: var(--text-primary); }
 
         /* ===== EMPTY STATE ===== */
-        .empty-state {
-            text-align: center;
-            padding: 3.5rem 2rem;
-            color: var(--text-secondary);
-        }
-
-        .empty-state svg {
-            width: 48px; height: 48px;
-            opacity: .25;
-            margin-bottom: 1rem;
-            stroke-width: 1.5;
-        }
-
+        .empty-state { text-align: center; padding: 3.5rem 2rem; color: var(--text-secondary); }
+        .empty-state svg { width: 48px; height: 48px; opacity: .25; margin-bottom: 1rem; stroke-width: 1.5; }
         .empty-state h3 { font-size: 1.125rem; margin-bottom: .375rem; color: var(--text-primary); }
         .empty-state p { font-size: .9375rem; }
 
-        /* ===== LOADING SKELETON ===== */
+        /* ===== SKELETON ===== */
         .skeleton {
             background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
             background-size: 200% 100%;
@@ -700,9 +630,22 @@
         }
 
         .alert svg { flex-shrink: 0; width: 18px; height: 18px; stroke-width: 2; margin-top: .1rem; }
-        .alert-error { background: rgba(239,68,68,.06); border-color: rgba(239,68,68,.25); color: #b91c1c; }
+        .alert-error   { background: rgba(239,68,68,.06);  border-color: rgba(239,68,68,.25);  color: #b91c1c; }
         .alert-success { background: rgba(16,185,129,.06); border-color: rgba(16,185,129,.25); color: #065f46; }
-        .alert-info { background: rgba(37,99,235,.06); border-color: rgba(37,99,235,.2); color: var(--primary-dark); }
+        .alert-info    { background: rgba(37,99,235,.06);  border-color: rgba(37,99,235,.2);   color: var(--primary-dark); }
+
+        /* ===== PENDING REVIEW CARD ===== */
+        .pending-meta {
+            font-size: .8125rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .pending-file {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: .9rem;
+        }
 
         /* ===== MOBILE ===== */
         .sidebar-overlay {
@@ -727,22 +670,14 @@
         @media (max-width: 480px) {
             .stats-grid { grid-template-columns: 1fr; }
             .topbar { padding: .875rem 1.25rem; }
-                .topbar-actions .btn-back {
-        padding: .5rem .625rem;
-        font-size: 0;
-    }
-    .topbar-actions .btn-back svg {
-        width: 18px;
-        height: 18px;
-    }
-}
+            .topbar-actions .btn-back { padding: .5rem .625rem; font-size: 0; }
+            .topbar-actions .btn-back svg { width: 18px; height: 18px; }
         }
     </style>
 </head>
 <body>
 
 <div id="toast-container"></div>
-
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <div class="admin-layout">
@@ -760,23 +695,28 @@
             <div class="nav-section-label">Overview</div>
             <button class="nav-link active" onclick="showSection('dashboard')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                Dashboard
+                <span class="nav-link-label">Dashboard</span>
             </button>
 
             <div class="nav-section-label">Manage</div>
             <button class="nav-link" onclick="showSection('subjects')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                Subjects
+                <span class="nav-link-label">Subjects</span>
             </button>
             <button class="nav-link" onclick="showSection('papers')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
-                Papers
+                <span class="nav-link-label">Papers</span>
+            </button>
+            <button class="nav-link" onclick="showSection('pending')" id="navPending">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                <span class="nav-link-label">Pending Reviews</span>
+                <span class="nav-badge" id="pendingNavBadge">0</span>
             </button>
 
             <div class="nav-section-label">Settings</div>
             <button class="nav-link" onclick="showSection('password')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                Change Password
+                <span class="nav-link-label">Change Password</span>
             </button>
         </nav>
 
@@ -793,7 +733,6 @@
 
     <!-- ========== MAIN ========== -->
     <div class="main-content">
-        <!-- Topbar -->
         <header class="topbar">
             <div class="topbar-left">
                 <button class="mobile-menu-btn" onclick="openSidebar()">
@@ -854,9 +793,15 @@
                         <div class="stat-value" id="stat-recent">—</div>
                         <div class="stat-label">Uploads (30d)</div>
                     </div>
+                    <div class="stat-card cyan" style="cursor:pointer" onclick="showSection('pending')">
+                        <div class="stat-icon cyan">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                        </div>
+                        <div class="stat-value" id="stat-pending">—</div>
+                        <div class="stat-label">Pending Reviews</div>
+                    </div>
                 </div>
 
-                <!-- Quick actions -->
                 <div class="card">
                     <div class="card-header">
                         <span class="card-title">Quick Actions</span>
@@ -870,6 +815,10 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:17px;height:17px;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                             Upload Paper
                         </a>
+                        <button class="btn btn-ghost" onclick="showSection('pending')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:17px;height:17px;stroke-width:2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                            Review Submissions
+                        </button>
                         <a href="{{ url_for('view_papers') }}" class="btn btn-ghost">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:17px;height:17px;stroke-width:2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                             View Browse Page
@@ -934,6 +883,42 @@
                                     </tr>
                                 </thead>
                                 <tbody id="papersTableBody">
+                                    <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-secondary)">Loading…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======= PENDING REVIEWS ======= -->
+            <div id="section-pending" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <div style="display:flex;align-items:center;gap:.75rem;">
+                            <span class="card-title">Pending Submissions</span>
+                            <span class="badge badge-orange" id="pendingCountBadge" style="display:none">0 pending</span>
+                        </div>
+                        <button class="btn btn-ghost btn-sm" onclick="loadPending()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23,4 23,11 16,11"/><polyline points="1,20 1,13 8,13"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 11M1 13l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                            Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>File</th>
+                                        <th>Subject</th>
+                                        <th>Sem</th>
+                                        <th>Year</th>
+                                        <th>Exam Type</th>
+                                        <th>Submitted</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pendingTableBody">
                                     <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-secondary)">Loading…</td></tr>
                                 </tbody>
                             </table>
@@ -1052,21 +1037,43 @@
     </div>
 </div>
 
-<!-- ========== DELETE CONFIRM MODAL ========== -->
+<!-- ========== GENERIC CONFIRM MODAL ========== -->
 <div class="modal-overlay" id="modalConfirmDelete">
     <div class="modal" style="max-width:400px;">
         <div class="modal-body" style="padding:2rem 1.5rem 1rem;">
-            <div class="confirm-icon">
+            <div class="confirm-icon" id="confirmIcon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
             </div>
             <div class="confirm-text">
-                <h3 id="deleteModalTitle">Delete Subject</h3>
+                <h3 id="deleteModalTitle">Confirm Action</h3>
                 <p id="deleteModalBody">Are you sure? This action cannot be undone.</p>
             </div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-ghost" onclick="closeModal('modalConfirmDelete')">Cancel</button>
-            <button class="btn btn-danger" id="confirmDeleteBtn">Yes, Delete</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== APPROVE CONFIRM MODAL ========== -->
+<div class="modal-overlay" id="modalConfirmApprove">
+    <div class="modal" style="max-width:400px;">
+        <div class="modal-body" style="padding:2rem 1.5rem 1rem;">
+            <div class="confirm-icon green-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20,6 9,17 4,12"/></svg>
+            </div>
+            <div class="confirm-text">
+                <h3>Approve Submission</h3>
+                <p id="approveModalBody">Approve this paper? It will be moved to the main bucket and published immediately.</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('modalConfirmApprove')">Cancel</button>
+            <button class="btn btn-success" id="confirmApproveBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:15px;height:15px;stroke-width:2.5"><polyline points="20,6 9,17 4,12"/></svg>
+                Yes, Publish
+            </button>
         </div>
     </div>
 </div>
@@ -1074,10 +1081,11 @@
 <script>
 // ===== NAVIGATION =====
 const pageTitles = {
-    dashboard: ['Dashboard', 'Overview of your portal activity'],
-    subjects: ['Subjects', 'Manage academic subjects'],
-    papers: ['Question Papers', 'View and manage uploaded papers'],
-    password: ['Change Password', 'Update admin login credentials'],
+    dashboard: ['Dashboard',         'Overview of your portal activity'],
+    subjects:  ['Subjects',          'Manage academic subjects'],
+    papers:    ['Question Papers',   'View and manage uploaded papers'],
+    pending:   ['Pending Reviews',   'Approve or reject user-submitted papers'],
+    password:  ['Change Password',   'Update admin login credentials'],
 };
 
 function showSection(name) {
@@ -1095,8 +1103,9 @@ function showSection(name) {
     closeSidebar();
 
     if (name === 'dashboard') loadStats();
-    if (name === 'subjects') loadSubjects();
-    if (name === 'papers') loadPapers();
+    if (name === 'subjects')  loadSubjects();
+    if (name === 'papers')    loadPapers();
+    if (name === 'pending')   loadPending();
 }
 
 // ===== SIDEBAR MOBILE =====
@@ -1110,7 +1119,7 @@ function closeSidebar() {
 }
 
 // ===== MODAL =====
-function openModal(id) { document.getElementById(id).classList.add('open'); }
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
@@ -1123,7 +1132,7 @@ function toast(msg, type = 'success') {
     const icon = type === 'success'
         ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20,6 9,17 4,12"/></svg>'
         : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
-    el.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-msg">${msg}</span>`;
+    el.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-msg">${escHtml(msg)}</span>`;
     document.getElementById('toast-container').appendChild(el);
     setTimeout(() => el.remove(), 3800);
 }
@@ -1131,14 +1140,37 @@ function toast(msg, type = 'success') {
 // ===== STATS =====
 async function loadStats() {
     try {
-        const r = await fetch('/admin/api/stats');
-        const d = await r.json();
+        const [statsRes, pendingRes] = await Promise.all([
+            fetch('/admin/api/stats'),
+            fetch('/admin/api/pending')
+        ]);
+        const d = await statsRes.json();
         document.getElementById('stat-subjects').textContent = d.total_subjects ?? 0;
-        document.getElementById('stat-papers').textContent = d.total_papers ?? 0;
-        document.getElementById('stat-ai').textContent = d.papers_with_ai ?? 0;
-        document.getElementById('stat-recent').textContent = d.recent_uploads ?? 0;
+        document.getElementById('stat-papers').textContent   = d.total_papers   ?? 0;
+        document.getElementById('stat-ai').textContent       = d.papers_with_ai ?? 0;
+        document.getElementById('stat-recent').textContent   = d.recent_uploads ?? 0;
+
+        if (pendingRes.ok) {
+            const pending = await pendingRes.json();
+            const count = Array.isArray(pending) ? pending.length : 0;
+            document.getElementById('stat-pending').textContent = count;
+            updatePendingBadge(count);
+        }
     } catch (e) {
         console.error(e);
+    }
+}
+
+function updatePendingBadge(count) {
+    const badge = document.getElementById('pendingNavBadge');
+    const cardBadge = document.getElementById('pendingCountBadge');
+    if (count > 0) {
+        badge.textContent = count;
+        badge.classList.add('visible');
+        if (cardBadge) { cardBadge.textContent = count + ' pending'; cardBadge.style.display = ''; }
+    } else {
+        badge.classList.remove('visible');
+        if (cardBadge) cardBadge.style.display = 'none';
     }
 }
 
@@ -1240,6 +1272,8 @@ async function submitEditSubject(e) {
 function openDeleteSubjectModal(id, name) {
     document.getElementById('deleteModalTitle').textContent = 'Delete Subject';
     document.getElementById('deleteModalBody').textContent = `Delete "${name}"? This cannot be undone. Associated papers may be affected.`;
+    document.getElementById('confirmDeleteBtn').className = 'btn btn-danger';
+    document.getElementById('confirmDeleteBtn').textContent = 'Yes, Delete';
     const btn = document.getElementById('confirmDeleteBtn');
     btn.onclick = () => deleteSubject(id);
     openModal('modalConfirmDelete');
@@ -1294,6 +1328,8 @@ async function loadPapers() {
 function openDeletePaperModal(id, subject) {
     document.getElementById('deleteModalTitle').textContent = 'Delete Paper';
     document.getElementById('deleteModalBody').textContent = `Delete the paper for "${subject}"? This also removes the Supabase file.`;
+    document.getElementById('confirmDeleteBtn').className = 'btn btn-danger';
+    document.getElementById('confirmDeleteBtn').textContent = 'Yes, Delete';
     const btn = document.getElementById('confirmDeleteBtn');
     btn.onclick = () => deletePaper(id);
     openModal('modalConfirmDelete');
@@ -1310,6 +1346,121 @@ async function deletePaper(id) {
         closeModal('modalConfirmDelete');
         loadPapers();
     } catch (err) { toast(err.message, 'error'); }
+}
+
+// ===== PENDING REVIEWS =====
+async function loadPending() {
+    const tbody = document.getElementById('pendingTableBody');
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-secondary)">Loading…</td></tr>';
+    try {
+        const r = await fetch('/admin/api/pending');
+        if (!r.ok) throw new Error('Failed to load');
+        const items = await r.json();
+
+        updatePendingBadge(items.length);
+
+        if (!items.length) {
+            tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+                <h3>All caught up!</h3>
+                <p>No pending submissions to review right now.</p>
+            </div></td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = items.map(item => {
+            const submittedAt = item.submitted_at
+                ? new Date(item.submitted_at).toLocaleString(undefined, {dateStyle:'medium', timeStyle:'short'})
+                : '—';
+            const previewBtn = item.preview_url
+                ? `<a href="${escAttr(item.preview_url)}" target="_blank" class="btn-icon" title="Preview PDF" style="color:var(--primary-blue)">
+                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                   </a>`
+                : '';
+            return `<tr>
+                <td>
+                    <div class="pending-file">${escHtml(item.file_name || '—')}</div>
+                    <div class="pending-meta">From: ${escHtml(item.submitted_by_ip || '—')}</div>
+                </td>
+                <td style="font-weight:600">${escHtml(item.subject_name || '—')}</td>
+                <td>${item.semester ? `<span class="badge badge-blue">Sem ${item.semester}</span>` : '—'}</td>
+                <td>${item.year || '—'}</td>
+                <td>${item.exam_type ? `<span class="badge badge-purple">${escHtml(item.exam_type)}</span>` : '<span class="badge badge-gray">—</span>'}</td>
+                <td style="color:var(--text-secondary);font-size:.875rem">${submittedAt}</td>
+                <td>
+                    <div class="td-actions">
+                        ${previewBtn}
+                        <button class="btn-icon approve" title="Approve & Publish"
+                            onclick="openApproveModal(${item.id}, '${escAttr(item.file_name || '')}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20,6 9,17 4,12"/></svg>
+                        </button>
+                        <button class="btn-icon delete" title="Reject & Delete"
+                            onclick="openRejectModal(${item.id}, '${escAttr(item.file_name || '')}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--accent-red);padding:2rem">Failed to load pending submissions.</td></tr>';
+    }
+}
+
+function openApproveModal(id, filename) {
+    document.getElementById('approveModalBody').textContent =
+        `Approve "${filename || 'this paper'}"? It will be moved to the main storage bucket and published to the portal immediately.`;
+    document.getElementById('confirmApproveBtn').onclick = () => approvePending(id);
+    openModal('modalConfirmApprove');
+}
+
+async function approvePending(id) {
+    const btn = document.getElementById('confirmApproveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:15px;height:15px;stroke-width:2.5"><polyline points="20,6 9,17 4,12"/></svg> Publishing…';
+    try {
+        const r = await fetch(`/admin/api/pending/${id}/approve`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCsrf()}
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Approve failed');
+        toast('Paper approved and published!');
+        closeModal('modalConfirmApprove');
+        loadPending();
+    } catch (err) {
+        toast(err.message, 'error');
+        closeModal('modalConfirmApprove');
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:15px;height:15px;stroke-width:2.5"><polyline points="20,6 9,17 4,12"/></svg> Yes, Publish';
+}
+
+function openRejectModal(id, filename) {
+    document.getElementById('deleteModalTitle').textContent = 'Reject Submission';
+    document.getElementById('deleteModalBody').textContent =
+        `Reject "${filename || 'this submission'}"? The file will be permanently deleted from staging storage.`;
+    document.getElementById('confirmDeleteBtn').className = 'btn btn-danger';
+    document.getElementById('confirmDeleteBtn').textContent = 'Yes, Reject';
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.onclick = () => rejectPending(id);
+    openModal('modalConfirmDelete');
+}
+
+async function rejectPending(id) {
+    try {
+        const r = await fetch(`/admin/api/pending/${id}/reject`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCsrf()}
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Reject failed');
+        toast('Submission rejected and deleted.');
+        closeModal('modalConfirmDelete');
+        loadPending();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
 }
 
 // ===== CHANGE PASSWORD =====

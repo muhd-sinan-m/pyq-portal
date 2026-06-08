@@ -203,8 +203,8 @@
     </section>
     <!-- ==================== ANNOUNCEMENT BANNER ==================== -->
     <div class="announcement-banner" id="announcementBanner">
-        <span>🎓 New papers added for Semester 2 — SEA-II. Check Browse section! <br> nanayt padikkiii
-            makkalleee...😎✌️</span>
+        <span>🎓 New papers elm loading makkaleee... <br>
+            puthye sem nammk tookkam...😎✌️</span>
         <button onclick="document.getElementById('announcementBanner').style.display='none'">✕</button>
     </div>
     <!-- ==================== DEPARTMENTS SECTION ==================== -->
@@ -426,6 +426,124 @@
         </div>
     </section>
 
+        <!-- ==================== CONTRIBUTE SECTION ==================== -->
+    <!-- INSERT THIS BLOCK right after </section> of the departments-section -->
+     <!-- ==================== CONTRIBUTE SECTION ==================== -->
+    <!-- INSERT THIS BLOCK right after </section> of the departments-section -->
+
+    <style>
+        .contrib-inner {
+            max-width: 860px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 2.5rem;
+            background: #fff;
+            border: 1px solid rgba(99,102,241,.15);
+            border-radius: 20px;
+            padding: 2.5rem 3rem;
+            box-shadow: 0 4px 24px rgba(99,102,241,.08), 0 1px 4px rgba(0,0,0,.04);
+        }
+        .contrib-cta-wrap { flex-shrink: 0; text-align: center; }
+        .contrib-cta-btn {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .5rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            text-decoration: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 8px 24px rgba(99,102,241,.35);
+            transition: transform .2s, box-shadow .2s;
+            min-width: 140px;
+        }
+        .contrib-cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(99,102,241,.45);
+        }
+        @media (max-width: 600px) {
+            .contrib-inner {
+                grid-template-columns: 1fr;
+                padding: 1.75rem 1.5rem;
+                gap: 1.75rem;
+                text-align: center;
+            }
+            .contrib-inner p { margin: 0 auto; }
+            .contrib-pills  { justify-content: center; }
+            .contrib-cta-wrap { width: 100%; }
+            .contrib-cta-btn  { width: 100%; max-width: 280px; }
+        }
+    </style>
+
+    <section style="
+        padding: 4rem 0;
+        background: linear-gradient(135deg, #f0f4ff 0%, #f5f0ff 100%);
+        position: relative;
+        overflow: hidden;
+    ">
+        <div style="position:absolute;top:-60px;right:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%);pointer-events:none;"></div>
+        <div style="position:absolute;bottom:-40px;left:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.1) 0%,transparent 70%);pointer-events:none;"></div>
+
+        <div class="container">
+            <div class="contrib-inner reveal">
+
+                <!-- Left text -->
+                <div>
+                    <div style="display:inline-flex;align-items:center;gap:.45rem;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.18);border-radius:999px;padding:.3rem .9rem;font-size:.78rem;font-weight:700;color:#4f46e5;letter-spacing:.05em;text-transform:uppercase;margin-bottom:1rem;">
+                        Community Contribution
+                    </div>
+
+                    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;color:#111827;line-height:1.3;margin-bottom:.65rem;">
+                        Have a question paper?
+                        <span style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Share it!</span>
+                    </h2>
+
+                    <p style="color:#6b7280;font-size:.975rem;line-height:1.65;max-width:460px;margin:0;">
+                        Help your classmates prepare better. Submit any previous year paper you have —
+                        our team will review and publish it to the portal for everyone.
+                    </p>
+
+                    <div class="contrib-pills" style="display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.25rem;">
+                        <span style="display:inline-flex;align-items:center;gap:.35rem;background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;border-radius:999px;padding:.25rem .75rem;font-size:.78rem;font-weight:600;">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>
+                            Reviewed before publishing
+                        </span>
+                        <span style="display:inline-flex;align-items:center;gap:.35rem;background:#eff6ff;border:1px solid #bfdbfe;color:#2563eb;border-radius:999px;padding:.25rem .75rem;font-size:.78rem;font-weight:600;">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>
+                            PDF only · No login needed
+                        </span>
+                
+                    </div>
+                </div>
+
+                <!-- Right CTA -->
+                <div class="contrib-cta-wrap">
+                    <a href="{{ url_for('user_upload') }}" class="contrib-cta-btn">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17,8 12,3 7,8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Submit a Paper
+                    </a>
+                    <p style="margin-top:.75rem;font-size:.75rem;color:#9ca3af;line-height:1.4;">
+                        Up to 5 submissions<br>per hour
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+    <!-- ==================== END CONTRIBUTE SECTION ==================== -->
+
+    <!-- ==================== END CONTRIBUTE SECTION ==================== -->
+
     <!-- ==================== CTA SECTION ==================== -->
     <section class="cta-section">
         <div class="cta-circle cta-circle-1"></div>
@@ -436,8 +554,7 @@
                 <div class="cta-grid">
                     <div class="cta-left">
                         <div class="cta-tag">PYQ Portal</div>
-                        <div class="cta-big">Exam season?<br>We got you. 🎯</div>
-                        <div class="cta-sub">Built for Marian Students</div>
+                        <div class="cta-big">Exam season?<br>We got you...!</div>
                     </div>
                     <div class="cta-divider-v"></div>
                     <div class="cta-right">
