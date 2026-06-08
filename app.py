@@ -429,23 +429,7 @@ def view_papers():
     finally:
         cur.close()
         return_db(conn)
-        
-@app.route("/download/<int:paper_id>")
-def download_paper(paper_id):
-    conn = get_db()
-    cur = conn.cursor()
-    try:
-        cur.execute(
-            "SELECT file_url FROM question_papers WHERE paper_id = %s",
-            (paper_id,)
-        )
-        row = cur.fetchone()
-        if not row or not row[0]:
-            return "Paper not found", 404
-        return redirect(row[0] + "?download=")
-    finally:
-        cur.close()
-        return_db(conn)        
+            
 @app.route("/about")
 def about():
     return render_template("about.html")
