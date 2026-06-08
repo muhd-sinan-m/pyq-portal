@@ -449,7 +449,7 @@ def view_papers():
         )
         rows = cur.fetchall()
 
-        for subject_name, semester, year, _, exam_type, paper_id, is_analysed in rows:
+        for subject_name, semester, year, file_url, exam_type, paper_id, is_analysed in rows:
             papers.append({
                 "subject": subject_name,
                 "year": year,
