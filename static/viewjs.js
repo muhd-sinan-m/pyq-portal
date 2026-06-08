@@ -163,24 +163,16 @@ function showToast(message, duration = 3000) {
 }
 
 /* ── Force-download helper ── */
+/* ── Force-download helper ── */
 function forceDownload(url, filename) {
     showToast('⬇️ Downloading… please wait');
-    fetch(url)
-        .then(res => res.blob())
-        .then(blob => {
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = filename || 'question-paper.pdf';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(a.href);
-            showToast('✅ Download started!');
-        })
-        .catch(() => {
-            showToast('⚠️ Could not download — opening instead');
-            window.open(url, '_blank');
-        });
+    const a = document.createElement('a');
+    a.href = url + '?download=';
+    a.download = filename || 'question-paper.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => showToast('✅ Download started!'), 500);
 }
 window.copyAnalysis = function() {
     const text = document.getElementById('analyseResult').innerText;
