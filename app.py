@@ -456,6 +456,7 @@ def view_papers():
                 "semester": semester,
                 "department": "",
                 "examType": exam_type or "—",
+                "file_url": file_url or f"/download/{paper_id}",
                 "download_url": f"/download/{paper_id}",
                 "paper_id": paper_id,
                 "is_analysed": is_analysed
