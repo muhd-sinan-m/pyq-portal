@@ -17,7 +17,7 @@ from flask_limiter.util import get_remote_address
 from flask_compress import Compress
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY','ashasdhg')
+app.secret_key = os.environ.get('SECRET_KEY','asas')
 Compress(app)
 load_dotenv()
 
@@ -401,6 +401,7 @@ def home():
     )
 
 
+
 @app.route("/upload", methods=["GET", "POST"])
 @login_required
 @admin_required
@@ -478,6 +479,7 @@ def upload_page():
             return_db(conn)
 
     return render_template("upload.html", subjects=get_subjects(), departments=DEPARTMENTS)
+
 
 
 @app.route("/papers")
