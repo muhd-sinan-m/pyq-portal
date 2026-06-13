@@ -17,7 +17,7 @@ from flask_limiter.util import get_remote_address
 from flask_compress import Compress
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY','asas')
+app.secret_key = os.environ.get('SECRET_KEY')
 Compress(app)
 load_dotenv()
 
@@ -28,9 +28,7 @@ def apply_security_headers(response):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-
-    # Uncomment after confirming HTTPS on Cloudflare
-    # response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
