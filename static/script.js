@@ -20,10 +20,65 @@ if (document.getElementById('semFolders')) {
 
     let activeSem  = null;
     let activeType = null;
+    let skipHashUpdate = false;
 
     const EXAM_TYPES  = ['SEA I', 'SEA II', 'ISA'];
     const EXAM_ICONS  = { 'SEA I': '📄', 'SEA II': '📋', 'ISA': '📝' };
     const EXAM_COLORS = { 'SEA I': 'blue', 'SEA II': 'purple', 'ISA': 'green' };
+    const SLUG_TO_EXAM_TYPE = { 'sea-i': 'SEA I', 'sea-ii': 'SEA II', 'isa': 'ISA' };
+
+    function examTypeToSlug(type) {
+        return type.toLowerCase().replace(/\s+/g, '-');
+    }
+
+    function syncHash() {
+        if (skipHashUpdate) return;
+        let hash = '';
+        if (activeSem != null) {
+            hash = activeType
+                ? `#sem-${activeSem}-${examTypeToSlug(activeType)}`
+                : `#sem-${activeSem}`;
+        }
+        const nextUrl = window.location.pathname + window.location.search + hash;
+        const currentUrl = window.location.pathname + window.location.search + window.location.hash;
+        if (nextUrl === currentUrl) return;
+        history.pushState({ sem: activeSem, type: activeType }, '', nextUrl);
+    }
+
+    function parseHash() {
+        const raw = location.hash.replace(/^#/, '');
+        if (!raw) return { level: 'folders' };
+        const match = raw.match(/^sem-(\d+)(?:-(.+))?$/);
+        if (!match) return { level: 'folders' };
+        const sem = parseInt(match[1], 10);
+        const typeSlug = match[2];
+        if (typeSlug) {
+            const type = SLUG_TO_EXAM_TYPE[typeSlug.toLowerCase()];
+            if (type) return { level: 'papers', sem, type };
+        }
+        return { level: 'semester', sem };
+    }
+
+    function applyHash() {
+        const parsed = parseHash();
+        skipHashUpdate = true;
+        try {
+            if (parsed.level === 'folders') {
+                activeSem = null;
+                activeType = null;
+                semesterFilter.value = '';
+                renderFolders();
+            } else if (parsed.level === 'semester') {
+                openFolder(parsed.sem);
+            } else if (parsed.level === 'papers') {
+                openExamType(parsed.sem, parsed.type);
+            }
+        } finally {
+            skipHashUpdate = false;
+        }
+    }
+
+    window.addEventListener('popstate', applyHash);
 
     // ---- Filter section visibility ----
     function showFiltersSection() {
@@ -85,6 +140,7 @@ if (document.getElementById('semFolders')) {
                 </div>
             `;
         }).join('');
+        syncHash();
     }
 
     // ---- Open semester → show exam type cards ----
@@ -130,6 +186,7 @@ if (document.getElementById('semFolders')) {
         papersGrid.style.display = 'none';
         noResults.style.display  = 'none';
         resultsCount.textContent = '';
+        syncHash();
     };
 
     // ---- Open exam type → show papers ----
@@ -153,26 +210,23 @@ if (document.getElementById('semFolders')) {
         `;
 
         renderPapers(type);
+        syncHash();
     };
 
-    // ---- Back button ----
-    btnBackFolders.addEventListener('click', () => {
-        if (activeType !== null) {
-            openFolder(activeSem);
-        } else {
-            activeSem  = null;
-            activeType = null;
-            semesterFilter.value = '';
-            renderFolders();
-            if (typeof updateFilterBadge === 'function') updateFilterBadge();
+    // ---- Back button (uses browser history when hash nav is active) ----
+    function goBackInBrowse() {
+        if (activeSem != null || activeType != null) {
+            history.back();
+            return;
         }
-    });
+        renderFolders();
+    }
+
+    btnBackFolders.addEventListener('click', goBackInBrowse);
     // ---- Floating back button (mobile scroll) ----
 const btnBackFloat = document.getElementById('btnBackFloat');
 
-btnBackFloat.addEventListener('click', () => {
-    btnBackFolders.click();
-});
+btnBackFloat.addEventListener('click', goBackInBrowse);
 
 window.addEventListener('scroll', () => {
     if (folderPapersView.style.display === 'none') {
@@ -348,48 +402,113 @@ window.closeAnalyseModal = function() {
         });
     });
 
-    // ---- Initial render ----
-    renderFolders();
+    // ---- Initial render (restore from hash if present) ----
+    applyHash();
 }
 
 // ==================== UPLOAD PAGE FUNCTIONALITY ====================
 if (document.getElementById('uploadForm')) {
     const uploadForm     = document.getElementById('uploadForm');
-    const uploadFile     = document.getElementById('uploadFile');
+    const uploadFile     = document.getElementById('uploadFile') || document.getElementById('fileInput');
     const fileUploadArea = document.getElementById('fileUploadArea');
     const fileSelected   = document.getElementById('fileSelected');
     const fileName       = document.getElementById('fileName');
     const fileSize       = document.getElementById('fileSize');
     const removeFile     = document.getElementById('removeFile');
 
-    fileUploadArea.addEventListener('click', () => uploadFile.click());
+    // ── Department → Subject filter ──
+    // Works for both /upload (uploadDepartment / uploadSubject)
+    // and /user-upload (department / subject_id)
+    (function () {
+        const deptSelect    = document.getElementById('uploadDepartment') || document.getElementById('department');
+        const subjectSelect = document.getElementById('uploadSubject')    || document.getElementById('subject_id');
+        if (!deptSelect || !subjectSelect) return;
 
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        fileUploadArea.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
-    });
+        const allSubjectOptions = Array.from(subjectSelect.querySelectorAll('option')).filter(o => o.value);
 
-    ['dragenter', 'dragover'].forEach(eventName => {
-        fileUploadArea.addEventListener(eventName, () => {
-            fileUploadArea.style.borderColor = 'var(--primary-blue)';
-            fileUploadArea.style.background = 'rgba(37, 99, 235, 0.05)';
+        function filterSubjectsByDept(deptName) {
+            subjectSelect.innerHTML = '<option value="">' +
+                (deptName ? '— Select a subject —' : '— Select department first —') +
+                '</option>';
+            if (!deptName) return;
+            let found = 0;
+            allSubjectOptions.forEach(opt => {
+                if (opt.dataset.department === deptName) {
+                    subjectSelect.appendChild(opt.cloneNode(true));
+                    found++;
+                }
+            });
+            if (found === 0) {
+                const empty = document.createElement('option');
+                empty.disabled = true;
+                empty.textContent = 'No subjects for this department';
+                subjectSelect.appendChild(empty);
+            }
+        }
+
+        deptSelect.addEventListener('change', function () {
+            filterSubjectsByDept(this.value);
+            subjectSelect.value = '';
+            const semSelect = document.getElementById('uploadSemester');
+            if (semSelect) semSelect.value = '';
+        });
+
+        // Restore filtered list on error re-render (dept already selected via POST)
+        if (deptSelect.value) filterSubjectsByDept(deptSelect.value);
+    })();
+
+    // ── Subject → Semester auto-fill (admin /upload only) ──
+    (function () {
+        const subjectSelect  = document.getElementById('uploadSubject');
+        const semesterSelect = document.getElementById('uploadSemester');
+        if (!subjectSelect || !semesterSelect) return;
+
+        subjectSelect.addEventListener('change', function () {
+            const selected = this.options[this.selectedIndex];
+            const sem = selected ? selected.dataset.semester : '';
+            if (sem) {
+                semesterSelect.value = sem;
+                semesterSelect.style.transition = 'background .3s ease';
+                semesterSelect.style.background = 'rgba(59,130,246,0.08)';
+                setTimeout(() => { semesterSelect.style.background = '#f3f4f6'; }, 600);
+            } else {
+                semesterSelect.value = '';
+            }
+        });
+    })();
+
+    if (fileUploadArea) {
+        fileUploadArea.addEventListener('click', () => uploadFile.click());
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileUploadArea.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileUploadArea.addEventListener(eventName, () => {
+                fileUploadArea.style.borderColor = 'var(--primary-blue)';
+                fileUploadArea.style.background = 'rgba(37, 99, 235, 0.05)';
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileUploadArea.addEventListener(eventName, () => {
+                fileUploadArea.style.borderColor = '';
+                fileUploadArea.style.background = '';
+            }, false);
+        });
+
+        fileUploadArea.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) { uploadFile.files = files; handleFileSelect(files[0]); }
         }, false);
-    });
+    }
 
-    ['dragleave', 'drop'].forEach(eventName => {
-        fileUploadArea.addEventListener(eventName, () => {
-            fileUploadArea.style.borderColor = '';
-            fileUploadArea.style.background = '';
-        }, false);
-    });
-
-    fileUploadArea.addEventListener('drop', (e) => {
-        const files = e.dataTransfer.files;
-        if (files.length > 0) { uploadFile.files = files; handleFileSelect(files[0]); }
-    }, false);
-
-    uploadFile.addEventListener('change', (e) => {
-        if (e.target.files[0]) handleFileSelect(e.target.files[0]);
-    });
+    if (uploadFile) {
+        uploadFile.addEventListener('change', (e) => {
+            if (e.target.files[0]) handleFileSelect(e.target.files[0]);
+        });
+    }
 
     function handleFileSelect(file) {
         if (file.type !== 'application/pdf') {
@@ -400,19 +519,23 @@ if (document.getElementById('uploadForm')) {
             showError('fileError', 'File size must not exceed 10MB');
             uploadFile.value = ''; return;
         }
-        fileName.textContent = file.name;
-        fileSize.textContent = formatFileSize(file.size);
-        document.querySelector('.file-upload-content').style.display = 'none';
-        fileSelected.style.display = 'flex';
+        if (fileName) fileName.textContent = file.name;
+        if (fileSize) fileSize.textContent = formatFileSize(file.size);
+        const uploadContent = document.querySelector('.file-upload-content');
+        if (uploadContent) uploadContent.style.display = 'none';
+        if (fileSelected) fileSelected.style.display = 'flex';
         hideError('fileError');
     }
 
-    removeFile.addEventListener('click', (e) => {
-        e.stopPropagation();
-        uploadFile.value = '';
-        document.querySelector('.file-upload-content').style.display = 'block';
-        fileSelected.style.display = 'none';
-    });
+    if (removeFile) {
+        removeFile.addEventListener('click', (e) => {
+            e.stopPropagation();
+            uploadFile.value = '';
+            const uploadContent = document.querySelector('.file-upload-content');
+            if (uploadContent) uploadContent.style.display = 'block';
+            if (fileSelected) fileSelected.style.display = 'none';
+        });
+    }
 
     function formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
@@ -437,13 +560,19 @@ if (document.getElementById('uploadForm')) {
         document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
 
         let isValid = true;
-        if (!document.getElementById('uploadSubject').value)    { showError('subjectError', 'Please select a subject'); isValid = false; }
-        if (!document.getElementById('uploadYear').value)       { showError('yearError', 'Please select a year'); isValid = false; }
-        if (!document.getElementById('uploadSemester').value)   { showError('semesterError', 'Please select a semester'); isValid = false; }
-        if (!document.getElementById('uploadDepartment').value) { showError('departmentError', 'Please select a department'); isValid = false; }
-        if (!document.getElementById('uploadExamType').value)   { showError('examTypeError', 'Please select an exam type'); isValid = false; }
+        const deptEl = document.getElementById('uploadDepartment');
+        const subEl  = document.getElementById('uploadSubject');
+        const semEl  = document.getElementById('uploadSemester');
+        const yearEl = document.getElementById('uploadYear');
+        const exEl   = document.getElementById('uploadExamType');
 
-        const file = uploadFile.files[0];
+        if (deptEl && !deptEl.value)  { showError('departmentError', 'Please select a department'); isValid = false; }
+        if (subEl  && !subEl.value)   { showError('subjectError',    'Please select a subject');    isValid = false; }
+        if (yearEl && !yearEl.value)  { showError('yearError',       'Please select a year');       isValid = false; }
+        if (semEl  && !semEl.value)   { showError('semesterError',   'Please select a semester');   isValid = false; }
+        if (exEl   && !exEl.value)    { showError('examTypeError',   'Please select an exam type'); isValid = false; }
+
+        const file = uploadFile ? uploadFile.files[0] : null;
         if (!file) { showError('fileError', 'Please select a PDF file'); isValid = false; }
         else if (file.type !== 'application/pdf') { showError('fileError', 'Only PDF files are allowed'); isValid = false; }
 

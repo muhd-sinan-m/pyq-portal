@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <title>Browse Papers - PYQ Portal</title>
+    <title>{{ department_name }} Papers - PYQ Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -54,7 +54,7 @@
                 <nav class="main-nav">
                     <ul class="nav-list">
                         <li><a href="{{ url_for('home') }}" class="nav-link active">Home</a></li>
-                        <li><a href="{{ url_for('view_papers') }}" class="nav-link">Browse</a></li>
+                        <li><a href="{{ url_for('view_papers_by_department', department=department_slug) }}" class="nav-link">Browse</a></li>
                         {% if session.get('role') == 'admin' %}
                         <li><a href="{{ url_for('upload_page') }}" class="nav-link">Upload</a></li>
                         {% endif %}
@@ -98,7 +98,7 @@
         <div class="mobile-nav" id="mobileNav">
             <nav>
                 <a href="{{ url_for('home') }}" class="mobile-nav-link">Home</a>
-                <a href="{{ url_for('view_papers') }}" class="mobile-nav-link">Browse Papers</a>
+                <a href="{{ url_for('view_papers_by_department', department=department_slug) }}" class="mobile-nav-link">Browse Papers</a>
                 {% if session.get('role') == 'admin' %}
                 <a href="{{ url_for('upload_page') }}" class="mobile-nav-link">Upload</a>
                 {% endif %}
@@ -125,12 +125,25 @@
             <div class="breadcrumb">
                 <a href="{{ url_for('home') }}">Home</a>
                 <span class="breadcrumb-separator">/</span>
-                <span class="breadcrumb-current">Browse Papers</span>
+                <a href="{{ url_for('view_papers') }}">Papers</a>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-current">{{ department_name }}</span>
             </div>
-            <h1 class="page-title">Browse Question Papers</h1>
+            <h1 class="page-title">{{ department_name }} Question Papers</h1>
             <p class="page-description">
-                Search and download from our comprehensive collection of previous year question papers
+                Browse previous year question papers for {{ department_name }}
             </p>
+            {% if departments|length > 1 %}
+            <div class="dept-switcher" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1rem;">
+                {% for slug, name in departments.items() %}
+                <a href="{{ url_for('view_papers_by_department', department=slug) }}"
+                   class="btn btn-secondary{% if slug == department_slug %} active{% endif %}"
+                   style="padding:0.35rem 0.85rem; font-size:0.85rem;{% if slug == department_slug %} opacity:1; font-weight:600;{% endif %}">
+                    {{ name }}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
     </section>
 
@@ -301,7 +314,7 @@
                     <span class="mini-footer-copy">© 2026 Marian College Kuttikkanam</span>
                 </div>
                 <nav class="mini-footer-nav">
-                    <a href="{{ url_for('view_papers') }}" class="mini-footer-link">Browse</a>
+                    <a href="{{ url_for('view_papers_by_department', department=department_slug) }}" class="mini-footer-link">Browse</a>
                     <a href="{{ url_for('about') }}"       class="mini-footer-link">About</a>
                     <button class="mini-footer-link" onclick="openPopup('help')">Help</button>
                     <button class="mini-footer-link" onclick="openPopup('contact')">Contact</button>
@@ -371,7 +384,10 @@
         </div>
     </div>
 </div>
-    <script>window.PAPERS_FROM_BACKEND = {{ (papers | default([])) | tojson }};</script>
+    <script>
+        window.PAPERS_FROM_BACKEND = {{ (papers | default([])) | tojson }};
+        window.CURRENT_DEPARTMENT = {{ department_slug | tojson }};
+    </script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script src="{{ url_for('static', filename='viewjs.js') }}"></script>
 </body>
