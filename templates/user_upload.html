@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit a Paper — PYQ Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style-combined.css') }}">
+    <style>
+        /* ── PAGE WRAPPER ── */
+        .upload-page-wrap {
+            min-height: calc(100vh - 120px);
+            background: linear-gradient(135deg, #f0f4ff 0%, #f5f0ff 100%);
+            padding: 3rem 1.25rem 4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ── PAGE HEADER ── */
+        .up-page-header {
+            text-align: center;
+            max-width: 540px;
+            margin-bottom: 2rem;
+        }
+
+        .up-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            background: rgba(99,102,241,.08);
+            border: 1px solid rgba(99,102,241,.2);
+            border-radius: 999px;
+            padding: .3rem .9rem;
+            font-size: .78rem;
+            font-weight: 700;
+            color: #4f46e5;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .up-page-header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.25;
+            margin-bottom: .6rem;
+        }
+
+        .up-page-header h1 span {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .up-page-header p {
+            color: #6b7280;
+            font-size: .95rem;
+            line-height: 1.65;
+        }
+
+        /* ── ALERTS ── */
+        .up-alert {
+            width: 100%;
+            max-width: 560px;
+            border-radius: 12px;
+            padding: .9rem 1.2rem;
+            font-size: .9rem;
+            display: flex;
+            align-items: flex-start;
+            gap: .7rem;
+            margin-bottom: 1.25rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .up-alert svg { flex-shrink: 0; width: 17px; height: 17px; margin-top: .1rem; }
+
+        .up-alert-error {
+            background: rgba(239,68,68,.06);
+            border: 1px solid rgba(239,68,68,.25);
+            color: #b91c1c;
+        }
+
+        /* ── CARD ── */
+        .up-card {
+            background: #fff;
+            border: 1px solid rgba(99,102,241,.12);
+            border-radius: 20px;
+            padding: 2.25rem;
+            width: 100%;
+            max-width: 560px;
+            box-shadow: 0 4px 24px rgba(99,102,241,.08), 0 1px 4px rgba(0,0,0,.04);
+        }
+
+        /* ── FORM ── */
+        .up-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.1rem;
+        }
+
+        .up-group { display: flex; flex-direction: column; gap: .4rem; }
+        .up-group.full { grid-column: 1 / -1; }
+
+        .up-label {
+            font-size: .78rem;
+            font-weight: 700;
+            color: #374151;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .up-control {
+            background: #f9fafb;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            color: #111827;
+            font-size: .93rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            padding: .65rem .9rem;
+            width: 100%;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .up-control:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,.14);
+            background: #fff;
+        }
+
+        .up-control::placeholder { color: #9ca3af; }
+
+        select.up-control {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right .85rem center;
+            padding-right: 2.25rem;
+        }
+
+        select.up-control option { background: #fff; }
+
+        /* ── DROPZONE ── */
+        .up-dropzone {
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            background: #f9fafb;
+            padding: 1.75rem 1.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .2s, background .2s;
+            position: relative;
+        }
+
+        .up-dropzone:hover, .up-dropzone.drag-over {
+            border-color: #6366f1;
+            background: rgba(99,102,241,.04);
+        }
+
+        .up-dropzone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .up-dz-icon {
+            display: block;
+            margin: 0 auto .5rem;
+            color: #9ca3af;
+        }
+
+        .up-dz-title {
+            font-size: .93rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: .2rem;
+        }
+
+        .up-dz-hint { font-size: .8rem; color: #9ca3af; }
+
+        .up-dz-file {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            font-size: .87rem;
+            color: #4f46e5;
+            font-weight: 600;
+            margin-top: .4rem;
+        }
+
+        .up-dz-file.visible { display: flex; }
+
+        .up-dz-remove {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: .95rem;
+            padding: 0 .2rem;
+            line-height: 1;
+        }
+
+        /* ── DIVIDER ── */
+        .up-divider {
+            border: none;
+            border-top: 1px solid #f3f4f6;
+            margin: 1.5rem 0;
+        }
+
+        /* ── SUBMIT BTN ── */
+        .up-btn {
+            width: 100%;
+            padding: .8rem 1.5rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: .95rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            box-shadow: 0 4px 14px rgba(99,102,241,.3);
+            transition: transform .15s, box-shadow .15s;
+        }
+
+        .up-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99,102,241,.4);
+        }
+
+        .up-btn:active { transform: scale(.99); }
+        .up-btn:disabled { background: #e5e7eb; color: #9ca3af; box-shadow: none; cursor: not-allowed; }
+
+        .up-btn .up-spinner {
+            display: none;
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: upspin .7s linear infinite;
+        }
+
+        .up-btn.loading .up-spinner { display: block; }
+        .up-btn.loading .up-btn-text { opacity: .7; }
+        @keyframes upspin { to { transform: rotate(360deg); } }
+
+        /* ── NOTICE ── */
+        .up-notice {
+            margin-top: .9rem;
+            font-size: .78rem;
+            color: #9ca3af;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .up-notice strong { color: #6b7280; }
+
+        /* ── PILLS ── */
+        .up-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            margin-bottom: 1.5rem;
+            justify-content: center;
+        }
+
+        .up-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .25rem .75rem;
+            border-radius: 999px;
+            font-size: .77rem;
+            font-weight: 600;
+        }
+
+        .up-pill-green { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
+        .up-pill-blue  { background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; }
+        .up-pill-purple{ background: #faf5ff; border: 1px solid #e9d5ff; color: #7c3aed; }
+
+        /* ── SUCCESS ── */
+        .up-success-card {
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+        }
+
+        .up-check-ring {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #dcfce7, #d1fae5);
+            border: 2px solid #86efac;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.9rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .up-success-card h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: .6rem;
+        }
+
+        .up-success-card p {
+            color: #6b7280;
+            font-size: .93rem;
+            line-height: 1.65;
+            max-width: 380px;
+            margin: 0 auto 1.75rem;
+        }
+
+        .up-action-row {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
+
+        .up-btn-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .6rem 1.3rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            color: #374151;
+            text-decoration: none;
+            font-size: .875rem;
+            font-weight: 600;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: border-color .2s, background .2s;
+        }
+
+        .up-btn-outline:hover { border-color: #6366f1; background: rgba(99,102,241,.04); color: #4f46e5; }
+
+        .up-btn-filled {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .6rem 1.3rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-size: .875rem;
+            font-weight: 700;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: transform .15s, box-shadow .15s;
+            box-shadow: 0 4px 14px rgba(99,102,241,.25);
+        }
+
+        .up-btn-filled:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,.35); }
+
+        @media (max-width: 540px) {
+            .up-grid { grid-template-columns: 1fr; }
+            .up-group.full { grid-column: 1; }
+            .up-card { padding: 1.5rem; }
+            .up-page-header h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== HEADER (same as index.html) ==================== -->
+    <header class="main-header">
+        <div class="container-fluid">
+            <div class="unified-header">
+                <div class="college-brand">
+                    <img src="{{ url_for('static', filename='marian-college-header.png') }}"
+                        alt="Marian College Kuttikkanam" class="college-logo">
+                </div>
+
+                <div class="portal-brand">
+                    <div class="portal-logo">
+                        <svg width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="lgMark" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#3B82F6"/>
+                                    <stop offset="100%" stop-color="#8B5CF6"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M20 10 C14 10 8 12 8 14 L8 30 C8 30 14 28 20 30 Z" fill="url(#lgMark)" opacity="0.9"/>
+                            <path d="M20 10 C26 10 32 12 32 14 L32 30 C32 30 26 28 20 30 Z" fill="url(#lgMark)" opacity="0.6"/>
+                            <line x1="20" y1="10" x2="20" y2="30" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+                            <circle cx="32" cy="10" r="3" fill="#F59E0B"/>
+                            <path d="M32 8.2 L32.5 9.5 L34 9.5 L32.8 10.4 L33.2 11.8 L32 11 L30.8 11.8 L31.2 10.4 L30 9.5 L31.5 9.5 Z" fill="white" opacity="0.9"/>
+                        </svg>
+                    </div>
+                    <div class="portal-text">
+                        <h1 class="portal-title">PYQ Portal</h1>
+                        <p class="portal-subtitle">Previous Year Question Papers</p>
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <nav class="main-nav">
+                        <ul class="nav-list">
+                            <li><a href="{{ url_for('home') }}" class="nav-link">Home</a></li>
+                            <li><a href="{{ url_for('view_papers') }}" class="nav-link">Browse</a></li>
+                            {% if session.get('role') == 'admin' %}
+                            <li><a href="{{ url_for('upload_page') }}" class="nav-link">Upload</a></li>
+                            {% endif %}
+                            <li><a href="{{ url_for('about') }}" class="nav-link">About</a></li>
+                        </ul>
+                    </nav>
+                    <div class="header-user">
+                        <button class="icon-btn" onclick="openPopup('help')" title="Help">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                        </button>
+                        <button class="icon-btn" onclick="openPopup('contact')" title="Contact">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                        </button>
+                        {% if session.get('user_id') %}
+                        <div class="user-menu desktop-only">
+                            <span class="user-name">{{ session.username }}</span>
+                            <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+                        </div>
+                        {% else %}
+                        <a href="{{ url_for('login') }}" class="btn-login desktop-only">Login</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+
+            <div class="mobile-nav" id="mobileNav">
+                <nav>
+                    <a href="{{ url_for('home') }}" class="mobile-nav-link">Home</a>
+                    <a href="{{ url_for('view_papers') }}" class="mobile-nav-link">Browse Papers</a>
+                    {% if session.get('role') == 'admin' %}
+                    <a href="{{ url_for('upload_page') }}" class="mobile-nav-link">Upload</a>
+                    {% endif %}
+                    <a href="{{ url_for('about') }}" class="mobile-nav-link">About</a>
+                    <hr class="mobile-nav-divider">
+                    <button class="mobile-nav-link" onclick="openPopup('help')">Help</button>
+                    <button class="mobile-nav-link" onclick="openPopup('contact')">Contact</button>
+                    {% if session.get('user_id') %}
+                    <hr class="mobile-nav-divider">
+                    <span class="mobile-nav-user">{{ session.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="mobile-nav-link mobile-nav-logout">Logout</a>
+                    {% else %}
+                    <hr class="mobile-nav-divider">
+                    <a href="{{ url_for('login') }}" class="mobile-nav-link mobile-nav-login">Login</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== UPLOAD PAGE ==================== -->
+    <div class="upload-page-wrap">
+
+        <div class="up-page-header">
+            <div class="up-badge">
+                                Community Contribution
+            </div>
+            <h1>Submit a <span>Question Paper</span></h1>
+            <p>Help your classmates prepare better. Upload any previous year paper — our team reviews it before it goes live.</p>
+        </div>
+
+        
+
+        {% if success %}
+        <!-- SUCCESS -->
+        <div class="up-card">
+            <div class="up-success-card">
+                <div class="up-check-ring">✓</div>
+                <h2>Submission Received!</h2>
+                <p>Your paper has been sent for review. Once our admin approves it, it'll appear in the public library. Thank you for contributing! 🎉</p>
+                <div class="up-action-row">
+                    <a href="{{ url_for('view_papers') }}" class="up-btn-outline">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Browse Papers
+                    </a>
+                    <a href="{{ url_for('user_upload') }}" class="up-btn-filled">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Submit Another
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+
+        {% if error %}
+        <div class="up-alert up-alert-error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>{{ error }}</div>
+        </div>
+        {% endif %}
+
+        <div class="up-card">
+            <form method="POST" enctype="multipart/form-data" id="uploadForm" novalidate>
+
+                <div class="up-grid">
+
+                    <!-- Department -->
+                    <div class="up-group full">
+                        <label class="up-label" for="department">Department</label>
+                        <select name="department" id="department" class="up-control" required>
+                            <option value="">— Select department —</option>
+                            {% for slug, name in departments.items() %}
+                            <option value="{{ name }}"
+                                {% if request.form.get('department') == name %}selected{% endif %}>
+                                {{ name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Subject (filtered by department via JS) -->
+                    <div class="up-group full">
+                        <label class="up-label" for="subject_id">Subject</label>
+                        <select name="subject_id" id="subject_id" class="up-control" required>
+                            <option value="">— Select department first —</option>
+                            {% for s in subjects %}
+                            <option value="{{ s.subject_id }}"
+                                    data-department="{{ s.department }}"
+                                    data-semester="{{ s.semester }}"
+                                    {% if request.form.get('subject_id') == s.subject_id|string %}selected{% endif %}>
+                                {% if s.semester %}Sem {{ s.semester }} — {% endif %}{{ s.subject_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Year -->
+                    <div class="up-group">
+                        <label class="up-label" for="year">Exam Year</label>
+                        <input
+                            type="number"
+                            name="year"
+                            id="year"
+                            class="up-control"
+                            placeholder="e.g. 2023"
+                            min="2000"
+                            max="2100"
+                            required
+                            value="{{ request.form.get('year', '') }}"
+                        />
+                    </div>
+
+                    <!-- Exam Type -->
+    <div class="up-group">
+                        <label class="up-label" for="exam_type">Exam Type</label>
+                        <select name="exam_type" id="exam_type" class="up-control" required>
+                            <option value="">— Select exam type —</option>
+                            <option value="SEA I"  {% if request.form.get('exam_type') == 'SEA I'  %}selected{% endif %}>SEA I</option>
+                            <option value="SEA II" {% if request.form.get('exam_type') == 'SEA II' %}selected{% endif %}>SEA II</option>
+                            <option value="ISA"    {% if request.form.get('exam_type') == 'ISA'    %}selected{% endif %}>ISA</option>
+                        </select>
+                    </div>
+
+                    <!-- File -->
+                    <div class="up-group full">
+                        <label class="up-label">PDF File</label>
+                        <div class="up-dropzone" id="dropzone">
+                            <input type="file" name="file" id="fileInput" accept=".pdf,application/pdf" required />
+                            <svg class="up-dz-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" id="dzIcon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <div class="up-dz-title" id="dzTitle">Click to choose or drag &amp; drop</div>
+                            <div class="up-dz-hint" id="dzHint">PDF only · MAX 5 MB</div>
+                            <div class="up-dz-file" id="dzFilename">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+                                <span id="dzFilenameText"></span>
+                                <button type="button" class="up-dz-remove" id="dzRemove" title="Remove">✕</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <hr class="up-divider" />
+
+                <button type="submit" class="up-btn" id="submitBtn">
+                    <div class="up-spinner"></div>
+                    <span class="up-btn-text">Submit for Review</span>
+                </button>
+
+                <p class="up-notice">
+                    <strong>Moderation:</strong> All submissions are reviewed before going public. <br>
+                    Max  <strong>5 papers</strong> per hour. Please only submit your own or freely shared papers.
+                </p>
+            </form>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- ==================== FOOTER (same as index.html) ==================== -->
+    <footer class="mini-footer">
+        <div class="container">
+            <div class="mini-footer-inner">
+                <div class="mini-footer-brand">
+                    <div class="mini-footer-logo">
+                        <svg width="22" height="22" viewBox="0 0 40 40" fill="none">
+                            <defs>
+                                <linearGradient id="fgMark" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#3B82F6"/>
+                                    <stop offset="100%" stop-color="#8B5CF6"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M20 10 C14 10 8 12 8 14 L8 30 C8 30 14 28 20 30 Z" fill="url(#fgMark)" opacity="0.9"/>
+                            <path d="M20 10 C26 10 32 12 32 14 L32 30 C32 30 26 28 20 30 Z" fill="url(#fgMark)" opacity="0.6"/>
+                            <line x1="20" y1="10" x2="20" y2="30" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+                            <circle cx="32" cy="10" r="2.5" fill="#F59E0B"/>
+                        </svg>
+                    </div>
+                    <span class="mini-footer-name">PYQ Portal</span>
+                    <span class="mini-footer-sep">·</span>
+                    <span class="mini-footer-copy">© 2026 Marian College Kuttikkanam</span>
+                </div>
+                <nav class="mini-footer-nav">
+                    <a href="{{ url_for('view_papers') }}" class="mini-footer-link">Browse</a>
+                    <a href="{{ url_for('about') }}" class="mini-footer-link">About</a>
+                    <button class="mini-footer-link" onclick="openPopup('help')">Help</button>
+                    <button class="mini-footer-link" onclick="openPopup('contact')">Contact</button>
+                </nav>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==================== POPUP (same as index.html) ==================== -->
+    <div class="popup-overlay" id="popupOverlay" onclick="closePopup()">
+        <div class="popup-card" id="popupCard" onclick="event.stopPropagation()">
+            <div class="popup-header-band"></div>
+            <div class="popup-body">
+                <button class="popup-close" onclick="closePopup()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+                <div class="popup-icon" id="popupIcon"></div>
+                <h3 class="popup-title" id="popupTitle"></h3>
+                <p class="popup-desc" id="popupDesc"></p>
+                <a class="popup-mail-btn" id="popupMailBtn" href="mailto:pyqportalhelp@gmail.com">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    <span id="popupMailLabel">pyqportalhelp@gmail.com</span>
+                </a>
+                <p class="popup-tagline">We usually respond within 24 hours</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='indexjs.js') }}"></script>
+    <script>
+        const dropzone   = document.getElementById('dropzone');
+        const fileInput  = document.getElementById('fileInput');
+        const dzFilename = document.getElementById('dzFilename');
+        const dzText     = document.getElementById('dzFilenameText');
+        const dzRemove   = document.getElementById('dzRemove');
+        const dzIcon     = document.getElementById('dzIcon');
+        const dzTitle    = document.getElementById('dzTitle');
+        const dzHint     = document.getElementById('dzHint');
+        const submitBtn  = document.getElementById('submitBtn');
+        const form       = document.getElementById('uploadForm');
+
+        function setFile(file) {
+            if (!file) return;
+            if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+                alert('Only PDF files are allowed.'); fileInput.value = ''; return;
+            }
+            if (file.size > 20 * 1024 * 1024) {
+                alert('File too large. Max 20 MB.'); fileInput.value = ''; return;
+            }
+            dzText.textContent = file.name;
+            dzFilename.classList.add('visible');
+            dzIcon.style.display = 'none';
+            dzTitle.style.display = 'none';
+            dzHint.style.display = 'none';
+        }
+
+        function clearFile() {
+            fileInput.value = '';
+            dzText.textContent = '';
+            dzFilename.classList.remove('visible');
+            dzIcon.style.display = '';
+            dzTitle.style.display = '';
+            dzHint.style.display = '';
+        }
+
+        fileInput.addEventListener('change', () => { if (fileInput.files.length) setFile(fileInput.files[0]); });
+        dzRemove.addEventListener('click', e => { e.stopPropagation(); clearFile(); });
+
+        dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+        dropzone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropzone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+                setFile(file);
+            }
+        });
+
+        form && form.addEventListener('submit', e => {
+            if (!document.getElementById('subject_id').value) { e.preventDefault(); alert('Please select a subject.'); return; }
+            const y = parseInt(document.getElementById('year').value);
+            if (!y || y < 2000 || y > 2100)  { e.preventDefault(); alert('Please enter a valid year (2000–2100).'); return; }
+            if (!fileInput.files[0])          { e.preventDefault(); alert('Please select a PDF file.'); return; }
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>
