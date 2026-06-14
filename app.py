@@ -64,8 +64,11 @@ def apply_security_headers(response):
     return response
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+def get_real_ip():
+    return request.headers.get('CF-Connecting-IP') or request.remote_addr
+
 limiter = Limiter(
-    get_remote_address,
+    key_func=get_real_ip,
     app=app,
     default_limits=[],
     storage_uri="memory://"
@@ -344,7 +347,8 @@ def get_department_papers(department_name):
 
 
 @app.route("/login", methods=["GET", "POST"])
-@limiter.limit("10 per minute")
+@limiter.limit("5 per minute")
+@limiter.limit("15 per hour")
 def login():
     error = None
     if request.method == "POST":
@@ -543,7 +547,7 @@ def analyze_paper(paper_id):
             })
 
         # 2. RATE LIMIT CHECK (ONLY FOR NEW ANALYSIS)
-        user_ip = request.remote_addr
+        user_ip = request.headers.get('CF-Connecting-IP') or request.remote_addr
         now = time.time()
 
         request_log.setdefault(user_ip, [])
