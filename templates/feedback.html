@@ -183,7 +183,6 @@
             gap: .2rem;
             flex-wrap: wrap;
         }
-        /* Each star button */
         .star-btn {
             background: none;
             border: none;
@@ -193,7 +192,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            transition: transform .18s cubic-bezier(.2,.9,.3,1);
+            transition: transform .18s cubic-bezier(.2,.9,.3,1), box-shadow .12s;
             -webkit-tap-highlight-color: transparent;
             outline: none;
         }
@@ -201,19 +200,18 @@
             box-shadow: 0 0 0 3px rgba(99,102,241,.3);
         }
         .star-btn svg {
-            width: 36px;
-            height: 36px;
+            width: 44px;
+            height: 44px;
             display: block;
-            transition: filter .15s;
+            transition: filter .15s, transform .12s;
         }
-        /* Hover lift */
-        .star-btn:hover { transform: translateY(-4px) scale(1.12); }
-        .star-btn.filled:hover { transform: translateY(-5px) scale(1.15); }
+        /* Remove hover pop/translate to keep selection stable on touch devices */
+        .star-btn:hover { transform: none; }
+        .star-btn.filled:hover { transform: none; }
         .star-btn.filled svg {
             filter: drop-shadow(0 3px 8px rgba(249,115,22,.3));
         }
 
-        /* Rating label next to stars */
         .star-label-text {
             margin-left: .75rem;
             font-size: .85rem;
@@ -270,77 +268,28 @@
            MOBILE RESPONSIVENESS
         ══════════════════════════════════════════ */
         @media (max-width: 640px) {
-            .feedback-page {
-                padding: 2rem .75rem 3rem;
-            }
-            .feedback-card {
-                padding: 1.5rem 1.1rem 2rem;
-                border-radius: 18px;
-            }
-            .feedback-title {
-                font-size: 1.45rem;
-            }
-            .feedback-eyebrow {
-                font-size: .72rem;
-                padding: .25rem .75rem;
-            }
-            .feedback-subtitle {
-                font-size: .88rem;
-            }
-            .star-btn svg {
-                width: 30px;
-                height: 30px;
-            }
-            .star-label-text {
-                margin-left: .4rem;
-                font-size: .8rem;
-                min-width: 60px;
-            }
-            .fb-input,
-            .fb-textarea {
-                font-size: .9rem;
-                padding: .65rem .85rem;
-            }
-            .fb-submit {
-                font-size: .93rem;
-                padding: .8rem 1rem;
-            }
-            .feedback-thankyou-section {
-                margin-top: 1.5rem;
-            }
-            .feedback-thankyou-box {
-                padding: .9rem 1rem;
-                gap: .65rem;
-            }
-            .feedback-thankyou-box p {
-                font-size: .85rem;
-            }
-            .feedback-thankyou-emoji {
-                font-size: 1.3rem;
-            }
-            .feedback-thankyou-section-heading {
-                font-size: .9rem;
-            }
+            .feedback-page { padding: 2rem .75rem 3rem; }
+            .feedback-card { padding: 1.5rem 1.1rem 2rem; border-radius: 18px; }
+            .feedback-title { font-size: 1.45rem; }
+            .feedback-eyebrow { font-size: .72rem; padding: .25rem .75rem; }
+            .feedback-subtitle { font-size: .88rem; }
+            .star-btn svg { width: 30px; height: 30px; }
+            .star-label-text { margin-left: .4rem; font-size: .8rem; min-width: 60px; }
+            .fb-input, .fb-textarea { font-size: .9rem; padding: .65rem .85rem; }
+            .fb-submit { font-size: .93rem; padding: .8rem 1rem; }
+            .feedback-thankyou-section { margin-top: 1.5rem; }
+            .feedback-thankyou-box { padding: .9rem 1rem; gap: .65rem; }
+            .feedback-thankyou-box p { font-size: .85rem; }
+            .feedback-thankyou-emoji { font-size: 1.3rem; }
+            .feedback-thankyou-section-heading { font-size: .9rem; }
         }
 
         @media (max-width: 400px) {
-            .feedback-page {
-                padding: 1.5rem .5rem 2.5rem;
-            }
-            .feedback-card {
-                padding: 1.25rem .9rem 1.75rem;
-                border-radius: 14px;
-            }
-            .feedback-title {
-                font-size: 1.3rem;
-            }
-            .star-btn svg {
-                width: 26px;
-                height: 26px;
-            }
-            .star-btn {
-                padding: 2px;
-            }
+            .feedback-page { padding: 1.5rem .5rem 2.5rem; }
+            .feedback-card { padding: 1.25rem .9rem 1.75rem; border-radius: 14px; }
+            .feedback-title { font-size: 1.3rem; }
+            .star-btn svg { width: 26px; height: 26px; }
+            .star-btn { padding: 2px; }
         }
     </style>
 </head>
@@ -465,24 +414,19 @@
                     <div class="fb-field">
                         <label class="fb-label" for="fb-name">Your Name <span class="req">*</span></label>
                         <input class="fb-input" type="text" id="fb-name" name="name"
-                            placeholder="e.g. Alex Mathew" autocomplete="name" maxlength="100">
+                            placeholder="e.g. Sinan" autocomplete="name" maxlength="100">
                     </div>
 
-                    <!-- Star Rating – JS-powered, hidden radios live INSIDE the widget container -->
+                    <!-- Star Rating – JS-powered -->
                     <div class="fb-field">
                         <label class="fb-label">Overall Rating <span class="req">*</span></label>
+                        <!--
+                            FIX: The hidden input is placed OUTSIDE the form so form.reset()
+                            cannot clear it. We read it directly by ID on submit.
+                            The star widget manages its own `currentRating` variable as
+                            the single source of truth.
+                        -->
                         <div class="star-widget" id="starWidget" role="radiogroup" aria-label="Star rating 1 to 5">
-                            <!-- Hidden radio inputs — scoped inside star-widget so CSS hides them correctly -->
-                            <input type="radio" name="rating" id="star1" value="1"
-                                style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;">
-                            <input type="radio" name="rating" id="star2" value="2"
-                                style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;">
-                            <input type="radio" name="rating" id="star3" value="3"
-                                style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;">
-                            <input type="radio" name="rating" id="star4" value="4"
-                                style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;">
-                            <input type="radio" name="rating" id="star5" value="5"
-                                style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;">
                             <!-- Star buttons injected by JS -->
                         </div>
                     </div>
@@ -596,70 +540,99 @@
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 
     <script>
-        /* ── Star widget ── */
-        (function () {
-            const labels = ['Terrible', 'Poor', 'Okay', 'Good', 'Excellent'];
-            const widget = document.getElementById('starWidget');
+        /* ══════════════════════════════════════════
+           STAR WIDGET
+           FIX: `currentRating` is the single source of truth.
+           The hidden input inside the form is gone — form.reset()
+           was wiping it. Instead we append a fresh hidden input
+           to FormData manually just before the fetch call.
+        ══════════════════════════════════════════ */
+        const StarWidget = (function () {
+            const labels  = ['Terrible', 'Poor', 'Okay', 'Good', 'Excellent'];
+            const widget  = document.getElementById('starWidget');
             const outlinePath = 'M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z';
 
-            let currentRating = 0;
+            let currentRating = 0; // single source of truth; never touched by form.reset()
 
-            function render(hovered) {
-                const active = hovered !== null ? hovered : currentRating;
+            function setRating(r) {
+                currentRating = r;
+                render(null);
+            }
 
-                // Remove only star buttons and the label — keep the hidden radio inputs
+            function focusButton(r) {
+                const btns = widget.querySelectorAll('.star-btn');
+                if (btns && btns[r - 1]) btns[r - 1].focus();
+            }
+
+            function render() {
+                const active = currentRating;
+
                 widget.querySelectorAll('.star-btn, .star-label-text').forEach(el => el.remove());
 
                 for (let i = 1; i <= 5; i++) {
                     const btn = document.createElement('button');
-                    btn.type = 'button';
+                    btn.type = 'button'; // prevents accidental form submit
                     btn.className = 'star-btn' + (i <= active ? ' filled' : '');
                     btn.setAttribute('aria-label', `Rate ${i} star${i > 1 ? 's' : ''} – ${labels[i - 1]}`);
+                    btn.setAttribute('role', 'radio');
                     btn.dataset.value = i;
 
                     const filled = i <= active;
-                    btn.innerHTML = `
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            ${filled
-                                ? `<defs>
-                                     <linearGradient id="starGrad${i}" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
-                                       <stop offset="0%" stop-color="#fbbf24"/>
-                                       <stop offset="100%" stop-color="#f97316"/>
-                                     </linearGradient>
-                                   </defs>
-                                   <path d="${outlinePath}" fill="url(#starGrad${i})" stroke="none"/>`
-                                : `<path d="${outlinePath}" fill="#e5e7eb" stroke="none"/>`
-                            }
-                        </svg>`;
+                    btn.setAttribute('aria-checked', filled ? 'true' : 'false');
+                    // Manage focus order: if nothing selected, make first tabbable, otherwise the selected one
+                    if (active === 0) {
+                        btn.tabIndex = (i === 1) ? 0 : -1;
+                    } else {
+                        btn.tabIndex = (i === active) ? 0 : -1;
+                    }
 
-                    btn.addEventListener('mouseenter', () => render(i));
-                    btn.addEventListener('mouseleave', () => render(null));
+                    btn.innerHTML = filled
+                        ? `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="starGrad${i}" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#f97316"/></linearGradient></defs><path d="${outlinePath}" fill="url(#starGrad${i})" stroke="none"/></svg>`
+                        : `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="${outlinePath}" fill="#e5e7eb" stroke="none"/></svg>`;
+
+                    // Click sets the rating (no hover handlers)
                     btn.addEventListener('click', () => {
-                        currentRating = i;
-                        document.getElementById('star' + i).checked = true;
-                        render(null);
+                        setRating(i);
+                    });
+
+                    // Keyboard support: Enter/Space to select, arrows to move
+                    btn.addEventListener('keydown', (ev) => {
+                        if (ev.key === 'Enter' || ev.key === ' ') {
+                            ev.preventDefault();
+                            setRating(i);
+                        } else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowDown') {
+                            ev.preventDefault();
+                            const nr = Math.max(1, i - 1);
+                            setRating(nr);
+                            focusButton(nr);
+                        } else if (ev.key === 'ArrowRight' || ev.key === 'ArrowUp') {
+                            ev.preventDefault();
+                            const nr = Math.min(5, i + 1);
+                            setRating(nr);
+                            focusButton(nr);
+                        }
                     });
 
                     widget.appendChild(btn);
                 }
 
-                // Label text
                 const lbl = document.createElement('span');
                 lbl.className = 'star-label-text' + (active > 0 ? ' rated' : '');
                 lbl.textContent = active > 0 ? labels[active - 1] : 'Select a rating';
                 widget.appendChild(lbl);
             }
 
-            render(null);
+            render();
 
-            // Reset on form reset
-            widget.addEventListener('reset-stars', () => {
-                currentRating = 0;
-                render(null);
-            });
+            return {
+                getRating: () => currentRating,
+                reset: () => { currentRating = 0; render(); }
+            };
         })();
 
-        /* ── Form submit ── */
+        /* ══════════════════════════════════════════
+           FORM SUBMIT
+        ══════════════════════════════════════════ */
         const form      = document.getElementById('feedbackForm');
         const toast     = document.getElementById('fbToast');
         const submitBtn = document.getElementById('fbSubmitBtn');
@@ -676,7 +649,17 @@
             e.preventDefault();
             toast.className = 'fb-toast';
 
+            // ── Read rating from the widget's closure, not from a hidden input ──
+            const rating = StarWidget.getRating();
+
+            if (!rating) {
+                showToast('error', 'Please select a star rating before submitting.');
+                return;
+            }
+
             const data = new FormData(form);
+            data.set('rating', String(rating)); // inject rating into FormData manually
+
             submitBtn.disabled = true;
             submitBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg> Sending…`;
 
@@ -685,8 +668,8 @@
                 const json = await res.json();
                 if (res.ok && json.success) {
                     showToast('success', 'Thanks for your feedback! 🎉');
-                    form.reset();
-                    document.getElementById('starWidget').dispatchEvent(new Event('reset-stars'));
+                    form.reset();        // safe — rating lives in StarWidget closure
+                    StarWidget.reset();  // reset stars visually
                 } else {
                     showToast('error', json.error || 'Something went wrong. Please try again.');
                 }
