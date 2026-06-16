@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback – PYQ Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style-combined.css') }}">
+    <style>
+        /* ---- page shell ---- */
+        .feedback-page {
+            min-height: calc(100vh - 80px);
+            background: linear-gradient(135deg, #f0f4ff 0%, #f5f0ff 100%);
+            padding: 4rem 1rem 5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .feedback-page::before {
+            content: '';
+            position: absolute;
+            top: -80px; right: -80px;
+            width: 320px; height: 320px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99,102,241,.13) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .feedback-page::after {
+            content: '';
+            position: absolute;
+            bottom: -60px; left: -60px;
+            width: 240px; height: 240px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139,92,246,.10) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* ---- card ---- */
+        .feedback-card {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid rgba(99,102,241,.15);
+            border-radius: 24px;
+            padding: 2.75rem 2.75rem 3rem;
+            box-shadow: 0 8px 40px rgba(99,102,241,.10), 0 1px 4px rgba(0,0,0,.04);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ---- heading ---- */
+        .feedback-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            background: rgba(99,102,241,.08);
+            border: 1px solid rgba(99,102,241,.18);
+            border-radius: 999px;
+            padding: .3rem .9rem;
+            font-size: .78rem;
+            font-weight: 700;
+            color: #4f46e5;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+        .feedback-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.25;
+            margin-bottom: .5rem;
+        }
+        .feedback-title span {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .feedback-subtitle {
+            color: #6b7280;
+            font-size: .95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ══════════════════════════════════════════
+           THANK-YOU SECTION — standalone, outside card
+        ══════════════════════════════════════════ */
+        .feedback-thankyou-section {
+            max-width: 600px;
+            margin: 2rem auto 0;
+            position: relative;
+            z-index: 1;
+        }
+        .feedback-thankyou-section-heading {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #4f46e5;
+            letter-spacing: .02em;
+            margin-bottom: .65rem;
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+        }
+        .feedback-thankyou-section-heading svg {
+            flex-shrink: 0;
+        }
+        .feedback-thankyou-box {
+            display: flex;
+            align-items: flex-start;
+            gap: .85rem;
+            background: linear-gradient(135deg, #eff6ff 0%, #f5f0ff 100%);
+            border: 1.5px solid rgba(99,102,241,.2);
+            border-radius: 16px;
+            padding: 1.1rem 1.3rem;
+            box-shadow: 0 2px 12px rgba(99,102,241,.08);
+        }
+        .feedback-thankyou-emoji {
+            font-size: 1.5rem;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .feedback-thankyou-box p {
+            margin: 0;
+            font-size: .9rem;
+            color: #4338ca;
+            line-height: 1.65;
+        }
+        .feedback-thankyou-box p strong {
+            font-weight: 700;
+            color: #3730a3;
+        }
+
+        /* ---- form ---- */
+        .fb-form { display: flex; flex-direction: column; gap: 1.35rem; }
+        .fb-field { display: flex; flex-direction: column; gap: .45rem; }
+        .fb-label {
+            font-size: .85rem;
+            font-weight: 600;
+            color: #374151;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .fb-label .req { color: #ef4444; margin-left: 2px; }
+
+        .fb-input,
+        .fb-textarea {
+            width: 100%;
+            padding: .7rem 1rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: .95rem;
+            color: #111827;
+            background: #fafafa;
+            transition: border-color .2s, box-shadow .2s;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .fb-input:focus,
+        .fb-textarea:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+            background: #fff;
+        }
+        .fb-textarea { resize: vertical; min-height: 100px; }
+
+        /* ══════════════════════════════════════════
+           STAR RATING — clean JS-driven widget
+        ══════════════════════════════════════════ */
+        .star-widget {
+            display: flex;
+            align-items: center;
+            gap: .2rem;
+            flex-wrap: wrap;
+        }
+        /* Each star button */
+        .star-btn {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform .18s cubic-bezier(.2,.9,.3,1);
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+        .star-btn:focus-visible {
+            box-shadow: 0 0 0 3px rgba(99,102,241,.3);
+        }
+        .star-btn svg {
+            width: 36px;
+            height: 36px;
+            display: block;
+            transition: filter .15s;
+        }
+        /* Hover lift */
+        .star-btn:hover { transform: translateY(-4px) scale(1.12); }
+        .star-btn.filled:hover { transform: translateY(-5px) scale(1.15); }
+        .star-btn.filled svg {
+            filter: drop-shadow(0 3px 8px rgba(249,115,22,.3));
+        }
+
+        /* Rating label next to stars */
+        .star-label-text {
+            margin-left: .75rem;
+            font-size: .85rem;
+            font-weight: 600;
+            color: #6b7280;
+            min-width: 80px;
+            transition: color .15s;
+        }
+        .star-label-text.rated { color: #f97316; }
+
+        /* ---- submit ---- */
+        .fb-submit-row { margin-top: .5rem; }
+        .fb-submit {
+            width: 100%;
+            padding: .85rem 1rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .55rem;
+            box-shadow: 0 6px 20px rgba(99,102,241,.30);
+            transition: transform .2s, box-shadow .2s, opacity .2s;
+        }
+        .fb-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(99,102,241,.40); }
+        .fb-submit:active { transform: translateY(0); }
+        .fb-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+        /* ---- toast ---- */
+        .fb-toast {
+            display: none;
+            align-items: center;
+            gap: .65rem;
+            padding: .85rem 1.1rem;
+            border-radius: 12px;
+            font-size: .9rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        .fb-toast.success { background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #15803d; display: flex; }
+        .fb-toast.error   { background: #fff1f2; border: 1.5px solid #fecdd3; color: #be123c; display: flex; }
+
+        .fb-divider { border: none; border-top: 1px solid rgba(99,102,241,.10); margin: .25rem 0 1.75rem; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ══════════════════════════════════════════
+           MOBILE RESPONSIVENESS
+        ══════════════════════════════════════════ */
+        @media (max-width: 640px) {
+            .feedback-page {
+                padding: 2rem .75rem 3rem;
+            }
+            .feedback-card {
+                padding: 1.5rem 1.1rem 2rem;
+                border-radius: 18px;
+            }
+            .feedback-title {
+                font-size: 1.45rem;
+            }
+            .feedback-eyebrow {
+                font-size: .72rem;
+                padding: .25rem .75rem;
+            }
+            .feedback-subtitle {
+                font-size: .88rem;
+            }
+            .star-btn svg {
+                width: 30px;
+                height: 30px;
+            }
+            .star-label-text {
+                margin-left: .4rem;
+                font-size: .8rem;
+                min-width: 60px;
+            }
+            .fb-input,
+            .fb-textarea {
+                font-size: .9rem;
+                padding: .65rem .85rem;
+            }
+            .fb-submit {
+                font-size: .93rem;
+                padding: .8rem 1rem;
+            }
+            .feedback-thankyou-section {
+                margin-top: 1.5rem;
+            }
+            .feedback-thankyou-box {
+                padding: .9rem 1rem;
+                gap: .65rem;
+            }
+            .feedback-thankyou-box p {
+                font-size: .85rem;
+            }
+            .feedback-thankyou-emoji {
+                font-size: 1.3rem;
+            }
+            .feedback-thankyou-section-heading {
+                font-size: .9rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .feedback-page {
+                padding: 1.5rem .5rem 2.5rem;
+            }
+            .feedback-card {
+                padding: 1.25rem .9rem 1.75rem;
+                border-radius: 14px;
+            }
+            .feedback-title {
+                font-size: 1.3rem;
+            }
+            .star-btn svg {
+                width: 26px;
+                height: 26px;
+            }
+            .star-btn {
+                padding: 2px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ==================== HEADER ==================== -->
+    <header class="main-header">
+        <div class="container-fluid">
+            <div class="unified-header">
+                <div class="college-brand">
+                    <img src="{{ url_for('static', filename='marian-college-header.png') }}"
+                        alt="Marian College Kuttikkanam" class="college-logo">
+                </div>
+
+                <div class="portal-brand">
+                    <div class="portal-logo">
+                        <svg width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="lgMark" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#3B82F6" />
+                                    <stop offset="100%" stop-color="#8B5CF6" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M20 10 C14 10 8 12 8 14 L8 30 C8 30 14 28 20 30 Z" fill="url(#lgMark)" opacity="0.9" />
+                            <path d="M20 10 C26 10 32 12 32 14 L32 30 C32 30 26 28 20 30 Z" fill="url(#lgMark)" opacity="0.6" />
+                            <line x1="20" y1="10" x2="20" y2="30" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.8" />
+                            <circle cx="32" cy="10" r="3" fill="#F59E0B" />
+                            <path d="M32 8.2 L32.5 9.5 L34 9.5 L32.8 10.4 L33.2 11.8 L32 11 L30.8 11.8 L31.2 10.4 L30 9.5 L31.5 9.5 Z" fill="white" opacity="0.9" />
+                        </svg>
+                    </div>
+                    <div class="portal-text">
+                        <h1 class="portal-title">PYQ Portal</h1>
+                        <p class="portal-subtitle">Previous Year Question Papers</p>
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <nav class="main-nav">
+                        <ul class="nav-list">
+                            <li><a href="{{ url_for('home') }}" class="nav-link">Home</a></li>
+                            <li><a href="{{ url_for('view_papers') }}" class="nav-link">Browse</a></li>
+                            {% if session.get('role') == 'admin' %}
+                            <li><a href="{{ url_for('upload_page') }}" class="nav-link">Upload</a></li>
+                            {% endif %}
+                            <li><a href="{{ url_for('about') }}" class="nav-link">About</a></li>
+                        </ul>
+                    </nav>
+                    <div class="header-user">
+                        <button class="icon-btn" onclick="openPopup('help')" title="Help">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                        </button>
+                        <button class="icon-btn" onclick="openPopup('contact')" title="Contact">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                <polyline points="22,6 12,13 2,6" />
+                            </svg>
+                        </button>
+                        {% if session.get('user_id') %}
+                        <div class="user-menu desktop-only">
+                            <span class="user-name">{{ session.username }}</span>
+                            <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+                        </div>
+                        {% else %}
+                        <a href="{{ url_for('login') }}" class="btn-login desktop-only">Login</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+
+            <div class="mobile-nav" id="mobileNav">
+                <nav>
+                    <a href="{{ url_for('home') }}" class="mobile-nav-link">Home</a>
+                    <a href="{{ url_for('view_papers') }}" class="mobile-nav-link">Browse Papers</a>
+                    {% if session.get('role') == 'admin' %}
+                    <a href="{{ url_for('upload_page') }}" class="mobile-nav-link">Upload</a>
+                    {% endif %}
+                    <a href="{{ url_for('about') }}" class="mobile-nav-link">About</a>
+                    <hr class="mobile-nav-divider">
+                    <button class="mobile-nav-link" onclick="openPopup('help')">Help</button>
+                    <button class="mobile-nav-link" onclick="openPopup('contact')">Contact</button>
+                    {% if session.get('user_id') %}
+                    <hr class="mobile-nav-divider">
+                    <span class="mobile-nav-user">{{ session.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="mobile-nav-link mobile-nav-logout">Logout</a>
+                    {% else %}
+                    <hr class="mobile-nav-divider">
+                    <a href="{{ url_for('login') }}" class="mobile-nav-link mobile-nav-login">Login</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== FEEDBACK FORM ==================== -->
+    <section class="feedback-page">
+        <div class="container">
+
+            <!-- ── Feedback Card ── -->
+            <div class="feedback-card">
+
+                <div id="fbToast" class="fb-toast"></div>
+
+                <div class="feedback-eyebrow">Share your thoughts</div>
+                <h2 class="feedback-title">We'd love your <span>Feedback</span></h2>
+                <p class="feedback-subtitle">
+                    Tell us what you think about PYQ Portal — your input helps us improve for everyone at Marian College.
+                </p>
+
+                <hr class="fb-divider">
+
+                <form class="fb-form" id="feedbackForm" novalidate>
+
+                    <!-- Name -->
+                    <div class="fb-field">
+                        <label class="fb-label" for="fb-name">Your Name <span class="req">*</span></label>
+                        <input class="fb-input" type="text" id="fb-name" name="name"
+                            placeholder="e.g. Alex Mathew" autocomplete="name" maxlength="100">
+                    </div>
+
+                    <!-- Star Rating – JS-powered, hidden radios live INSIDE the widget container -->
+                    <div class="fb-field">
+                        <label class="fb-label">Overall Rating <span class="req">*</span></label>
+                        <div class="star-widget" id="starWidget" role="radiogroup" aria-label="Star rating 1 to 5">
+                            <!-- Hidden radio inputs — scoped inside star-widget so CSS hides them correctly -->
+                            <input type="radio" name="rating" id="star1" value="1"
+                                style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;">
+                            <input type="radio" name="rating" id="star2" value="2"
+                                style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;">
+                            <input type="radio" name="rating" id="star3" value="3"
+                                style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;">
+                            <input type="radio" name="rating" id="star4" value="4"
+                                style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;">
+                            <input type="radio" name="rating" id="star5" value="5"
+                                style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;">
+                            <!-- Star buttons injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Opinion -->
+                    <div class="fb-field">
+                        <label class="fb-label" for="fb-opinion">What do you think of the portal?</label>
+                        <textarea class="fb-textarea" id="fb-opinion" name="opinion"
+                            placeholder="Share your overall experience..." maxlength="1000"></textarea>
+                    </div>
+
+                    <!-- Suggestion -->
+                    <div class="fb-field">
+                        <label class="fb-label" for="fb-suggestion">Any suggestions to improve?</label>
+                        <textarea class="fb-textarea" id="fb-suggestion" name="suggestion"
+                            placeholder="What would make this portal even better?" maxlength="1000"></textarea>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="fb-submit-row">
+                        <button type="submit" class="fb-submit" id="fbSubmitBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                            Submit Feedback
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ── Thank-You Note — standalone section outside the card ── -->
+            <div class="feedback-thankyou-section">
+                <p class="feedback-thankyou-section-heading">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    Why Your Feedback Matters
+                </p>
+                <div class="feedback-thankyou-box">
+                    <div class="feedback-thankyou-emoji">🙏</div>
+                    <p>
+                        <strong>Thank you for taking a moment!</strong> Every response we get — whether it's a glowing review or honest criticism — goes directly into making PYQ Portal better for you and your classmates. We genuinely read each one.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="mini-footer">
+        <div class="container">
+            <div class="mini-footer-inner">
+                <div class="mini-footer-brand">
+                    <div class="mini-footer-logo">
+                        <svg width="22" height="22" viewBox="0 0 40 40" fill="none">
+                            <defs>
+                                <linearGradient id="fgMark" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#3B82F6" />
+                                    <stop offset="100%" stop-color="#8B5CF6" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M20 10 C14 10 8 12 8 14 L8 30 C8 30 14 28 20 30 Z" fill="url(#fgMark)" opacity="0.9" />
+                            <path d="M20 10 C26 10 32 12 32 14 L32 30 C32 30 26 28 20 30 Z" fill="url(#fgMark)" opacity="0.6" />
+                            <line x1="20" y1="10" x2="20" y2="30" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.8" />
+                            <circle cx="32" cy="10" r="2.5" fill="#F59E0B" />
+                        </svg>
+                    </div>
+                    <span class="mini-footer-name">PYQ Portal</span>
+                    <span class="mini-footer-sep">·</span>
+                    <span class="mini-footer-copy">© 2026 Marian College Kuttikkanam</span>
+                </div>
+                <nav class="mini-footer-nav">
+                    <a href="{{ url_for('view_papers') }}" class="mini-footer-link">Browse</a>
+                    <a href="{{ url_for('about') }}" class="mini-footer-link">About</a>
+                    <button class="mini-footer-link" onclick="openPopup('help')">Help</button>
+                    <button class="mini-footer-link" onclick="openPopup('contact')">Contact</button>
+                </nav>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==================== POPUP ==================== -->
+    <div class="popup-overlay" id="popupOverlay" onclick="closePopup()">
+        <div class="popup-card" id="popupCard" onclick="event.stopPropagation()">
+            <div class="popup-header-band"></div>
+            <div class="popup-body">
+                <button class="popup-close" onclick="closePopup()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+                <div class="popup-icon" id="popupIcon"></div>
+                <h3 class="popup-title" id="popupTitle"></h3>
+                <p class="popup-desc" id="popupDesc"></p>
+                <a class="popup-mail-btn" id="popupMailBtn" href="mailto:pyqportalhelp@gmail.com">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                    <span id="popupMailLabel">pyqportalhelp@gmail.com</span>
+                </a>
+                <p class="popup-tagline">We usually respond within 24 hours</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <script>
+        /* ── Star widget ── */
+        (function () {
+            const labels = ['Terrible', 'Poor', 'Okay', 'Good', 'Excellent'];
+            const widget = document.getElementById('starWidget');
+            const outlinePath = 'M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z';
+
+            let currentRating = 0;
+
+            function render(hovered) {
+                const active = hovered !== null ? hovered : currentRating;
+
+                // Remove only star buttons and the label — keep the hidden radio inputs
+                widget.querySelectorAll('.star-btn, .star-label-text').forEach(el => el.remove());
+
+                for (let i = 1; i <= 5; i++) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'star-btn' + (i <= active ? ' filled' : '');
+                    btn.setAttribute('aria-label', `Rate ${i} star${i > 1 ? 's' : ''} – ${labels[i - 1]}`);
+                    btn.dataset.value = i;
+
+                    const filled = i <= active;
+                    btn.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            ${filled
+                                ? `<defs>
+                                     <linearGradient id="starGrad${i}" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                                       <stop offset="0%" stop-color="#fbbf24"/>
+                                       <stop offset="100%" stop-color="#f97316"/>
+                                     </linearGradient>
+                                   </defs>
+                                   <path d="${outlinePath}" fill="url(#starGrad${i})" stroke="none"/>`
+                                : `<path d="${outlinePath}" fill="#e5e7eb" stroke="none"/>`
+                            }
+                        </svg>`;
+
+                    btn.addEventListener('mouseenter', () => render(i));
+                    btn.addEventListener('mouseleave', () => render(null));
+                    btn.addEventListener('click', () => {
+                        currentRating = i;
+                        document.getElementById('star' + i).checked = true;
+                        render(null);
+                    });
+
+                    widget.appendChild(btn);
+                }
+
+                // Label text
+                const lbl = document.createElement('span');
+                lbl.className = 'star-label-text' + (active > 0 ? ' rated' : '');
+                lbl.textContent = active > 0 ? labels[active - 1] : 'Select a rating';
+                widget.appendChild(lbl);
+            }
+
+            render(null);
+
+            // Reset on form reset
+            widget.addEventListener('reset-stars', () => {
+                currentRating = 0;
+                render(null);
+            });
+        })();
+
+        /* ── Form submit ── */
+        const form      = document.getElementById('feedbackForm');
+        const toast     = document.getElementById('fbToast');
+        const submitBtn = document.getElementById('fbSubmitBtn');
+
+        function showToast(type, msg) {
+            toast.className = 'fb-toast ' + type;
+            toast.innerHTML = type === 'success'
+                ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg> ${msg}`
+                : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${msg}`;
+            toast.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            toast.className = 'fb-toast';
+
+            const data = new FormData(form);
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg> Sending…`;
+
+            try {
+                const res  = await fetch('/feedback', { method: 'POST', body: data });
+                const json = await res.json();
+                if (res.ok && json.success) {
+                    showToast('success', 'Thanks for your feedback! 🎉');
+                    form.reset();
+                    document.getElementById('starWidget').dispatchEvent(new Event('reset-stars'));
+                } else {
+                    showToast('error', json.error || 'Something went wrong. Please try again.');
+                }
+            } catch {
+                showToast('error', 'Network error. Please check your connection.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Submit Feedback`;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Analysis – PYQ Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style-combined.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* ── Page shell ── */
+        .fa-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f0f4ff 0%, #f5f0ff 100%);
+            padding: 3rem 0 5rem;
+        }
+
+        /* ── Page header ── */
+        .fa-hero {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .fa-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            background: rgba(99,102,241,.08);
+            border: 1px solid rgba(99,102,241,.18);
+            border-radius: 999px;
+            padding: .3rem .9rem;
+            font-size: .78rem;
+            font-weight: 700;
+            color: #4f46e5;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+        .fa-hero h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(1.75rem, 4vw, 2.6rem);
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.2;
+            margin-bottom: .5rem;
+        }
+        .fa-hero h1 span {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .fa-hero p {
+            color: #6b7280;
+            font-size: .975rem;
+        }
+
+        /* ── Stat cards row ── */
+        .fa-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+        .fa-stat-card {
+            background: #fff;
+            border: 1px solid rgba(99,102,241,.12);
+            border-radius: 18px;
+            padding: 1.5rem 1.75rem;
+            box-shadow: 0 2px 12px rgba(99,102,241,.06);
+            display: flex;
+            align-items: center;
+            gap: 1.1rem;
+        }
+        .fa-stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .fa-stat-icon--blue  { background: #eff6ff; }
+        .fa-stat-icon--gold  { background: #fffbeb; }
+        .fa-stat-icon--green { background: #f0fdf4; }
+        .fa-stat-label {
+            font-size: .78rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: .2rem;
+        }
+        .fa-stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1;
+        }
+        .fa-stat-value span {
+            font-size: 1rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* ── Panel card ── */
+        .fa-panel {
+            background: #fff;
+            border: 1px solid rgba(99,102,241,.12);
+            border-radius: 20px;
+            padding: 1.75rem 2rem;
+            box-shadow: 0 2px 16px rgba(99,102,241,.07);
+            margin-bottom: 1.5rem;
+        }
+        .fa-panel-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+        }
+        .fa-panel-title-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            flex-shrink: 0;
+        }
+
+        /* ── Two-column grid ── */
+        .fa-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ── Star distribution bars ── */
+        .fa-dist-row {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-bottom: .65rem;
+        }
+        .fa-dist-row:last-child { margin-bottom: 0; }
+        .fa-dist-stars {
+            font-size: .8rem;
+            color: #f59e0b;
+            width: 64px;
+            flex-shrink: 0;
+            letter-spacing: -.5px;
+        }
+        .fa-dist-bar-wrap {
+            flex: 1;
+            background: #f1f5f9;
+            border-radius: 999px;
+            height: 10px;
+            overflow: hidden;
+        }
+        .fa-dist-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: width .6s ease;
+        }
+        .fa-dist-count {
+            font-size: .8rem;
+            font-weight: 600;
+            color: #6b7280;
+            width: 28px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        /* ── Chart canvas wrapper ── */
+        .fa-chart-wrap {
+            position: relative;
+            height: 220px;
+        }
+
+        /* ── Opinions / Suggestions list ── */
+        .fa-comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: .85rem;
+            max-height: 340px;
+            overflow-y: auto;
+            padding-right: .25rem;
+        }
+        .fa-comment-list::-webkit-scrollbar { width: 4px; }
+        .fa-comment-list::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+        .fa-comment-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: .85rem 1rem;
+        }
+        .fa-comment-text {
+            font-size: .9rem;
+            color: #374151;
+            line-height: 1.55;
+            margin-bottom: .4rem;
+        }
+        .fa-comment-date {
+            font-size: .72rem;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        .fa-empty {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #9ca3af;
+            font-size: .9rem;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 700px) {
+            .fa-grid-2 { grid-template-columns: 1fr; }
+            .fa-panel { padding: 1.25rem 1.1rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ==================== HEADER ==================== -->
+    <header class="main-header">
+        <div class="container-fluid">
+            <div class="unified-header">
+                <div class="college-brand">
+                    <img src="{{ url_for('static', filename='marian-college-header.png') }}"
+                        alt="Marian College Kuttikkanam" class="college-logo">
+                </div>
+
+                <div class="portal-brand">
+                    <div class="portal-logo">
+                        <svg width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="lgMark" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#3B82F6" />
+                                    <stop offset="100%" stop-color="#8B5CF6" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M20 10 C14 10 8 12 8 14 L8 30 C8 30 14 28 20 30 Z" fill="url(#lgMark)" opacity="0.9" />
+                            <path d="M20 10 C26 10 32 12 32 14 L32 30 C32 30 26 28 20 30 Z" fill="url(#lgMark)" opacity="0.6" />
+                            <line x1="20" y1="10" x2="20" y2="30" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.8" />
+                            <circle cx="32" cy="10" r="3" fill="#F59E0B" />
+                            <path d="M32 8.2 L32.5 9.5 L34 9.5 L32.8 10.4 L33.2 11.8 L32 11 L30.8 11.8 L31.2 10.4 L30 9.5 L31.5 9.5 Z" fill="white" opacity="0.9" />
+                        </svg>
+                    </div>
+                    <div class="portal-text">
+                        <h1 class="portal-title">PYQ Portal</h1>
+                        <p class="portal-subtitle">Previous Year Question Papers</p>
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <nav class="main-nav">
+                        <ul class="nav-list">
+                            <li><a href="{{ url_for('home') }}" class="nav-link">Home</a></li>
+                            <li><a href="{{ url_for('view_papers') }}" class="nav-link">Browse</a></li>
+                            {% if session.get('role') == 'admin' %}
+                            <li><a href="{{ url_for('upload_page') }}" class="nav-link">Upload</a></li>
+                            {% endif %}
+                            <li><a href="{{ url_for('about') }}" class="nav-link">About</a></li>
+                        </ul>
+                    </nav>
+                    <div class="header-user">
+                        <button class="icon-btn" onclick="openPopup('help')" title="Help">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                        </button>
+                        <button class="icon-btn" onclick="openPopup('contact')" title="Contact">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                <polyline points="22,6 12,13 2,6" />
+                            </svg>
+                        </button>
+                        {% if session.get('user_id') %}
+                        <div class="user-menu desktop-only">
+                            <span class="user-name">{{ session.username }}</span>
+                            <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+                        </div>
+                        {% else %}
+                        <a href="{{ url_for('login') }}" class="btn-login desktop-only">Login</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+
+            <div class="mobile-nav" id="mobileNav">
+                <nav>
+                    <a href="{{ url_for('home') }}" class="mobile-nav-link">Home</a>
+                    <a href="{{ url_for('view_papers') }}" class="mobile-nav-link">Browse Papers</a>
+                    {% if session.get('role') == 'admin' %}
+                    <a href="{{ url_for('upload_page') }}" class="mobile-nav-link">Upload</a>
+                    {% endif %}
+                    <a href="{{ url_for('about') }}" class="mobile-nav-link">About</a>
+                    <hr class="mobile-nav-divider">
+                    <button class="mobile-nav-link" onclick="openPopup('help')">Help</button>
+                    <button class="mobile-nav-link" onclick="openPopup('contact')">Contact</button>
+                    {% if session.get('user_id') %}
+                    <hr class="mobile-nav-divider">
+                    <span class="mobile-nav-user">{{ session.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="mobile-nav-link mobile-nav-logout">Logout</a>
+                    {% else %}
+                    <hr class="mobile-nav-divider">
+                    <a href="{{ url_for('login') }}" class="mobile-nav-link mobile-nav-login">Login</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN ==================== -->
+    <main class="fa-page">
+        <div class="container">
+
+            <!-- Page hero -->
+            <div class="fa-hero">
+                <div class="fa-hero-badge">
+                    Admin Dashboard
+                </div>
+                <h1>Feedback <span>Analysis</span></h1>
+                <p>Responses collected from students and visitors</p>
+            </div>
+
+            <!-- Stat cards -->
+            <div class="fa-stats">
+                <div class="fa-stat-card">
+                    <div class="fa-stat-icon fa-stat-icon--blue">📋</div>
+                    <div>
+                        <div class="fa-stat-label">Total Responses</div>
+                        <div class="fa-stat-value">{{ total }}</div>
+                    </div>
+                </div>
+                <div class="fa-stat-card">
+                    <div class="fa-stat-icon fa-stat-icon--gold">⭐</div>
+                    <div>
+                        <div class="fa-stat-label">Average Rating</div>
+                        <div class="fa-stat-value">{{ avg_rating }} <span>/ 5</span></div>
+                    </div>
+                </div>
+                <div class="fa-stat-card">
+                    <div class="fa-stat-icon fa-stat-icon--green">💬</div>
+                    <div>
+                        <div class="fa-stat-label">With Opinions</div>
+                        <div class="fa-stat-value">{{ opinions|length }}</div>
+                    </div>
+                </div>
+                <div class="fa-stat-card">
+                    <div class="fa-stat-icon" style="background:#fdf4ff;">💡</div>
+                    <div>
+                        <div class="fa-stat-label">Suggestions</div>
+                        <div class="fa-stat-value">{{ suggestions|length }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts row -->
+            <div class="fa-grid-2">
+                <!-- Rating distribution -->
+                <div class="fa-panel">
+                    <div class="fa-panel-title">
+                        <span class="fa-panel-title-dot"></span>
+                        Rating Distribution
+                    </div>
+                    {% set max_dist = [distribution['1']|int, distribution['2']|int, distribution['3']|int, distribution['4']|int, distribution['5']|int] | max %}
+                    {% for star in ['5','4','3','2','1'] %}
+                    {% set count = distribution[star]|int %}
+                    {% set pct = ((count / max_dist * 100) if max_dist > 0 else 0)|round|int %}
+                    <div class="fa-dist-row">
+                        <div class="fa-dist-stars">{{ '★' * star|int }}{{ '☆' * (5 - star|int) }}</div>
+                        <div class="fa-dist-bar-wrap">
+                            <div class="fa-dist-bar-fill" style="width: {{ pct }}%"></div>
+                        </div>
+                        <div class="fa-dist-count">{{ count }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- 14-day trend chart -->
+                <div class="fa-panel">
+                    <div class="fa-panel-title">
+                        <span class="fa-panel-title-dot"></span>
+                        Submissions — Last 14 Days
+                    </div>
+                    <div class="fa-chart-wrap">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Opinions + Suggestions row -->
+            <div class="fa-grid-2">
+                <!-- Opinions -->
+                <div class="fa-panel">
+                    <div class="fa-panel-title">
+                        <span class="fa-panel-title-dot"></span>
+                        Recent Opinions
+                    </div>
+                    <div class="fa-comment-list">
+                        {% if opinions %}
+                            {% for item in opinions %}
+                            <div class="fa-comment-item">
+                                <div class="fa-comment-text">{{ item.text }}</div>
+                                <div class="fa-comment-date">{{ item.at }}</div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="fa-empty">No opinions submitted yet.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Suggestions -->
+                <div class="fa-panel">
+                    <div class="fa-panel-title">
+                        <span class="fa-panel-title-dot"></span>
+                        Recent Suggestions
+                    </div>
+                    <div class="fa-comment-list">
+                        {% if suggestions %}
+                            {% for item in suggestions %}
+                            <div class="fa-comment-item">
+                                <div class="fa-comment-text">{{ item.text }}</div>
+                                <div class="fa-comment-date">{{ item.at }}</div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="fa-empty">No suggestions submitted yet.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="mini-footer">
+        <div class="container">
+            <div class="mini-footer-inner">
+                <div class="mini-footer-brand">
+                    <div class="mini-footer-logo">
+                        <svg width="22" height="22" viewBox="0 0 40 40" fill="none">
+                            <defs>
+                                <linearGradient id="fgMark" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#3B82F6" />
+                                    <stop offset="100%" stop-color="#8B5CF6" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M20 10 C14 10 8 12 8 14 L8 30 C8 30 14 28 20 30 Z" fill="url(#fgMark)" opacity="0.9" />
+                            <path d="M20 10 C26 10 32 12 32 14 L32 30 C32 30 26 28 20 30 Z" fill="url(#fgMark)" opacity="0.6" />
+                            <line x1="20" y1="10" x2="20" y2="30" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.8" />
+                            <circle cx="32" cy="10" r="2.5" fill="#F59E0B" />
+                        </svg>
+                    </div>
+                    <span class="mini-footer-name">PYQ Portal</span>
+                    <span class="mini-footer-sep">·</span>
+                    <span class="mini-footer-copy">© 2026 Marian College Kuttikkanam</span>
+                </div>
+                <nav class="mini-footer-nav">
+                    <a href="{{ url_for('view_papers') }}" class="mini-footer-link">Browse</a>
+                    <a href="{{ url_for('about') }}" class="mini-footer-link">About</a>
+                    <button class="mini-footer-link" onclick="openPopup('help')">Help</button>
+                    <button class="mini-footer-link" onclick="openPopup('contact')">Contact</button>
+                </nav>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==================== POPUP ==================== -->
+    <div class="popup-overlay" id="popupOverlay" onclick="closePopup()">
+        <div class="popup-card" id="popupCard" onclick="event.stopPropagation()">
+            <div class="popup-header-band"></div>
+            <div class="popup-body">
+                <button class="popup-close" onclick="closePopup()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+                <div class="popup-icon" id="popupIcon"></div>
+                <h3 class="popup-title" id="popupTitle"></h3>
+                <p class="popup-desc" id="popupDesc"></p>
+                <a class="popup-mail-btn" id="popupMailBtn" href="mailto:pyqportalhelp@gmail.com">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                    <span id="popupMailLabel">pyqportalhelp@gmail.com</span>
+                </a>
+                <p class="popup-tagline">We usually respond within 24 hours</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <!-- Trend chart -->
+    <script>
+        (function () {
+            const labels = {{ trend_labels | tojson }};
+            const data   = {{ trend_data   | tojson }};
+
+            if (!labels.length) return;
+
+            const ctx = document.getElementById('trendChart').getContext('2d');
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 220);
+            gradient.addColorStop(0,   'rgba(99,102,241,0.25)');
+            gradient.addColorStop(1,   'rgba(99,102,241,0)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        borderColor: '#6366f1',
+                        borderWidth: 2.5,
+                        pointBackgroundColor: '#6366f1',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        backgroundColor: gradient,
+                        tension: 0.4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { family: 'Plus Jakarta Sans', size: 10 },
+                                color: '#9ca3af',
+                                maxRotation: 45,
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                font: { family: 'Plus Jakarta Sans', size: 10 },
+                                color: '#9ca3af',
+                            },
+                            grid: { color: 'rgba(0,0,0,.05)' }
+                        }
+                    }
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

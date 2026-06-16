@@ -873,6 +873,137 @@ def download_paper(paper_id):
         cur.close()
         return_db(conn)
         
+
+# ================================================================
+# FEEDBACK ROUTES
+# Add these two routes to your app.py
+# ================================================================
+
+
+@app.route("/feedback", methods=["GET", "POST"])
+def feedback():
+    if request.method == "POST":
+        name = (request.form.get("name") or "").strip()
+        rating_raw = request.form.get("rating", "").strip()
+        opinion = (request.form.get("opinion") or "").strip()
+        suggestion = (request.form.get("suggestion") or "").strip()
+
+        # --- Validate ---
+        if not name:
+            return jsonify({"error": "Name is required."}), 400
+        try:
+            rating = int(rating_raw)
+            if not 1 <= rating <= 5:
+                raise ValueError
+        except (ValueError, TypeError):
+            return jsonify({"error": "Please select a star rating."}), 400
+
+        conn = get_db()
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                """
+                INSERT INTO feedback (name, rating, opinion, suggestion)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (name, rating, opinion or None, suggestion or None),
+            )
+            conn.commit()
+            return jsonify({"success": True}), 200
+        except Exception as e:
+            conn.rollback()
+            app.logger.exception("Feedback insert failed")
+            return jsonify({"error": "Something went wrong. Please try again."}), 500
+        finally:
+            cur.close()
+            return_db(conn)
+
+    return render_template("feedback.html")
+
+
+@app.route("/feedback-analysis")
+@login_required
+@admin_required
+def feedback_analysis():
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        # Total count
+        cur.execute("SELECT COUNT(*) FROM feedback")
+        total = cur.fetchone()[0] or 0
+
+        # Average rating
+        cur.execute("SELECT ROUND(AVG(rating)::numeric, 2) FROM feedback")
+        avg_rating = float(cur.fetchone()[0] or 0)
+
+        # Rating distribution  (1-5)
+        cur.execute("""
+            SELECT rating, COUNT(*) AS cnt
+            FROM feedback
+            GROUP BY rating
+            ORDER BY rating
+        """)
+        dist_rows = cur.fetchall()
+        distribution = {str(i): 0 for i in range(1, 6)}
+        for rating, cnt in dist_rows:
+            distribution[str(rating)] = cnt
+
+        # Opinions (no names)
+        cur.execute("""
+            SELECT opinion, submitted_at
+            FROM feedback
+            WHERE opinion IS NOT NULL AND opinion <> ''
+            ORDER BY submitted_at DESC
+            LIMIT 50
+        """)
+        opinions = [
+            {"text": r[0], "at": r[1].strftime("%d %b %Y") if r[1] else ""}
+            for r in cur.fetchall()
+        ]
+
+        # Suggestions (no names)
+        cur.execute("""
+            SELECT suggestion, submitted_at
+            FROM feedback
+            WHERE suggestion IS NOT NULL AND suggestion <> ''
+            ORDER BY submitted_at DESC
+            LIMIT 50
+        """)
+        suggestions = [
+            {"text": r[0], "at": r[1].strftime("%d %b %Y") if r[1] else ""}
+            for r in cur.fetchall()
+        ]
+
+        # Recent trend: daily count for last 14 days
+        cur.execute("""
+            SELECT DATE(submitted_at) AS day, COUNT(*) AS cnt
+            FROM feedback
+            WHERE submitted_at >= NOW() - INTERVAL '14 days'
+            GROUP BY day
+            ORDER BY day
+        """)
+        trend_rows = cur.fetchall()
+        trend_labels = [str(r[0]) for r in trend_rows]
+        trend_data = [r[1] for r in trend_rows]
+
+        return render_template(
+            "feedback_analysis.html",
+            total=total,
+            avg_rating=avg_rating,
+            distribution=distribution,
+            opinions=opinions,
+            suggestions=suggestions,
+            trend_labels=trend_labels,
+            trend_data=trend_data,
+        )
+    except Exception:
+        app.logger.exception("Feedback analysis failed")
+        return render_template("500.html"), 500
+    finally:
+        cur.close()
+        return_db(conn)
+
+        
 # ================================================================
 # ADMIN PANEL
 # ================================================================
