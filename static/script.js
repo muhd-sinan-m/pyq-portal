@@ -353,36 +353,56 @@ window.closeAnalyseModal = function() {
         });
     });
 
-    // ---- Bulk semester download ----
-    // NOTE: Safari/iOS often only downloads the first PDF in a sequential
-    // auto-download loop (known browser limitation). For full cross-browser
-    // reliability a server-side ZIP route would be needed — flagged as follow-up.
+    // ---- Bulk semester download (JSZip — single ZIP file, works in all browsers) ----
+    // Fetches all PDFs as blobs in parallel, bundles them into one ZIP, single download.
+    // This bypasses the browser multi-download block that limited the old approach to 1 file.
     let isDownloadingSem = false;
 
     window.downloadSemester = async function(sem) {
-        if (isDownloadingSem) return; // guard against double-click spam
-        const semPapers = papers.filter(p => String(p.semester) === String(sem));
+        if (isDownloadingSem) return;
+        const semPapers = papers.filter(p => String(p.semester) === String(sem) && p.file_url);
         if (semPapers.length === 0) return;
 
-        if (semPapers.length >= 8 &&
-            !confirm(`Download ${semPapers.length} papers? Your browser may ask ` +
-                     `permission to allow multiple downloads.`)) {
+        if (!window.JSZip) {
+            showToast('⚠️ JSZip not loaded yet — try again in a moment.');
             return;
         }
 
         isDownloadingSem = true;
-        showToast(`⬇️ Downloading ${semPapers.length} papers from Semester ${sem}…`);
 
-        for (let i = 0; i < semPapers.length; i++) {
-            const p = semPapers[i];
-            if (!p.file_url) continue;
+        const zip = new JSZip();
+        let done = 0;
+        showToast(`⬇️ Fetching paper 1 of ${semPapers.length}…`);
+
+        // Fetch all in parallel (one promise per paper)
+        const fetchPromises = semPapers.map(async (p) => {
             const filename = `${sanitizeFilename(p.subject)}_${sanitizeFilename(p.examType || 'paper')}_${p.year}.pdf`;
-            forceDownload(p.file_url, filename, /* silent */ true);
-            await new Promise(r => setTimeout(r, 600));
+            try {
+                const res = await fetch(p.file_url + '?download=');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const blob = await res.blob();
+                zip.file(filename, blob);
+            } catch (err) {
+                console.warn(`Skipped ${filename}:`, err);
+            }
+            done++;
+            showToast(`⬇️ Fetching paper ${done} of ${semPapers.length}…`);
+        });
+
+        await Promise.all(fetchPromises);
+
+        if (Object.keys(zip.files).length === 0) {
+            showToast('⚠️ No papers could be fetched. Check your connection.');
+            isDownloadingSem = false;
+            return;
         }
 
+        showToast('📦 Building ZIP…');
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        saveAs(zipBlob, `Semester_${sem}_Papers.zip`);
+
         isDownloadingSem = false;
-        showToast(`✅ ${semPapers.length} downloads started!`);
+        showToast(`✅ Semester ${sem} — ${Object.keys(zip.files).length} papers downloaded!`);
     };
 
     function sanitizeFilename(name) {
