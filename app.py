@@ -51,9 +51,10 @@ def apply_security_headers(response):
         # Images — self + data URIs
         "img-src 'self' data:; "
 
-        # API calls — self + Google Analytics
+        # API calls — self + Google Analytics + Supabase storage (proxy-pdf route fetches server-side)
         "connect-src 'self' "
-        "https://www.google-analytics.com; "
+        "https://www.google-analytics.com "
+        "https://*.supabase.co; "
 
         # PDFs open in new tab from Supabase storage
         "frame-src https://*.supabase.co; "
@@ -1163,6 +1164,46 @@ def admin_change_password():
     finally:
         cur.close()
         return_db(conn)
+
+# ================================================================
+# PDF PROXY  (used by client-side bulk download / JSZip)
+# ================================================================
+
+@app.route('/proxy-pdf')
+def proxy_pdf():
+    """Fetch a Supabase-hosted PDF server-side and stream it to the client.
+    This is needed because browsers block cross-origin fetch() to Supabase
+    storage from JS (CORS + CSP), but a same-origin request to our own
+    Flask server is always allowed.
+    """
+    url = request.args.get('url', '').strip()
+    if not url:
+        return 'Missing url parameter', 400
+
+    # Security: only allow Supabase storage URLs
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    if not (parsed.scheme in ('http', 'https') and
+            parsed.hostname and
+            parsed.hostname.endswith('.supabase.co')):
+        return 'Forbidden: only Supabase storage URLs are allowed', 403
+
+    try:
+        r = requests.get(url, timeout=30, stream=True)
+        r.raise_for_status()
+    except requests.RequestException as e:
+        return f'Upstream fetch failed: {e}', 502
+
+    from flask import Response, stream_with_context
+    content_type = r.headers.get('Content-Type', 'application/pdf')
+    return Response(
+        stream_with_context(r.iter_content(chunk_size=65536)),
+        status=r.status_code,
+        content_type=content_type,
+        headers={
+            'Content-Disposition': r.headers.get('Content-Disposition', 'inline'),
+        }
+    )
 
 # ================================================================
 # ERROR HANDLERS

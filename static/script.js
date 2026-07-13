@@ -378,7 +378,9 @@ window.closeAnalyseModal = function() {
         const fetchPromises = semPapers.map(async (p) => {
             const filename = `${sanitizeFilename(p.subject)}_${sanitizeFilename(p.examType || 'paper')}_${p.year}.pdf`;
             try {
-                const res = await fetch(p.file_url + '?download=');
+                // Use /proxy-pdf to avoid CORS/CSP block on direct Supabase fetch
+                const proxyUrl = '/proxy-pdf?url=' + encodeURIComponent(p.file_url);
+                const res = await fetch(proxyUrl);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const blob = await res.blob();
                 zip.file(filename, blob);
