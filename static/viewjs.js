@@ -44,57 +44,6 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closePopup();
 });
 
-/* ── Filter section visibility ── */
-function showFilters() {
-    const section = document.getElementById('filtersSection');
-    if (section) section.style.display = '';
-}
-
-function hideFilters() {
-    const section = document.getElementById('filtersSection');
-    if (section) section.style.display = 'none';
-    /* Also close the filter panel if open */
-    const wrapper = document.getElementById('filtersCardWrapper');
-    const btn     = document.getElementById('filterToggleBtn');
-    if (wrapper) wrapper.classList.remove('visible');
-    if (btn)     btn.classList.remove('open');
-}
-
-/* ── Filter toggle ── */
-function toggleFilters() {
-    const wrapper = document.getElementById('filtersCardWrapper');
-    const btn     = document.getElementById('filterToggleBtn');
-    const isOpen  = wrapper.classList.contains('visible');
-    wrapper.classList.toggle('visible', !isOpen);
-    btn.classList.toggle('open', !isOpen);
-}
-
-/* ── Active filter badge ── */
-function updateFilterBadge() {
-    const values = [
-        document.getElementById('subjectFilter').value,
-        document.getElementById('yearFilter').value,
-        document.getElementById('searchInput').value.trim()
-    ];
-    const count = values.filter(Boolean).length;
-    const badge = document.getElementById('activeFilterBadge');
-    if (count > 0) {
-        badge.style.display = 'inline';
-        badge.textContent   = `${count} filter${count > 1 ? 's' : ''} active`;
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
-['subjectFilter', 'yearFilter', 'searchInput'].forEach(id => {
-    document.getElementById(id).addEventListener('change', updateFilterBadge);
-    document.getElementById(id).addEventListener('input',  updateFilterBadge);
-});
-
-document.getElementById('resetFilters').addEventListener('click', () => {
-    setTimeout(updateFilterBadge, 50);
-});
-
 /* ── Staggered card entrance animation ── */
 function animateCards() {
     const cards = document.querySelectorAll('#papersGrid .paper-card, #papersGrid > *');
@@ -124,17 +73,7 @@ if (grid) {
     mo.observe(grid, { childList: true });
 }
 
-/* ── Filter inputs trigger re-animation ── */
-['subjectFilter', 'yearFilter', 'searchInput'].forEach(id => {
-    document.getElementById(id).addEventListener('change', () => setTimeout(reAnimateCards, 80));
-    document.getElementById(id).addEventListener('input',  () => setTimeout(reAnimateCards, 80));
-});
-
-document.getElementById('resetFilters').addEventListener('click', () => {
-    setTimeout(reAnimateCards, 100);
-});
-
-/* ── Filter select: flash on change ── */
+/* ── Filter select: flash on change (no-op if no selects exist, safe) ── */
 document.querySelectorAll('.filter-select').forEach(el => {
     el.addEventListener('change', function () {
         if (!this.value) return;
@@ -148,6 +87,7 @@ document.querySelectorAll('.filter-select').forEach(el => {
 window.addEventListener('load', () => {
     setTimeout(animateCards, 300);
 });
+
 /* ── Toast notification ── */
 function showToast(message, duration = 3000) {
     let toast = document.getElementById('pyqToast');
@@ -162,18 +102,20 @@ function showToast(message, duration = 3000) {
     toast._timer = setTimeout(() => toast.classList.remove('toast-visible'), duration);
 }
 
-/* ── Force-download helper ── */
-/* ── Force-download helper ── */
-function forceDownload(url, filename) {
-    showToast('⬇️ Downloading… please wait');
+/* ── Force-download helper ──
+   silent=true suppresses per-file toasts (used by bulk downloadSemester).
+   Single-paper downloads call without silent (defaults to false). */
+function forceDownload(url, filename, silent = false) {
+    if (!silent) showToast('⬇️ Downloading… please wait');
     const a = document.createElement('a');
     a.href = url + '?download=';
     a.download = filename || 'question-paper.pdf';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    setTimeout(() => showToast('✅ Download started!'), 500);
+    if (!silent) setTimeout(() => showToast('✅ Download started!'), 500);
 }
+
 window.copyAnalysis = function() {
     const text = document.getElementById('analyseResult').innerText;
     navigator.clipboard.writeText(text).then(() => {

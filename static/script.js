@@ -8,11 +8,7 @@ if (document.getElementById('semFolders')) {
     const papersGrid         = document.getElementById('papersGrid');
     const noResults          = document.getElementById('noResults');
     const resultsCount       = document.getElementById('resultsCount');
-    const subjectFilter      = document.getElementById('subjectFilter');
-    const yearFilter         = document.getElementById('yearFilter');
     const semesterFilter     = document.getElementById('semesterFilter');
-    const searchInput        = document.getElementById('searchInput');
-    const resetFilters       = document.getElementById('resetFilters');
     const semFolders         = document.getElementById('semFolders');
     const folderPapersView   = document.getElementById('folderPapersView');
     const btnBackFolders     = document.getElementById('btnBackFolders');
@@ -80,44 +76,10 @@ if (document.getElementById('semFolders')) {
 
     window.addEventListener('popstate', applyHash);
 
-    // ---- Filter section visibility ----
-    function showFiltersSection() {
-        const section = document.getElementById('filtersSection');
-        if (section) section.style.display = '';
-    }
-
-    function hideFiltersSection() {
-        const section = document.getElementById('filtersSection');
-        if (section) section.style.display = 'none';
-        const wrapper = document.getElementById('filtersCardWrapper');
-        const btn     = document.getElementById('filterToggleBtn');
-        if (wrapper) wrapper.classList.remove('visible');
-        if (btn)     btn.classList.remove('open');
-    }
-
-    // ---- Context-aware subject filter ----
-    function filterSubjectsBySem(sem) {
-        subjectFilter.querySelectorAll('option').forEach(opt => {
-            if (!opt.value) return;
-            opt.hidden = opt.dataset.semester && String(opt.dataset.semester) !== String(sem);
-        });
-        if (subjectFilter.value) {
-            const selected = subjectFilter.querySelector(`option[value="${subjectFilter.value}"]`);
-            if (selected && selected.hidden) subjectFilter.value = '';
-        }
-    }
-
-    function resetSubjectFilter() {
-        subjectFilter.querySelectorAll('option').forEach(opt => opt.hidden = false);
-        subjectFilter.value = '';
-    }
-
     // ---- Render semester folders ----
     function renderFolders() {
         semFolders.style.display = 'grid';
         folderPapersView.style.display = 'none';
-        hideFiltersSection();
-        resetSubjectFilter();
         const sems = [1,2,3,4,5,6];
         semFolders.innerHTML = sems.map(sem => {
             const count = papers.filter(p => String(p.semester) === String(sem)).length;
@@ -125,6 +87,17 @@ if (document.getElementById('semFolders')) {
             return `
                 <div class="sem-folder-card ${isEmpty ? 'sem-folder-empty' : ''}"
                      onclick="${isEmpty ? '' : `openFolder(${sem})`}">
+                    ${!isEmpty ? `
+                    <button class="sem-folder-download-btn"
+                            onclick="event.stopPropagation(); downloadSemester(${sem})"
+                            title="Download all Semester ${sem} papers"
+                            aria-label="Download all Semester ${sem} papers">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    </button>` : ''}
                     <div class="sem-folder-icon-wrap">
                         <svg viewBox="0 0 48 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <rect x="0" y="8" width="48" height="30" rx="4" fill="${isEmpty ? '#D1D5DB' : '#BFDBFE'}"/>
@@ -149,8 +122,6 @@ if (document.getElementById('semFolders')) {
         activeType = null;
         semFolders.style.display = 'none';
         folderPapersView.style.display = 'block';
-        hideFiltersSection();
-        resetSubjectFilter();
 
         const typeCards = EXAM_TYPES.map(type => {
             const count = papers.filter(p =>
@@ -193,8 +164,6 @@ if (document.getElementById('semFolders')) {
     window.openExamType = function(sem, type) {
         activeType = type;
         semesterFilter.value = String(sem);
-        showFiltersSection();
-        filterSubjectsBySem(sem);
 
         folderPapersHeader.innerHTML = `
             <div class="folder-breadcrumb">
@@ -223,97 +192,92 @@ if (document.getElementById('semFolders')) {
     }
 
     btnBackFolders.addEventListener('click', goBackInBrowse);
+
     // ---- Floating back button (mobile scroll) ----
-const btnBackFloat = document.getElementById('btnBackFloat');
+    const btnBackFloat = document.getElementById('btnBackFloat');
 
-btnBackFloat.addEventListener('click', goBackInBrowse);
+    btnBackFloat.addEventListener('click', goBackInBrowse);
 
-window.addEventListener('scroll', () => {
-    if (folderPapersView.style.display === 'none') {
-        btnBackFloat.classList.remove('visible');
-        return;
-    }
-    const rect = btnBackFolders.getBoundingClientRect();
-    btnBackFloat.classList.toggle('visible', rect.bottom < 0);
-}, { passive: true });
+    window.addEventListener('scroll', () => {
+        if (folderPapersView.style.display === 'none') {
+            btnBackFloat.classList.remove('visible');
+            return;
+        }
+        const rect = btnBackFolders.getBoundingClientRect();
+        btnBackFloat.classList.toggle('visible', rect.bottom < 0);
+    }, { passive: true });
 
-    // ---- Render papers ----
+    // ---- Render papers (folder/exam-type driven, no legacy filter dropdowns) ----
     function renderPapers(forceType) {
-        const subjectValue  = subjectFilter.value.toLowerCase();
-        const yearValue     = yearFilter.value;
         const semesterValue = semesterFilter.value;
-        const searchValue   = searchInput.value.toLowerCase();
         const typeValue     = forceType || activeType;
-
-        let filteredPapers = papers.filter(paper => {
-            const matchSubject  = !subjectValue  || (paper.subject && paper.subject.toLowerCase() === subjectValue);
-            const matchYear     = !yearValue     || String(paper.year) === String(yearValue);
+        const filteredPapers = papers.filter(paper => {
             const matchSemester = !semesterValue || String(paper.semester) === String(semesterValue);
             const matchType     = !typeValue     || (paper.examType || '').toUpperCase() === typeValue.toUpperCase();
-            const matchSearch   = !searchValue   ||
-                (paper.subject    && paper.subject.toLowerCase().includes(searchValue))  ||
-                (paper.file_url   && paper.file_url.toLowerCase().includes(searchValue)) ||
-                (paper.examType   && paper.examType.toLowerCase().includes(searchValue)) ||
-                (paper.department && paper.department.toLowerCase().includes(searchValue));
-            return matchSubject && matchYear && matchSemester && matchType && matchSearch;
+            return matchSemester && matchType;
         });
+        renderPaperCards(filteredPapers);
+    }
 
-        const count = filteredPapers.length;
+    // ---- Shared paper-card renderer (used by both folder browse and unified search) ----
+    function renderPaperCards(list) {
+        const count = list.length;
         resultsCount.textContent = `Showing ${count} ${count === 1 ? 'paper' : 'papers'}`;
 
-        if (filteredPapers.length === 0) {
+        if (list.length === 0) {
             papersGrid.style.display = 'none';
             noResults.style.display  = 'block';
-        } else {
-            papersGrid.style.display = 'grid';
-            noResults.style.display  = 'none';
-            papersGrid.innerHTML = filteredPapers.map(paper => `
-                <div class="paper-card">
-                    <div class="paper-info">
-                        <div class="info-item">
-                            <span class="info-label">Subject</span>
-                            <span class="info-value">${escapeHtml(paper.subject)}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Year</span>
-                            <span class="info-value">${escapeHtml(String(paper.year))}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Semester</span>
-                            <span class="info-value">Sem ${escapeHtml(String(paper.semester || ''))}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Exam Type</span>
-                            <span class="info-value">${escapeHtml(paper.examType || '—')}</span>
-                        </div>
+            return;
+        }
+        papersGrid.style.display = 'grid';
+        noResults.style.display  = 'none';
+        papersGrid.innerHTML = list.map(paper => `
+            <div class="paper-card">
+                <div class="paper-info">
+                    <div class="info-item">
+                        <span class="info-label">Subject</span>
+                        <span class="info-value">${escapeHtml(paper.subject)}</span>
                     </div>
-                                        <div class="paper-card-actions">
-                        <a href="${escapeHtml(paper.file_url || '')}" class="btn-view-paper" target="_blank">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                            View
-                        </a>
-                        <button class="btn-download-paper" onclick="forceDownload('${escapeHtml(paper.file_url || '')}', '${escapeHtml(paper.subject)}_${escapeHtml(String(paper.year))}.pdf')">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                            Download
-                        </button>
-                        <button class="btn-analyse-paper" onclick="analysePaper(${paper.paper_id}, '${escapeHtml(paper.subject)}')">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                 <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
-                            </svg>
-                            Analyse
-                        </button>
+                    <div class="info-item">
+                        <span class="info-label">Year</span>
+                        <span class="info-value">${escapeHtml(String(paper.year))}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Semester</span>
+                        <span class="info-value">Sem ${escapeHtml(String(paper.semester || ''))}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Exam Type</span>
+                        <span class="info-value">${escapeHtml(paper.examType || '—')}</span>
                     </div>
                 </div>
-            `).join('');
-        }
+                                <div class="paper-card-actions">
+                    <a href="${escapeHtml(paper.file_url || '')}" class="btn-view-paper" target="_blank">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        View
+                    </a>
+                    <button class="btn-download-paper" onclick="forceDownload('${escapeHtml(paper.file_url || '')}', '${escapeHtml(paper.subject)}_${escapeHtml(String(paper.year))}.pdf')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download
+                    </button>
+                    <button class="btn-analyse-paper" onclick="analysePaper(${paper.paper_id}, '${escapeHtml(paper.subject)}')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                             <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+                        </svg>
+                        Analyse
+                    </button>
+                </div>
+            </div>
+        `).join('');
     }
+
     let analyseController = null;
 
 window.analysePaper = async function(paperId, subject) {
@@ -362,26 +326,13 @@ window.closeAnalyseModal = function() {
     if (analyseController) { analyseController.abort(); analyseController = null; }
     document.getElementById('analyseModal').style.display = 'none';
 };
+
     function escapeHtml(text) {
         if (text == null) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
-
-    // ---- Filter listeners ----
-    subjectFilter.addEventListener('change',  () => { if (activeType) renderPapers(); });
-    yearFilter.addEventListener('change',     () => { if (activeType) renderPapers(); });
-    semesterFilter.addEventListener('change', () => { if (activeType) renderPapers(); });
-    searchInput.addEventListener('input',     () => { if (activeType) renderPapers(); });
-
-    resetFilters.addEventListener('click', () => {
-        subjectFilter.value  = '';
-        yearFilter.value     = '';
-        semesterFilter.value = activeSem ? String(activeSem) : '';
-        searchInput.value    = '';
-        if (activeType) renderPapers();
-    });
 
     // ---- View toggle ----
     const viewBtns = document.querySelectorAll('.view-btn');
@@ -401,6 +352,79 @@ window.closeAnalyseModal = function() {
             }
         });
     });
+
+    // ---- Bulk semester download ----
+    // NOTE: Safari/iOS often only downloads the first PDF in a sequential
+    // auto-download loop (known browser limitation). For full cross-browser
+    // reliability a server-side ZIP route would be needed — flagged as follow-up.
+    let isDownloadingSem = false;
+
+    window.downloadSemester = async function(sem) {
+        if (isDownloadingSem) return; // guard against double-click spam
+        const semPapers = papers.filter(p => String(p.semester) === String(sem));
+        if (semPapers.length === 0) return;
+
+        if (semPapers.length >= 8 &&
+            !confirm(`Download ${semPapers.length} papers? Your browser may ask ` +
+                     `permission to allow multiple downloads.`)) {
+            return;
+        }
+
+        isDownloadingSem = true;
+        showToast(`⬇️ Downloading ${semPapers.length} papers from Semester ${sem}…`);
+
+        for (let i = 0; i < semPapers.length; i++) {
+            const p = semPapers[i];
+            if (!p.file_url) continue;
+            const filename = `${sanitizeFilename(p.subject)}_${sanitizeFilename(p.examType || 'paper')}_${p.year}.pdf`;
+            forceDownload(p.file_url, filename, /* silent */ true);
+            await new Promise(r => setTimeout(r, 600));
+        }
+
+        isDownloadingSem = false;
+        showToast(`✅ ${semPapers.length} downloads started!`);
+    };
+
+    function sanitizeFilename(name) {
+        return String(name || 'Subject').replace(/[\/\\?%*:|"<>]/g, '-').trim();
+    }
+
+    // ---- Unified search (replaces old Subject/Year/Search filter dropdowns) ----
+    // Deliberately never touches location.hash — transient in-memory view.
+    // Clearing the box calls applyHash() to restore the prior hash-based view.
+    const unifiedSearch = document.getElementById('unifiedSearch');
+    let searchDebounceTimer = null;
+
+    if (unifiedSearch) {
+        unifiedSearch.addEventListener('input', () => {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                const q = unifiedSearch.value.trim().toLowerCase();
+                if (!q) {
+                    applyHash(); // restore whatever folder level the hash points to
+                    return;
+                }
+                renderSearchResults(q);
+            }, 120);
+        });
+    }
+
+    function renderSearchResults(q) {
+        const matches = papers.filter(p =>
+            (p.subject  && p.subject.toLowerCase().includes(q))  ||
+            (p.examType && p.examType.toLowerCase().includes(q)) ||
+            String(p.year     || '').includes(q) ||
+            String(p.semester || '').includes(q)
+        );
+        semFolders.style.display = 'none';
+        folderPapersView.style.display = 'block';
+        folderPapersHeader.innerHTML = `
+            <div class="folder-title-row">
+                <h2>🔍 Search results for "${escapeHtml(q)}"</h2>
+                <span class="folder-total-badge">${matches.length} found</span>
+            </div>`;
+        renderPaperCards(matches);
+    }
 
     // ---- Initial render (restore from hash if present) ----
     applyHash();

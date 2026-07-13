@@ -1497,3 +1497,88 @@ textarea.form-control {
         padding: 3.5rem 0;
     }
 }
+
+/* ================================================================
+   GOAL 1 — Per-semester bulk download button on folder cards
+   ================================================================ */
+.sem-folder-card { position: relative; }
+
+.sem-folder-download-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    color: #3B82F6;
+    cursor: pointer;
+    z-index: 2;
+    padding: 0;
+    transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
+}
+
+.sem-folder-download-btn:hover {
+    background: #EFF6FF;
+    border-color: #3B82F6;
+    box-shadow: 0 2px 8px rgba(59,130,246,0.18);
+}
+
+/* ================================================================
+   GOAL 2 — Unified search bar + page-header flex layout
+   ================================================================ */
+.page-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.unified-search-wrap {
+    position: relative;
+    min-width: 280px;
+    flex-shrink: 0;
+}
+
+.unified-search-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9CA3AF;
+    pointer-events: none;
+}
+
+.unified-search-input {
+    width: 100%;
+    padding: 0.6rem 1rem 0.6rem 2.4rem;
+    border-radius: 999px;
+    border: 1px solid #E5E7EB;
+    font-family: inherit;
+    font-size: 0.9rem;
+    background: #fff;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    box-sizing: border-box;
+}
+
+.unified-search-input:focus {
+    outline: none;
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
+@media (max-width: 640px) {
+    .page-header-top {
+        flex-direction: column;
+    }
+    .unified-search-wrap {
+        width: 100%;
+        min-width: 0;
+    }
+}
