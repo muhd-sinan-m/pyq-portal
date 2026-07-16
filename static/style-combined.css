@@ -3371,14 +3371,33 @@ body {
 }
 
 /* ================================================================
-   SEARCH HERO — Full-width beautiful search bar
+   PAGE HEADER — side-by-side: title left · search right
+   ================================================================ */
+.page-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.page-header-left {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ================================================================
+   SEARCH HERO — right-column search card
    ================================================================ */
 .search-hero-wrap {
-    margin-top: 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    max-width: 600px;
+    min-width: 320px;
+    max-width: 420px;
+    flex-shrink: 0;
+    align-self: center;
 }
 
 .search-hero-box {
@@ -3488,7 +3507,15 @@ body {
     color: #1D4ED8;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+    .page-header-top {
+        flex-direction: column;
+    }
+    .search-hero-wrap {
+        min-width: 0;
+        max-width: 100%;
+        width: 100%;
+    }
     .search-hero-box {
         border-radius: 12px;
         padding: 0.5rem 0.85rem;

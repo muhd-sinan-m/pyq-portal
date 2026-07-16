@@ -131,54 +131,57 @@
                 <span class="breadcrumb-separator">/</span>
                 <span class="breadcrumb-current">{{ department_name }}</span>
             </div>
-            <div class="page-header-top" style="flex-wrap:wrap; align-items:flex-start;">
-                <div>
+
+            <!-- Title left · Search right -->
+            <div class="page-header-top">
+                <div class="page-header-left">
                     <h1 class="page-title">{{ department_name }} Question Papers</h1>
                     <p class="page-description">
                         Browse previous year question papers for {{ department_name }}
                     </p>
+                    {% if departments|length > 1 %}
+                    <div class="dept-switcher" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.85rem;">
+                        {% for slug, name in departments.items() %}
+                        <a href="{{ url_for('view_papers_by_department', department=slug) }}"
+                           class="btn btn-secondary{% if slug == department_slug %} active{% endif %}"
+                           style="padding:0.35rem 0.85rem; font-size:0.85rem;{% if slug == department_slug %} opacity:1; font-weight:600;{% endif %}">
+                            {{ name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
-            </div>
 
-            <!-- ── Full-width Search Bar ── -->
-            <div class="search-hero-wrap">
-                <div class="search-hero-box" id="searchHeroBox">
-                    <svg class="search-hero-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-                    <input type="text" id="unifiedSearch" class="search-hero-input"
-                           placeholder="Search by subject, exam type, year…"
-                           aria-label="Search papers by subject, exam type, or year"
-                           autocomplete="off">
-                    <button class="search-hero-clear" id="searchClearBtn" title="Clear search" style="display:none;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                <!-- Search + chips on the right -->
+                <div class="search-hero-wrap">
+                    <div class="search-hero-box" id="searchHeroBox">
+                        <svg class="search-hero-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
                         </svg>
-                    </button>
-                </div>
-                <div class="search-chips">
-                    <span class="search-chip-label">Try:</span>
-                    <button class="search-chip" onclick="setSearch('SEA I')">SEA I</button>
-                    <button class="search-chip" onclick="setSearch('SEA II')">SEA II</button>
-                    <button class="search-chip" onclick="setSearch('ISA')">ISA</button>
-                    <button class="search-chip" onclick="setSearch('{{ department_name.split()[0] }}')">{{ department_name.split()[0] }}</button>
+                        <input type="text" id="unifiedSearch" class="search-hero-input"
+                               placeholder="Search by subject, exam type, year…"
+                               aria-label="Search papers by subject, exam type, or year"
+                               autocomplete="off">
+                        <button class="search-hero-clear" id="searchClearBtn" title="Clear search" style="display:none;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="search-chips">
+                        <span class="search-chip-label">Try:</span>
+                        <button class="search-chip" onclick="setSearch('SEA I')">SEA I</button>
+                        <button class="search-chip" onclick="setSearch('SEA II')">SEA II</button>
+                        <button class="search-chip" onclick="setSearch('ISA')">ISA</button>
+                        <button class="search-chip" onclick="setSearch('{{ department_name.split()[0] }}')">{{ department_name.split()[0] }}</button>
+                    </div>
                 </div>
             </div>
 
-            {% if departments|length > 1 %}
-            <div class="dept-switcher" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1rem;">
-                {% for slug, name in departments.items() %}
-                <a href="{{ url_for('view_papers_by_department', department=slug) }}"
-                   class="btn btn-secondary{% if slug == department_slug %} active{% endif %}"
-                   style="padding:0.35rem 0.85rem; font-size:0.85rem;{% if slug == department_slug %} opacity:1; font-weight:600;{% endif %}">
-                    {{ name }}
-                </a>
-                {% endfor %}
-            </div>
-            {% endif %}
         </div>
     </section>
+
 
 
 
