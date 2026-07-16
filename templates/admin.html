@@ -969,47 +969,73 @@
     </div><!-- /main-content -->
 </div><!-- /admin-layout -->
 
-<!-- ========== ADD SUBJECT MODAL ========== -->
+<!-- ========== ADD SUBJECT MODAL (BULK) ========== -->
 <div class="modal-overlay" id="modalAddSubject">
-    <div class="modal">
+    <div class="modal" style="max-width:560px;">
         <div class="modal-header">
-            <h3 class="modal-title">Add New Subject</h3>
+            <h3 class="modal-title">Add Subjects</h3>
             <button class="modal-close" onclick="closeModal('modalAddSubject')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
         </div>
         <div class="modal-body">
             <div id="addSubjectAlert"></div>
-            <form id="addSubjectForm" onsubmit="submitAddSubject(event)">
-                <div class="form-group">
-                    <label class="form-label">Subject Name <span style="color:var(--accent-red)">*</span></label>
-                    <input type="text" class="form-control" name="subject_name" required placeholder="e.g. Data Structures">
-                </div>
-                <div class="form-group">
+
+            <!-- Shared Department + Semester (applied to ALL subjects below) -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
+                <div class="form-group" style="margin:0;">
                     <label class="form-label">Department <span style="color:var(--accent-red)">*</span></label>
-                    <select class="form-control" name="department" required>
+                    <select class="form-control" id="bulkSubjectDept" required>
                         {% for slug, name in departments.items() %}
                         <option value="{{ name }}"{% if slug == 'bca' %} selected{% endif %}>{{ name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="margin:0;">
                     <label class="form-label">Semester</label>
-                    <select class="form-control" name="semester">
+                    <select class="form-control" id="bulkSubjectSem">
                         <option value="">— Select semester —</option>
                         {% for i in range(1, 9) %}
                         <option value="{{ i }}">Semester {{ i }}</option>
                         {% endfor %}
                     </select>
                 </div>
+            </div>
+
+            <!-- Divider -->
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <span style="font-size:0.8rem; font-weight:700; color:#6B7280; white-space:nowrap;">SUBJECT NAMES</span>
+                <div style="flex:1; height:1px; background:#E5E7EB;"></div>
+                <span style="font-size:0.75rem; color:#9CA3AF;">one per row</span>
+            </div>
+
+            <!-- Dynamic subject name rows -->
+            <div id="bulkSubjectRows" style="display:flex; flex-direction:column; gap:0.5rem; max-height:280px; overflow-y:auto; padding-right:2px;">
+                <!-- rows injected by JS -->
+            </div>
+
+            <!-- Add row button -->
+            <button type="button" id="bulkAddRowBtn" onclick="addBulkRow()"
+                style="margin-top:0.75rem; display:inline-flex; align-items:center; gap:0.4rem;
+                       background:none; border:1.5px dashed #D1D5DB; border-radius:8px;
+                       padding:0.45rem 1rem; font-size:0.85rem; font-weight:600;
+                       color:#6B7280; cursor:pointer; width:100%; justify-content:center;
+                       transition:border-color 0.15s, color 0.15s;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Another Subject
+            </button>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-ghost" onclick="closeModal('modalAddSubject')">Cancel</button>
-            <button type="submit" form="addSubjectForm" class="btn btn-primary" id="addSubjectSubmitBtn">Save Subject</button>
+            <button type="button" class="btn btn-primary" id="addSubjectSubmitBtn" onclick="submitBulkSubjects()">
+                Save All Subjects
+            </button>
         </div>
-            </form>
     </div>
 </div>
+
 
 <!-- ========== EDIT SUBJECT MODAL ========== -->
 <div class="modal-overlay" id="modalEditSubject">
@@ -1225,34 +1251,147 @@ async function loadSubjects() {
     }
 }
 
+/* ── Bulk Add Subjects ── */
+let bulkRowCount = 0;
+
 function openAddSubjectModal() {
-    document.getElementById('addSubjectForm').reset();
+    // Reset
+    document.getElementById('bulkSubjectRows').innerHTML = '';
     document.getElementById('addSubjectAlert').innerHTML = '';
+    document.getElementById('addSubjectSubmitBtn').disabled = false;
+    document.getElementById('addSubjectSubmitBtn').textContent = 'Save All Subjects';
+    bulkRowCount = 0;
+    // Start with 3 empty rows
+    addBulkRow(); addBulkRow(); addBulkRow();
     openModal('modalAddSubject');
+    // Focus first input
+    setTimeout(() => {
+        const first = document.querySelector('#bulkSubjectRows .bulk-row-input');
+        if (first) first.focus();
+    }, 80);
 }
 
-async function submitAddSubject(e) {
-    e.preventDefault();
-    const btn = document.getElementById('addSubjectSubmitBtn');
-    const data = Object.fromEntries(new FormData(e.target));
-    if (!data.semester) data.semester = null; else data.semester = parseInt(data.semester);
-    btn.disabled = true; btn.textContent = 'Saving…';
-    try {
-        const r = await fetch('/admin/api/subjects', {
-            method: 'POST',
-            headers: {'Content-Type':'application/json','X-CSRFToken': getCsrf()},
-            body: JSON.stringify(data)
-        });
-        const result = await r.json();
-        if (!r.ok) throw new Error(result.error || 'Failed');
-        toast('Subject added successfully!');
-        closeModal('modalAddSubject');
-        loadSubjects();
-    } catch (err) {
-        document.getElementById('addSubjectAlert').innerHTML = alertHtml('error', err.message);
-    }
-    btn.disabled = false; btn.textContent = 'Save Subject';
+function addBulkRow(prefill = '') {
+    bulkRowCount++;
+    const id = `bulkRow_${bulkRowCount}`;
+    const row = document.createElement('div');
+    row.id = id;
+    row.style.cssText = 'display:flex; align-items:center; gap:0.5rem;';
+    row.innerHTML = `
+        <span style="min-width:24px; text-align:right; font-size:0.78rem; color:#9CA3AF; font-weight:600;">${bulkRowCount}</span>
+        <input type="text" class="form-control bulk-row-input"
+               placeholder="Subject name e.g. Data Structures"
+               value="${prefill.replace(/"/g, '&quot;')}"
+               style="flex:1; font-size:0.9rem;"
+               onkeydown="handleBulkRowKey(event, '${id}')">
+        <button type="button" onclick="removeBulkRow('${id}')"
+                title="Remove"
+                style="flex-shrink:0; display:flex; align-items:center; justify-content:center;
+                       background:none; border:none; color:#9CA3AF; cursor:pointer;
+                       width:28px; height:28px; border-radius:6px;
+                       transition:color 0.15s, background 0.15s;"
+                onmouseover="this.style.color='#EF4444'; this.style.background='#FEF2F2';"
+                onmouseout="this.style.color='#9CA3AF'; this.style.background='none';">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>`;
+    document.getElementById('bulkSubjectRows').appendChild(row);
+    // Renumber all rows
+    renumberBulkRows();
+    return row.querySelector('input');
 }
+
+function removeBulkRow(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+    renumberBulkRows();
+}
+
+function renumberBulkRows() {
+    document.querySelectorAll('#bulkSubjectRows > div').forEach((row, i) => {
+        const num = row.querySelector('span');
+        if (num) num.textContent = i + 1;
+    });
+}
+
+function handleBulkRowKey(e, currentId) {
+    // Enter → add new row and focus it
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const inp = addBulkRow();
+        inp.focus();
+    }
+    // Backspace on empty → remove row, go up
+    if (e.key === 'Backspace' && e.target.value === '') {
+        e.preventDefault();
+        const rows = Array.from(document.querySelectorAll('#bulkSubjectRows > div'));
+        const idx = rows.findIndex(r => r.id === currentId);
+        removeBulkRow(currentId);
+        if (idx > 0) {
+            const prev = rows[idx - 1];
+            if (prev) {
+                const inp = prev.querySelector('input');
+                if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+            }
+        }
+    }
+}
+
+async function submitBulkSubjects() {
+    const btn = document.getElementById('addSubjectSubmitBtn');
+    const alertEl = document.getElementById('addSubjectAlert');
+    alertEl.innerHTML = '';
+
+    const department = document.getElementById('bulkSubjectDept').value;
+    const semester   = document.getElementById('bulkSubjectSem').value || null;
+    const names = Array.from(document.querySelectorAll('#bulkSubjectRows .bulk-row-input'))
+                       .map(i => i.value.trim()).filter(Boolean);
+
+    if (!names.length) {
+        alertEl.innerHTML = alertHtml('error', 'Enter at least one subject name.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = `Saving ${names.length} subject${names.length > 1 ? 's' : ''}…`;
+
+    try {
+        const r = await fetch('/admin/api/subjects/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+            body: JSON.stringify({ subject_names: names, department, semester })
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Failed');
+
+        const results = data.results || [];
+        const ok   = results.filter(x => x.ok);
+        const fail = results.filter(x => !x.ok);
+
+        if (fail.length === 0) {
+            toast(`✅ ${ok.length} subject${ok.length > 1 ? 's' : ''} added successfully!`);
+            closeModal('modalAddSubject');
+            loadSubjects();
+        } else {
+            // Show summary — keep modal open so admin can fix failures
+            let html = `<div style="margin-bottom:0.5rem;">
+                <strong style="color:#059669;">✅ ${ok.length} saved</strong>
+                ${fail.length ? `&nbsp;·&nbsp;<strong style="color:#EF4444;">❌ ${fail.length} failed</strong>` : ''}
+            </div>`;
+            if (fail.length) {
+                html += `<div style="font-size:0.82rem; color:#6B7280;">Failed: ${fail.map(f => `<em>${f.subject_name}</em>`).join(', ')}</div>`;
+            }
+            alertEl.innerHTML = `<div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem;">${html}</div>`;
+            loadSubjects();
+        }
+    } catch (err) {
+        alertEl.innerHTML = alertHtml('error', err.message);
+    }
+    btn.disabled = false;
+    btn.textContent = 'Save All Subjects';
+}
+
 
 function openEditSubjectModal(id, name, semester, department) {
     document.getElementById('editSubjectId').value = id;

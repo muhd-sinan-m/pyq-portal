@@ -524,8 +524,8 @@
 
                 <div class="up-grid">
 
-                    <!-- Department -->
-                    <div class="up-group full">
+                    <!-- Row 1: Department + Semester side by side -->
+                    <div class="up-group">
                         <label class="up-label" for="department">Department</label>
                         <select name="department" id="department" class="up-control" required>
                             <option value="">— Select department —</option>
@@ -538,23 +538,36 @@
                         </select>
                     </div>
 
-                    <!-- Subject (filtered by department via JS) -->
-                    <div class="up-group full">
-                        <label class="up-label" for="subject_id">Subject</label>
-                        <select name="subject_id" id="subject_id" class="up-control" required>
-                            <option value="">— Select department first —</option>
-                            {% for s in subjects %}
-                            <option value="{{ s.subject_id }}"
-                                    data-department="{{ s.department }}"
-                                    data-semester="{{ s.semester }}"
-                                    {% if request.form.get('subject_id') == s.subject_id|string %}selected{% endif %}>
-                                {% if s.semester %}Sem {{ s.semester }} — {% endif %}{{ s.subject_name }}
+                    <div class="up-group">
+                        <label class="up-label" for="semester">Semester</label>
+                        <select name="semester" id="semester" class="up-control" required>
+                            <option value="">— Select semester —</option>
+                            {% for i in range(1, 9) %}
+                            <option value="{{ i }}"
+                                {% if request.form.get('semester')|string == i|string %}selected{% endif %}>
+                                Semester {{ i }}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <!-- Year -->
+                    <!-- Row 2: Subject (filtered by dept + semester) -->
+                    <div class="up-group full">
+                        <label class="up-label" for="subject_id">Subject</label>
+                        <select name="subject_id" id="subject_id" class="up-control" required>
+                            <option value="">— Select department &amp; semester first —</option>
+                            {% for s in subjects %}
+                            <option value="{{ s.subject_id }}"
+                                    data-department="{{ s.department }}"
+                                    data-semester="{{ s.semester or '' }}"
+                                    {% if request.form.get('subject_id') == s.subject_id|string %}selected{% endif %}>
+                                {{ s.subject_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Row 3: Year + Exam Type -->
                     <div class="up-group">
                         <label class="up-label" for="year">Exam Year</label>
                         <input
@@ -570,8 +583,7 @@
                         />
                     </div>
 
-                    <!-- Exam Type -->
-    <div class="up-group">
+                    <div class="up-group">
                         <label class="up-label" for="exam_type">Exam Type</label>
                         <select name="exam_type" id="exam_type" class="up-control" required>
                             <option value="">— Select exam type —</option>
@@ -598,6 +610,7 @@
                     </div>
 
                 </div>
+
 
                 <hr class="up-divider" />
 
@@ -688,6 +701,57 @@
         const submitBtn  = document.getElementById('submitBtn');
         const form       = document.getElementById('uploadForm');
 
+        /* ── Subject filter: by Department + Semester ── */
+        const deptSel    = document.getElementById('department');
+        const semSel     = document.getElementById('semester');
+        const subjectSel = document.getElementById('subject_id');
+
+        // Store all original options (built from Jinja) so we can restore/filter
+        const allSubjectOptions = Array.from(subjectSel.querySelectorAll('option[value]:not([value=""])'));
+
+        function filterSubjects() {
+            const dept = deptSel.value;
+            const sem  = semSel.value;
+
+            // Remove all subject options except the placeholder
+            while (subjectSel.options.length > 1) subjectSel.remove(1);
+
+            if (!dept || !sem) {
+                subjectSel.options[0].textContent = '— Select department & semester first —';
+                return;
+            }
+
+            const filtered = allSubjectOptions.filter(opt => {
+                const optDept = opt.getAttribute('data-department') || '';
+                const optSem  = opt.getAttribute('data-semester')  || '';
+                return optDept === dept && optSem === sem;
+            });
+
+            if (filtered.length === 0) {
+                subjectSel.options[0].textContent = '— No subjects for this semester —';
+            } else {
+                subjectSel.options[0].textContent = '— Select subject —';
+                filtered.forEach(opt => subjectSel.appendChild(opt.cloneNode(true)));
+            }
+            subjectSel.value = '';
+        }
+
+        deptSel.addEventListener('change', filterSubjects);
+        semSel.addEventListener('change',  filterSubjects);
+
+        // Restore state on page reload with server-side form values
+        (function restoreFormState() {
+            const savedDept = deptSel.value;
+            const savedSem  = semSel.value;
+            if (savedDept && savedSem) {
+                filterSubjects();
+                // Re-select the previously submitted subject_id
+                const savedSubjectId = "{{ request.form.get('subject_id', '') }}";
+                if (savedSubjectId) subjectSel.value = savedSubjectId;
+            }
+        })();
+
+        /* ── File drag & drop ── */
         function setFile(file) {
             if (!file) return;
             if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
@@ -729,14 +793,17 @@
             }
         });
 
+        /* ── Form submit validation ── */
         form && form.addEventListener('submit', e => {
-            if (!document.getElementById('subject_id').value) { e.preventDefault(); alert('Please select a subject.'); return; }
+            if (!deptSel.value)                         { e.preventDefault(); alert('Please select a department.'); return; }
+            if (!semSel.value)                          { e.preventDefault(); alert('Please select a semester.'); return; }
+            if (!subjectSel.value)                      { e.preventDefault(); alert('Please select a subject.'); return; }
             const y = parseInt(document.getElementById('year').value);
-            if (!y || y < 2000 || y > 2100)  { e.preventDefault(); alert('Please enter a valid year (2000–2100).'); return; }
-            if (!fileInput.files[0])          { e.preventDefault(); alert('Please select a PDF file.'); return; }
+            if (!y || y < 2000 || y > 2100)            { e.preventDefault(); alert('Please enter a valid year (2000–2100).'); return; }
+            if (!fileInput.files[0])                    { e.preventDefault(); alert('Please select a PDF file.'); return; }
             submitBtn.classList.add('loading');
             submitBtn.disabled = true;
         });
     </script>
 </body>
-</html>
+</html>

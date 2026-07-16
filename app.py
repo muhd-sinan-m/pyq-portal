@@ -990,6 +990,65 @@ def admin_create_subject():
         return_db(conn)
 
 
+@app.route("/admin/api/subjects/bulk", methods=["POST"])
+@login_required
+@admin_required
+def admin_bulk_create_subjects():
+    """Insert multiple subjects sharing the same department and semester."""
+    data = request.get_json()
+    names = data.get("subject_names", [])
+    semester = data.get("semester")
+    department = (data.get("department") or DEPARTMENTS[DEFAULT_DEPARTMENT]).strip()
+
+    # Validate department
+    if department not in DEPARTMENTS.values():
+        return jsonify({"error": "Invalid department"}), 400
+
+    # Validate semester
+    if semester is not None and semester != "":
+        try:
+            semester = int(semester)
+            if not 1 <= semester <= 8:
+                raise ValueError
+        except (ValueError, TypeError):
+            return jsonify({"error": "Semester must be between 1 and 8"}), 400
+    else:
+        semester = None
+
+    # Clean names — drop empty strings
+    clean_names = [n.strip() for n in names if isinstance(n, str) and n.strip()]
+    if not clean_names:
+        return jsonify({"error": "At least one subject name is required"}), 400
+
+    conn = get_db()
+    cur = conn.cursor()
+    results = []
+    try:
+        for name in clean_names:
+            try:
+                cur.execute(
+                    "INSERT INTO subjects (subject_name, semester, department) "
+                    "VALUES (%s, %s, %s) RETURNING subject_id",
+                    (name, semester, department)
+                )
+                new_id = cur.fetchone()[0]
+                results.append({"subject_name": name, "subject_id": new_id, "ok": True})
+            except Exception as row_err:
+                conn.rollback()
+                results.append({"subject_name": name, "ok": False, "error": str(row_err)})
+                # Re-open cursor after rollback so remaining rows can continue
+                cur.close()
+                cur = conn.cursor()
+        conn.commit()
+        return jsonify({"results": results}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        return_db(conn)
+
+
 @app.route("/admin/api/subjects/<int:subject_id>", methods=["PUT"])
 @login_required
 @admin_required

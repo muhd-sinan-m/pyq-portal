@@ -481,11 +481,11 @@ if (document.getElementById('uploadForm')) {
     const removeFile     = document.getElementById('removeFile');
 
     // ── Department → Subject filter ──
-    // Works for both /upload (uploadDepartment / uploadSubject)
-    // and /user-upload (department / subject_id)
+    // Only runs on admin /upload page (uploadDepartment).
+    // The /user-upload page has its own dept+semester dual filter inline.
     (function () {
-        const deptSelect    = document.getElementById('uploadDepartment') || document.getElementById('department');
-        const subjectSelect = document.getElementById('uploadSubject')    || document.getElementById('subject_id');
+        const deptSelect    = document.getElementById('uploadDepartment');
+        const subjectSelect = document.getElementById('uploadSubject');
         if (!deptSelect || !subjectSelect) return;
 
         const allSubjectOptions = Array.from(subjectSelect.querySelectorAll('option')).filter(o => o.value);
