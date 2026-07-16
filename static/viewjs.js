@@ -136,3 +136,46 @@ window.copyAnalysis = function() {
         }, 2000);
     });
 };
+
+/* ── Search hero: clear button + chip active state ── */
+(function () {
+    const input     = document.getElementById('unifiedSearch');
+    const clearBtn  = document.getElementById('searchClearBtn');
+    const chips     = document.querySelectorAll('.search-chip');
+
+    if (!input) return;
+
+    function updateClearBtn() {
+        if (clearBtn) clearBtn.style.display = input.value ? 'flex' : 'none';
+    }
+
+    input.addEventListener('input', updateClearBtn);
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            input.value = '';
+            input.dispatchEvent(new Event('input'));
+            chips.forEach(c => c.classList.remove('active'));
+            updateClearBtn();
+            input.focus();
+        });
+    }
+
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            chips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+        });
+    });
+})();
+
+/* ── setSearch: called by quick-filter chips ── */
+window.setSearch = function(term) {
+    const input = document.getElementById('unifiedSearch');
+    if (!input) return;
+    input.value = term;
+    input.dispatchEvent(new Event('input'));
+    input.focus();
+    const clearBtn = document.getElementById('searchClearBtn');
+    if (clearBtn) clearBtn.style.display = 'flex';
+};

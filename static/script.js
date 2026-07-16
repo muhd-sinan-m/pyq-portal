@@ -110,6 +110,15 @@ if (document.getElementById('semFolders')) {
                     </div>
                     <div class="sem-folder-name">Semester ${sem}</div>
                     <div class="sem-folder-count">${count} ${count === 1 ? 'paper' : 'papers'}</div>
+                    ${isEmpty ? `
+                    <a href="/user-upload" class="upload-hint-btn" onclick="event.stopPropagation()" title="No papers yet — be the first to upload!">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Upload
+                    </a>` : ''}
                 </div>
             `;
         }).join('');
@@ -136,6 +145,15 @@ if (document.getElementById('semFolders')) {
                     <div class="exam-type-icon">${EXAM_ICONS[type]}</div>
                     <div class="exam-type-name">${type}</div>
                     <div class="exam-type-count">${count} ${count === 1 ? 'paper' : 'papers'}</div>
+                    ${isEmpty ? `
+                    <a href="/user-upload" class="upload-hint-btn upload-hint-sm" onclick="event.stopPropagation()" title="No papers yet — be the first to upload!">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Upload
+                    </a>` : ''}
                 </div>
             `;
         }).join('');

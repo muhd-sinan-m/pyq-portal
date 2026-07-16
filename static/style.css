@@ -1529,56 +1529,131 @@ textarea.form-control {
 }
 
 /* ================================================================
-   GOAL 2 — Unified search bar + page-header flex layout
+   SEARCH HERO — Full-width beautiful search bar
    ================================================================ */
-.page-header-top {
+.search-hero-wrap {
+    margin-top: 1.5rem;
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-    margin-top: 0.5rem;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 600px;
 }
 
-.unified-search-wrap {
-    position: relative;
-    min-width: 280px;
-    flex-shrink: 0;
-}
-
-.unified-search-wrap svg {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9CA3AF;
-    pointer-events: none;
-}
-
-.unified-search-input {
-    width: 100%;
-    padding: 0.6rem 1rem 0.6rem 2.4rem;
-    border-radius: 999px;
-    border: 1px solid #E5E7EB;
-    font-family: inherit;
-    font-size: 0.9rem;
+/* Gradient-border card container */
+.search-hero-box {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     background: #fff;
-    transition: border-color 0.18s, box-shadow 0.18s;
-    box-sizing: border-box;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 16px;
+    padding: 0.6rem 1rem 0.6rem 1.1rem;
+    transition: border-color 0.2s, box-shadow 0.25s;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    position: relative;
 }
 
-.unified-search-input:focus {
-    outline: none;
+.search-hero-box:focus-within {
     border-color: #3B82F6;
-    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.12), 0 4px 20px rgba(59,130,246,0.1);
+}
+
+.search-hero-icon {
+    color: #9CA3AF;
+    flex-shrink: 0;
+    transition: color 0.2s;
+}
+
+.search-hero-box:focus-within .search-hero-icon {
+    color: #3B82F6;
+}
+
+.search-hero-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 1rem;
+    color: #111827;
+    padding: 0.35rem 0;
+    min-width: 0;
+}
+
+.search-hero-input::placeholder {
+    color: #9CA3AF;
+}
+
+.search-hero-clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F3F4F6;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    color: #6B7280;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+    padding: 0;
+}
+
+.search-hero-clear:hover {
+    background: #E5E7EB;
+    color: #111827;
+}
+
+/* Quick filter chips */
+.search-chips {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.search-chip-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #9CA3AF;
+    letter-spacing: 0.02em;
+}
+
+.search-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.22rem 0.7rem;
+    border-radius: 2rem;
+    border: 1px solid #E5E7EB;
+    background: #F9FAFB;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+
+.search-chip:hover {
+    background: rgba(59,130,246,0.07);
+    border-color: rgba(59,130,246,0.35);
+    color: #2563EB;
+    transform: translateY(-1px);
+}
+
+.search-chip.active {
+    background: rgba(59,130,246,0.1);
+    border-color: #3B82F6;
+    color: #1D4ED8;
 }
 
 @media (max-width: 640px) {
-    .page-header-top {
-        flex-direction: column;
+    .search-hero-box {
+        border-radius: 12px;
+        padding: 0.5rem 0.85rem;
     }
-    .unified-search-wrap {
-        width: 100%;
-        min-width: 0;
+    .search-hero-input {
+        font-size: 0.92rem;
     }
 }
