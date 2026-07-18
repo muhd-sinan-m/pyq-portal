@@ -21,8 +21,8 @@
         <div class="unified-header">
             <!-- Left: College Branding -->
             <div class="college-brand">
-                <img src="{{ url_for('static', filename='marian-college-header.png') }}" 
-                     alt="Marian College Kuttikkanam" 
+                <img src="{{ url_for('static', filename='mcsc_logo.png') }}" 
+                     alt="MCSC Marian College Students Council" 
                      class="college-logo">
             </div>
 
@@ -258,13 +258,15 @@
     "></div>
 
     <div class="college-inner" style="position: relative; z-index: 1;">
-        <h2 class="college-name reveal" style="color: #ffffff;">Marian College<br>Kuttikkanam</h2>
-        <p class="college-subtitle reveal" style="color: rgba(255,255,255,0.75);">Autonomous College · Kerala, India</p>
-        <div class="college-badges reveal">
-            <span class="college-badge">Est. 1995</span>
-            <span class="college-badge">NAAC Accredited</span>
-            <span class="college-badge">Kuttikkanam, Kerala</span>
+        <div class="reveal" style="display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+            <img src="{{ url_for('static', filename='mcsc_logo.png') }}" alt="MCSC Logo" style="height: clamp(60px, 10vw, 85px); width: auto; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); margin: 0;">
+            <h2 class="college-name" style="color: #ffffff; font-size: clamp(3rem, 7vw, 4.5rem); line-height: 1; margin: 0;">
+                <span style="color: #3B82F6;">MC</span><span style="color: #F59E0B;">SC</span>
+            </h2>
         </div>
+        <p class="college-subtitle reveal" style="color: rgba(255, 255, 255, 0.95); font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 500; font-family: 'Space Grotesk', sans-serif; margin-bottom: 0; letter-spacing: 0.02em;">
+            Marian College Students Council
+        </p>
     </div>
 </section>
 
