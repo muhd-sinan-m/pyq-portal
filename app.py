@@ -159,9 +159,13 @@ def init_db():
                 upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 file_url TEXT,
                 public_id TEXT,
-                ai_analysis TEXT
+                ai_analysis TEXT,
+                file_size BIGINT
             );
         """)
+        cur.execute(
+            "ALTER TABLE question_papers ADD COLUMN IF NOT EXISTS file_size BIGINT"
+        )
         conn.commit()
 
         cur.execute("SELECT COUNT(*) FROM users")
@@ -226,6 +230,22 @@ ALLOWED_EXTENSIONS = {"pdf"}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def format_file_size(size_bytes):
+    if size_bytes is None:
+        return "—"
+    try:
+        size = float(size_bytes)
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size < 1024.0:
+                if unit == 'B':
+                    return f"{int(size)} B"
+                return f"{size:.1f} {unit}"
+            size /= 1024.0
+        return f"{size:.1f} TB"
+    except (ValueError, TypeError):
+        return "—"
 
 
 def analyze_with_gemini(pdf_url, subject_name):
@@ -445,10 +465,11 @@ def upload_page():
             exam_type = request.form.get(
                 "examType") or request.form.get("exam_type") or ""
 
+            file_bytes = file.read()
             unique_name = f"{subject_id}/{year_int}/{uuid.uuid4()}.pdf"
             supabase.storage.from_(SUPABASE_BUCKET).upload(
                 unique_name,
-                file.read(),
+                file_bytes,
                 file_options={"content-type": "application/pdf"}
             )
             file_url = supabase.storage.from_(
@@ -458,12 +479,12 @@ def upload_page():
             cur.execute(
                 """
                 INSERT INTO question_papers
-                (subject_id, year, file_name, file_url, exam_type, public_id)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                (subject_id, year, file_name, file_url, exam_type, public_id, file_size)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
                 RETURNING paper_id
                 """,
                 (subject_id, year_int, original_filename,
-                 file_url, exam_type, unique_name),
+                 file_url, exam_type, unique_name, len(file_bytes)),
             )
             conn.commit()
 
@@ -771,9 +792,9 @@ def approve_pending(pending_id):
         # 3. Insert into question_papers
         cur.execute("""
             INSERT INTO question_papers
-            (subject_id, year, file_name, file_url, exam_type, public_id)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (subject_id, year, file_name, final_url, exam_type, final_path))
+            (subject_id, year, file_name, file_url, exam_type, public_id, file_size)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (subject_id, year, file_name, final_url, exam_type, final_path, len(file_bytes)))
 
         # 4. Mark as approved
         cur.execute(
@@ -1125,26 +1146,39 @@ def admin_get_papers():
         cur.execute("""
             SELECT q.paper_id, s.subject_name, s.semester, q.year,
                    q.exam_type, q.file_url, q.upload_date, q.ai_analysis,
-                   q.public_id
+                   q.public_id, q.file_size
             FROM question_papers q
             LEFT JOIN subjects s ON q.subject_id = s.subject_id
             ORDER BY q.upload_date DESC NULLS LAST
         """)
         rows = cur.fetchall()
-        return jsonify([
-            {
-                "paper_id": r[0],
-                "subject_name": r[1] or "Unknown",
-                "semester": r[2],
-                "year": r[3],
-                "exam_type": r[4],
-                "file_url": r[5],
-                "upload_date": r[6].isoformat() if r[6] else None,
-                "ai_analysis": r[7],
-                "public_id": r[8],
-            }
-            for r in rows
-        ])
+        results = []
+        for r in rows:
+            paper_id, subj_name, sem, yr, ex_type, file_url, up_date, ai_an, pub_id, size = r
+            if size is None and file_url:
+                try:
+                    head_res = requests.head(file_url, timeout=3)
+                    if head_res.status_code == 200 and 'Content-Length' in head_res.headers:
+                        size = int(head_res.headers['Content-Length'])
+                        cur.execute("UPDATE question_papers SET file_size = %s WHERE paper_id = %s", (size, paper_id))
+                        conn.commit()
+                except Exception:
+                    pass
+
+            results.append({
+                "paper_id": paper_id,
+                "subject_name": subj_name or "Unknown",
+                "semester": sem,
+                "year": yr,
+                "exam_type": ex_type,
+                "file_url": file_url,
+                "upload_date": up_date.isoformat() if up_date else None,
+                "ai_analysis": ai_an,
+                "public_id": pub_id,
+                "file_size": size,
+                "file_size_formatted": format_file_size(size),
+            })
+        return jsonify(results)
     finally:
         cur.close()
         return_db(conn)

@@ -926,13 +926,14 @@
                                         <th>Semester</th>
                                         <th>Year</th>
                                         <th>Exam Type</th>
+                                        <th>File Size</th>
                                         <th>AI</th>
                                         <th>Uploaded</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="papersTableBody">
-                                    <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-secondary)">Loading…</td></tr>
+                                    <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-secondary)">Loading…</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1551,12 +1552,12 @@ async function deleteSubject(id) {
 // ===== PAPERS =====
 async function loadPapers() {
     const tbody = document.getElementById('papersTableBody');
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-secondary)">Loading…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-secondary)">Loading…</td></tr>';
     try {
         const r = await fetch('/admin/api/papers');
         const papers = await r.json();
         if (!papers.length) {
-            tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg><h3>No papers uploaded yet</h3><p>Go to Upload page to add papers.</p></div></td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg><h3>No papers uploaded yet</h3><p>Go to Upload page to add papers.</p></div></td></tr>`;
             return;
         }
         tbody.innerHTML = papers.map(p => `
@@ -1565,6 +1566,7 @@ async function loadPapers() {
                 <td>${p.semester ? `<span class="badge badge-blue">Sem ${p.semester}</span>` : '—'}</td>
                 <td>${p.year || '—'}</td>
                 <td>${p.exam_type ? `<span class="badge badge-purple">${escHtml(p.exam_type)}</span>` : '—'}</td>
+                <td><span class="badge badge-gray" style="font-family:monospace;font-size:.8rem;">${escHtml(p.file_size_formatted || '—')}</span></td>
                 <td>${p.ai_analysis ? '<span class="badge badge-green">✓ Yes</span>' : '<span class="badge badge-gray">No</span>'}</td>
                 <td style="color:var(--text-secondary);font-size:.875rem">${p.upload_date ? new Date(p.upload_date).toLocaleDateString() : '—'}</td>
                 <td>
@@ -1577,7 +1579,7 @@ async function loadPapers() {
                 </td>
             </tr>`).join('');
     } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--accent-red);padding:2rem">Failed to load papers.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--accent-red);padding:2rem">Failed to load papers.</td></tr>';
     }
 }
 
